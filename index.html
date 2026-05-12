@@ -4,9 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SIGNAL // a transmission log of visual thoughts</title>
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="assets/space-mono.css" />
 <style>
   :root {
     --bg: #0c0c0a;
@@ -244,8 +242,9 @@
     50%      { opacity: 0.35; }
   }
 
-  .row--wip .visual { opacity: 0.55; }
-  .row--wip .title  { color: var(--bone-dim); }
+  .row--wip          { cursor: default; }
+  .row--wip .visual  { opacity: 0.55; }
+  .row--wip .title   { color: var(--bone-dim); }
 
   .title {
     font-size: 1.7rem;
@@ -364,7 +363,7 @@
     </a>
 
     <!-- ── ENTRY 02 ────────────────────────────────────────── -->
-    <a class="row row--wip" href="thought-02.html">
+    <div class="row row--wip" aria-disabled="true">
       <div class="num">No. <b>02</b></div>
       <div class="visual">
         <svg viewBox="0 0 100 100" fill="none" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
@@ -380,7 +379,7 @@
         <p class="desc">What happens when ideas almost touch but never do — a meditation on the geometry of almost.</p>
       </div>
       <div class="open-cell">Drafting<span class="arrow">···</span></div>
-    </a>
+    </div>
 
     <!-- ── ADD MORE ENTRIES BELOW THIS LINE ─────────────────
     <a class="row" href="thought-03.html">
