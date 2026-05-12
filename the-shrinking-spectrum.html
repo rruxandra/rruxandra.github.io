@@ -359,6 +359,23 @@
   .coda.in-view .coda-inner > *:nth-child(5) { transition-delay: 0.7s; }
   .coda.in-view .coda-inner > *:nth-child(6) { transition-delay: 0.85s; }
 
+  /* Back link */
+  .back {
+    position: fixed;
+    bottom: 22px;
+    left: 28px;
+    z-index: 60;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  .back:hover { color: var(--warm); }
+  .back::before { content: "← "; }
+
   /* ---- Mobile ---- */
   @media (max-width: 720px) {
     .meta { left: 18px; top: 18px; font-size: 10px; }
@@ -366,6 +383,7 @@
     .stage-inner::before { inset: -40px -30px; }
     .stage .ghost-age { font-size: clamp(220px, 90vw, 420px); }
     .hero h1 { font-size: clamp(56px, 18vw, 120px); }
+    .back { left: 18px; bottom: 14px; }
   }
 </style>
 </head>
@@ -378,6 +396,7 @@
 
 <div class="meta">an essay <span>·</span> in light</div>
 <div class="meta-r">№ 01</div>
+<a class="back" href="index.html">return to log</a>
 
 <main>
 
