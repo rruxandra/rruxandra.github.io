@@ -18,7 +18,8 @@ import numpy as np
 ROOT = Path(__file__).resolve().parent.parent
 FONT_REG = ROOT / "tools" / "SpaceMono-Regular.ttf"
 FONT_BOLD = ROOT / "tools" / "SpaceMono-Bold.ttf"
-OUT = ROOT / "assets" / "preview.mp4"
+OUT_MP4 = ROOT / "assets" / "preview.mp4"
+OUT_GIF = ROOT / "assets" / "preview.gif"
 
 W, H = 960, 540
 FPS = 30
@@ -114,11 +115,7 @@ def build_filter() -> str:
     return ",".join(layers)
 
 
-def main() -> None:
-    if not FONT_REG.exists() or not FONT_BOLD.exists():
-        raise SystemExit(f"Missing font files in {FONT_REG.parent}")
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-
+def encode_mp4() -> None:
     cmd = [
         "ffmpeg", "-y",
         "-f", "rawvideo", "-pix_fmt", "rgb24",
@@ -129,7 +126,7 @@ def main() -> None:
         "-crf", "22", "-preset", "slow",
         "-movflags", "+faststart",
         "-loglevel", "error",
-        str(OUT),
+        str(OUT_MP4),
     ]
     proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     assert proc.stdin is not None
@@ -138,8 +135,45 @@ def main() -> None:
     proc.stdin.close()
     rc = proc.wait()
     if rc != 0:
-        raise SystemExit(f"ffmpeg exited {rc}")
-    print(f"wrote {OUT} ({OUT.stat().st_size / 1024:.1f} KB)")
+        raise SystemExit(f"ffmpeg (mp4) exited {rc}")
+
+
+def encode_gif() -> None:
+    """Two-pass palette → high-quality GIF for inline rendering on GitHub."""
+    gif_filter = (
+        f"{build_filter()},fps=20,scale=720:-1:flags=lanczos,"
+        "split[a][b];[a]palettegen=max_colors=128:stats_mode=full[p];"
+        "[b][p]paletteuse=dither=bayer:bayer_scale=5"
+    )
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "rawvideo", "-pix_fmt", "rgb24",
+        "-s", f"{W}x{H}", "-r", str(FPS),
+        "-i", "-",
+        "-filter_complex", gif_filter,
+        "-loop", "0",
+        "-loglevel", "error",
+        str(OUT_GIF),
+    ]
+    proc = subprocess.Popen(cmd, stdin=subprocess.PIPE)
+    assert proc.stdin is not None
+    for i in range(N_FRAMES):
+        proc.stdin.write(frame(i / N_FRAMES).tobytes())
+    proc.stdin.close()
+    rc = proc.wait()
+    if rc != 0:
+        raise SystemExit(f"ffmpeg (gif) exited {rc}")
+
+
+def main() -> None:
+    if not FONT_REG.exists() or not FONT_BOLD.exists():
+        raise SystemExit(f"Missing font files in {FONT_REG.parent}")
+    OUT_MP4.parent.mkdir(parents=True, exist_ok=True)
+
+    encode_mp4()
+    print(f"wrote {OUT_MP4} ({OUT_MP4.stat().st_size / 1024:.1f} KB)")
+    encode_gif()
+    print(f"wrote {OUT_GIF} ({OUT_GIF.stat().st_size / 1024:.1f} KB)")
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 <p align="center">
-  <video src="https://github.com/rruxandra/rruxandra.github.io/raw/main/assets/preview.mp4" autoplay loop muted playsinline width="720"></video>
+  <img src="assets/preview.gif" alt="SIG/NAL.LOG preview" width="720">
 </p>
 
 <p align="center">
