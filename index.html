@@ -4,6 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SIGNAL // a transmission log of visual thoughts</title>
+<link rel="alternate" type="application/rss+xml" title="Signal//log" href="feed.xml" />
 <link rel="stylesheet" href="assets/space-mono.css" />
 <style>
   :root {
@@ -310,6 +311,18 @@
     content: "■ ";
     color: var(--acid);
   }
+  footer .feed {
+    color: var(--bone-dim);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  footer .feed:hover { color: var(--acid); }
+  footer .feed .arrow {
+    display: inline-block;
+    margin-left: 0.3rem;
+    transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  footer .feed:hover .arrow { transform: translate(3px, -3px); }
 </style>
 </head>
 <body>
@@ -437,6 +450,7 @@
 
   <footer>
     <span class="end">END OF TRANSMISSION</span>
+    <a class="feed" href="feed.xml">SUBSCRIBE / FEED<span class="arrow">↗</span></a>
     <span>02 logged · 01 drafting</span>
   </footer>
 

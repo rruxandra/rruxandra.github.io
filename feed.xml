@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Signal//log</title>
+    <link>https://rruxandra.github.io/</link>
+    <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
+    <language>en</language>
+    <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 12 May 2026 23:29:32 +0200</lastBuildDate>
+
+    <item>
+      <title>The Continuous Experiment</title>
+      <link>https://rruxandra.github.io/the-continuous-experiment.html</link>
+      <description>If every life is already an experiment — anonymous, ambient, distributed — what would we finally be able to see?</description>
+      <pubDate>Tue, 12 May 2026 23:29:32 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-continuous-experiment.html</guid>
+    </item>
+
+    <item>
+      <title>The Shrinking Spectrum</title>
+      <link>https://rruxandra.github.io/the-shrinking-spectrum.html</link>
+      <description>On how the cone of possible futures narrows with age — and why what remains is not less.</description>
+      <pubDate>Tue, 12 May 2026 22:18:34 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-shrinking-spectrum.html</guid>
+    </item>
+
+  </channel>
+</rss>
