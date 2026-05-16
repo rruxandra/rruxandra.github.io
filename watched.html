@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OBSERVED — A Society Under Watch</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Barlow+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #00ff88;
+    --dim-green: #00ff8833;
+    --red: #ff3344;
+    --amber: #ffaa00;
+    --bg: #04060a;
+    --panel: #080d14;
+    --border: #1a2a1a;
+    --text: #c8d8c0;
+    --muted: #445544;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Barlow Condensed', sans-serif;
+    overflow-x: hidden;
+    cursor: crosshair;
+  }
+
+  /* SCANLINE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,255,136,0.015) 2px,
+      rgba(0,255,136,0.015) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* NOISE */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity: 0.4;
+    pointer-events: none;
+    z-index: 9998;
+  }
+
+  /* ─── HERO ─── */
+  #hero {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(0,255,136,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,255,136,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    animation: gridDrift 20s linear infinite;
+  }
+
+  @keyframes gridDrift {
+    from { transform: translateY(0); }
+    to   { transform: translateY(60px); }
+  }
+
+  .eye-container {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin-bottom: 40px;
+  }
+
+  .eye-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 1px solid var(--green);
+    opacity: 0.3;
+    animation: pulse 3s ease-in-out infinite;
+  }
+  .eye-ring:nth-child(2) { inset: -20px; animation-delay: 0.5s; opacity: 0.15; }
+  .eye-ring:nth-child(3) { inset: -40px; animation-delay: 1s; opacity: 0.08; }
+  .eye-ring:nth-child(4) { inset: -60px; animation-delay: 1.5s; opacity: 0.04; }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 0.3; }
+    50% { transform: scale(1.05); opacity: 0.15; }
+  }
+
+  .eye-svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .pupil-track {
+    transform-origin: center;
+    transition: transform 0.1s ease;
+  }
+
+  .hero-tag {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    opacity: 0.7;
+  }
+
+  .hero-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 700;
+    line-height: 0.9;
+    text-align: center;
+    letter-spacing: -2px;
+    color: #e8f0e0;
+    position: relative;
+  }
+
+  .hero-title .accent {
+    color: var(--green);
+    font-style: italic;
+  }
+
+  .hero-sub {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-top: 24px;
+    text-align: center;
+    max-width: 500px;
+    padding: 0 20px;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    animation: blink 2s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* STATUS BAR */
+  .status-bar {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 36px;
+    background: rgba(4,6,10,0.95);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 24px;
+    z-index: 1000;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .status-live {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--red);
+  }
+
+  .dot-live {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--red);
+    animation: blink 1s step-end infinite;
+  }
+
+  .status-bar .right {
+    margin-left: auto;
+    display: flex;
+    gap: 20px;
+  }
+
+  /* ─── SECTIONS ─── */
+  section {
+    padding: 100px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .section-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 5px;
+    color: var(--green);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    opacity: 0.6;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 48px;
+    color: #d8e8d0;
+  }
+
+  .section-title em {
+    color: var(--green);
+    font-style: italic;
+  }
+
+  /* ─── SCORE CARD ─── */
+  #score-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 60px 40px;
+    margin: 0 20px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #score-section::before {
+    content: 'CITIZEN PROFILE';
+    position: absolute;
+    top: 20px; right: 24px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+  }
+
+  .score-layout {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 60px;
+    align-items: start;
+  }
+
+  .score-circle-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .score-ring {
+    width: 160px;
+    height: 160px;
+    position: relative;
+  }
+
+  .score-ring svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+  }
+
+  .score-ring-bg { fill: none; stroke: #1a2a1a; stroke-width: 8; }
+  .score-ring-fill {
+    fill: none;
+    stroke: var(--green);
+    stroke-width: 8;
+    stroke-linecap: round;
+    stroke-dasharray: 408;
+    stroke-dashoffset: 408;
+    filter: drop-shadow(0 0 6px var(--green));
+    transition: stroke-dashoffset 2s ease;
+  }
+
+  .score-number {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 36px;
+    color: var(--green);
+    text-shadow: 0 0 20px var(--green);
+  }
+
+  .score-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+  }
+
+  .score-status {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--amber);
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border: 1px solid var(--amber);
+    opacity: 0.8;
+  }
+
+  .score-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .metric {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .metric-name {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+
+  .metric-bar-wrap {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+  }
+
+  .metric-bar {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1.5s ease;
+  }
+
+  .metric-value {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--text);
+  }
+
+  /* ─── TIMELINE ─── */
+  .day-timeline {
+    position: relative;
+    padding-left: 32px;
+  }
+
+  .day-timeline::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 1px;
+    background: linear-gradient(to bottom, transparent, var(--green), var(--green), transparent);
+    opacity: 0.3;
+  }
+
+  .timeline-event {
+    position: relative;
+    padding: 20px 0 20px 28px;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.5s ease;
+  }
+
+  .timeline-event.visible {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .timeline-event::before {
+    content: '';
+    position: absolute;
+    left: -24px; top: 28px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+  }
+
+  .event-time {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .event-text {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1.5;
+    margin-bottom: 6px;
+  }
+
+  .event-flag {
+    display: inline-block;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 2px;
+    padding: 2px 8px;
+    text-transform: uppercase;
+  }
+
+  .flag-ok { color: var(--green); border: 1px solid rgba(0,255,136,0.3); }
+  .flag-warn { color: var(--amber); border: 1px solid rgba(255,170,0,0.3); }
+  .flag-alert { color: var(--red); border: 1px solid rgba(255,51,68,0.3); }
+
+  /* ─── CAMERA GRID ─── */
+  .cam-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 3px;
+    margin-top: 40px;
+  }
+
+  .cam-feed {
+    aspect-ratio: 4/3;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cam-feed::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at center, rgba(0,255,136,0.03) 0%, transparent 70%);
+  }
+
+  .cam-label {
+    position: absolute;
+    top: 8px; left: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--green);
+    letter-spacing: 2px;
+    opacity: 0.7;
+  }
+
+  .cam-time {
+    position: absolute;
+    top: 8px; right: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  .cam-corner {
+    position: absolute;
+    width: 12px; height: 12px;
+    border-color: var(--green);
+    border-style: solid;
+    opacity: 0.5;
+  }
+  .cam-corner.tl { top: 4px; left: 4px; border-width: 1px 0 0 1px; }
+  .cam-corner.tr { top: 4px; right: 4px; border-width: 1px 1px 0 0; }
+  .cam-corner.bl { bottom: 4px; left: 4px; border-width: 0 0 1px 1px; }
+  .cam-corner.br { bottom: 4px; right: 4px; border-width: 0 1px 1px 0; }
+
+  .cam-scene {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+  }
+
+  .cam-desc {
+    font-size: 13px;
+    color: rgba(200,216,192,0.5);
+    font-weight: 300;
+    line-height: 1.4;
+  }
+
+  .cam-alert-band {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  /* ─── CITIZEN PROFILES ─── */
+  .child-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2px;
+    margin-top: 40px;
+  }
+
+  .child-card {
+    background: var(--panel);
+    padding: 32px 28px;
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .child-card::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+
+  .child-card.green::after { background: var(--green); }
+  .child-card.amber::after { background: var(--amber); }
+  .child-card.red::after   { background: var(--red); }
+
+  .child-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px;
+    margin-bottom: 4px;
+    color: #d8e8d0;
+  }
+
+  .child-age {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    margin-bottom: 20px;
+  }
+
+  .child-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(26,42,26,0.6);
+    font-size: 13px;
+  }
+
+  .child-stat-label { color: var(--muted); letter-spacing: 1px; }
+  .child-stat-val { font-family: 'Share Tech Mono', monospace; font-size: 12px; }
+
+  .child-note {
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    font-style: italic;
+    border-left: 2px solid var(--border);
+    padding-left: 12px;
+  }
+
+  /* ─── QUOTE ─── */
+  .pull-quote {
+    text-align: center;
+    padding: 80px 40px;
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .pull-quote blockquote {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.5;
+    color: #d0e0c8;
+    margin-bottom: 24px;
+  }
+
+  .pull-quote cite {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: var(--muted);
+    font-style: normal;
+    text-transform: uppercase;
+  }
+
+  /* ─── ANXIETY METER ─── */
+  .anxiety-section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    margin: 0 20px 80px;
+    padding: 60px 40px;
+  }
+
+  .anxiety-bars {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-top: 40px;
+  }
+
+  .anxiety-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 60px;
+    gap: 20px;
+    align-items: center;
+  }
+
+  .anxiety-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--text);
+    text-align: right;
+  }
+
+  .anxiety-track {
+    height: 8px;
+    background: rgba(26,42,26,0.8);
+    border-radius: 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .anxiety-fill {
+    height: 100%;
+    border-radius: 0;
+    position: relative;
+    transition: width 2s cubic-bezier(0.23,1,0.32,1);
+  }
+
+  .anxiety-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 4px; height: 100%;
+    background: white;
+    opacity: 0.8;
+    filter: blur(2px);
+  }
+
+  .anxiety-pct {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-align: right;
+  }
+
+  /* ─── DUALITY ─── */
+  .duality-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2px;
+    margin-top: 40px;
+  }
+
+  .duality-col {
+    padding: 48px 40px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+  }
+
+  .duality-col.dark {
+    background: #020408;
+  }
+
+  .duality-heading {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    margin-bottom: 24px;
+  }
+
+  .duality-col:first-child .duality-heading { color: var(--green); }
+  .duality-col:last-child .duality-heading  { color: var(--red); }
+
+  .duality-item {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 15px;
+    font-weight: 300;
+    color: var(--text);
+    line-height: 1.5;
+    display: flex;
+    gap: 12px;
+  }
+
+  .duality-item::before {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 12px;
+    opacity: 0.5;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+  .duality-col:first-child .duality-item::before { content: '→'; color: var(--green); }
+  .duality-col:last-child  .duality-item::before { content: '→'; color: var(--red); }
+
+  /* ─── FOOTER ─── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 40px;
+    text-align: center;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    line-height: 2;
+  }
+
+  /* ─── BACK LINK ─── */
+  .back {
+    position: fixed;
+    bottom: 22px;
+    left: 28px;
+    z-index: 1001;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.3s ease;
+    cursor: crosshair;
+  }
+  .back:hover { color: var(--green); }
+  .back::before { content: "← "; }
+
+  /* RESPONSIVE */
+  @media (max-width: 700px) {
+    .score-layout { grid-template-columns: 1fr; }
+    .score-metrics { grid-template-columns: 1fr; }
+    .cam-grid { grid-template-columns: 1fr 1fr; }
+    .duality-grid { grid-template-columns: 1fr; }
+    .anxiety-row { grid-template-columns: 120px 1fr 40px; }
+    section { padding: 60px 20px; }
+    #score-section { margin: 0 0 60px; padding: 40px 20px; }
+    .anxiety-section { margin: 0 0 60px; padding: 40px 20px; }
+    .back { left: 18px; bottom: 14px; }
+  }
+
+  @media (max-width: 480px) {
+    .cam-grid { grid-template-columns: 1fr; }
+  }
+
+  /* FADE IN ON SCROLL */
+  .fade-in {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+</style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+
+<div class="status-bar">
+  <div class="status-live"><div class="dot-live"></div> LIVE MONITORING</div>
+  <span id="citizen-count">CITIZENS TRACKED: 8,241,997</span>
+  <span class="right">
+    <span id="clock-display">--:--:--</span>
+    <span>SYS.OK</span>
+  </span>
+</div>
+
+<!-- ─── HERO ─── -->
+
+<section id="hero" style="max-width:100%; padding:0;">
+  <div class="grid-bg"></div>
+  <div class="eye-container">
+    <div class="eye-ring"></div>
+    <div class="eye-ring"></div>
+    <div class="eye-ring"></div>
+    <div class="eye-ring"></div>
+    <svg class="eye-svg" viewBox="0 0 200 200">
+      <defs>
+        <radialGradient id="eyeGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#00ff88" stop-opacity="0.2"/>
+          <stop offset="100%" stop-color="#00ff88" stop-opacity="0"/>
+        </radialGradient>
+        <filter id="glow">
+          <feGaussianBlur stdDeviation="3" result="blur"/>
+          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+        </filter>
+      </defs>
+      <ellipse cx="100" cy="100" rx="80" ry="50" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.6"/>
+      <ellipse cx="100" cy="100" rx="80" ry="50" fill="url(#eyeGlow)"/>
+      <g class="pupil-track" id="pupilGroup">
+        <circle cx="100" cy="100" r="30" fill="none" stroke="#00ff88" stroke-width="1" opacity="0.4"/>
+        <circle cx="100" cy="100" r="20" fill="#00ff88" opacity="0.15"/>
+        <circle cx="100" cy="100" r="8" fill="#00ff88" opacity="0.8" filter="url(#glow)"/>
+        <circle cx="96" cy="97" r="3" fill="white" opacity="0.6"/>
+      </g>
+    </svg>
+  </div>
+  <div class="hero-tag">SPECULATIVE DESIGN · SURVEILLANCE FUTURES</div>
+  <h1 class="hero-title">THE <span class="accent">OBSERVED</span><br>SOCIETY</h1>
+  <p class="hero-sub">// WHAT HAPPENS WHEN EVERY CONVERSATION IS LOGGED, EVERY HESITATION SCORED, AND EVERY ADULT LEARNS TO PERFORM THEIR LIFE RATHER THAN LIVE IT //</p>
+  <div class="scroll-hint">▼ SCROLL TO EXPLORE</div>
+</section>
+
+<!-- ─── SCORE CARD ─── -->
+
+<div id="score-section" class="fade-in">
+  <div class="section-label">MODULE 01 — CITIZEN INTELLIGENCE</div>
+  <div class="section-title" style="margin-bottom:40px;">The <em>Civic Score</em> — your life, quantified</div>
+
+  <div class="score-layout">
+    <div class="score-circle-wrap">
+      <div class="score-ring">
+        <svg viewBox="0 0 140 140">
+          <circle class="score-ring-bg" cx="70" cy="70" r="65"/>
+          <circle class="score-ring-fill" id="scoreArc" cx="70" cy="70" r="65"/>
+        </svg>
+        <div class="score-number">763</div>
+      </div>
+      <div class="score-label">CIVIC TRUST INDEX</div>
+      <div class="score-status">PROVISIONAL ACCESS</div>
+    </div>
+    <div>
+      <div class="score-metrics">
+        <div class="metric">
+          <div class="metric-name">Workplace Productivity</div>
+          <div class="metric-bar-wrap"><div class="metric-bar" style="width:0%;background:var(--green);" data-width="88%"></div></div>
+          <div class="metric-value">88 / 100</div>
+        </div>
+        <div class="metric">
+          <div class="metric-name">Spending Pattern Normality</div>
+          <div class="metric-bar-wrap"><div class="metric-bar" style="width:0%;background:var(--green);" data-width="81%"></div></div>
+          <div class="metric-value">81 / 100</div>
+        </div>
+        <div class="metric">
+          <div class="metric-name">Social Network Stability</div>
+          <div class="metric-bar-wrap"><div class="metric-bar" style="width:0%;background:var(--amber);" data-width="74%"></div></div>
+          <div class="metric-value">74 / 100</div>
+        </div>
+        <div class="metric">
+          <div class="metric-name">Political Expression Index</div>
+          <div class="metric-bar-wrap"><div class="metric-bar" style="width:0%;background:var(--amber);" data-width="58%"></div></div>
+          <div class="metric-value">58 / 100 ⚠</div>
+        </div>
+        <div class="metric">
+          <div class="metric-name">Routine Predictability</div>
+          <div class="metric-bar-wrap"><div class="metric-bar" style="width:0%;background:var(--green);" data-width="93%"></div></div>
+          <div class="metric-value">93 / 100</div>
+        </div>
+        <div class="metric">
+          <div class="metric-name">Anomalous Behavior</div>
+          <div class="metric-bar-wrap"><div class="metric-bar" style="width:0%;background:var(--red);" data-width="31%"></div></div>
+          <div class="metric-value">31 / 100 ⚠</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── QUOTE 1 ─── -->
+
+<div class="pull-quote fade-in">
+  <blockquote>"I no longer know if my opinions are my own, or just the ones I've learned are safe to have out loud."</blockquote>
+  <cite>— Speculative citizen testimony, 2041</cite>
+</div>
+
+<!-- ─── TIMELINE ─── -->
+
+<section class="fade-in">
+  <div class="section-label">MODULE 02 — DAILY RECORD</div>
+  <div class="section-title">A <em>Wednesday</em> in 2041 — age 34</div>
+  <div class="day-timeline">
+    <div class="timeline-event">
+      <div class="event-time">06:49 — BEDROOM · BIOMETRIC BAND</div>
+      <div class="event-text">Woke after 6h 12m sleep. Cortisol 18% above baseline. Heart rate variability: poor. AI wellness coach sends morning prompt: "Consider your stress load today."</div>
+      <span class="event-flag flag-warn">STRESS MARKER · LOGGED</span>
+    </div>
+    <div class="timeline-event">
+      <div class="event-time">08:02 — HOME OFFICE · CAM-DESK</div>
+      <div class="event-text">Logged into work terminal. Attention monitoring active. Opened a browser tab to a news article before starting tasks. Tab closed by productivity manager after 90 seconds.</div>
+      <span class="event-flag flag-warn">OFF-TASK DEVIATION · −3 PTS</span>
+    </div>
+    <div class="timeline-event">
+      <div class="event-time">10:17 — MEETING · AUDIO ANALYSIS</div>
+      <div class="event-text">Team call. Spoke 4 times. Sentiment analysis: neutral. Raised a concern about project timeline in a tone flagged as "confrontational." Manager automatically notified.</div>
+      <span class="event-flag flag-alert">WORKPLACE TONE FLAG · REVIEW QUEUED</span>
+    </div>
+    <div class="timeline-event">
+      <div class="event-time">12:44 — STREET · CAM-31</div>
+      <div class="event-text">Walked to lunch alone. Took an unregistered route. Entered a café with a low civic rating (3 prior flagged conversations on premises). Flagged as location of interest.</div>
+      <span class="event-flag flag-warn">NON-STANDARD LOCATION · NOTED</span>
+    </div>
+    <div class="timeline-event">
+      <div class="event-time">13:30 — CAFÉ · CAM-INTERIOR</div>
+      <div class="event-text">Spoke with an acquaintance. Conversation captured. Keyword: "election." Keyword: "unfair." Combined sentiment score: 0.71 (negative civic). Cross-referenced with contact's score: 491.</div>
+      <span class="event-flag flag-alert">CONTACT RISK · −18 PTS</span>
+    </div>
+    <div class="timeline-event">
+      <div class="event-time">17:55 — HOME · SMART DEVICE</div>
+      <div class="event-text">Searched: "how to delete search history." Search flagged. Query escalated to secondary monitoring tier. No action taken — yet.</div>
+      <span class="event-flag flag-alert">EVASION INTENT · ESCALATED</span>
+    </div>
+    <div class="timeline-event">
+      <div class="event-time">22:10 — BEDROOM · BIOMETRIC BAND</div>
+      <div class="event-text">Sleep onset delayed 54 minutes. Elevated resting heart rate. No external cause detected. The system notes: no cause detected. The system does not ask how you feel.</div>
+      <span class="event-flag flag-warn">SLEEP ANOMALY · LOGGED</span>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CAMERA GRID ─── -->
+
+<section class="fade-in">
+  <div class="section-label">MODULE 03 — ENVIRONMENT COVERAGE</div>
+  <div class="section-title">Every space, <em>every moment</em></div>
+  <div class="cam-grid">
+    <div class="cam-feed">
+      <div class="cam-label">CAM-OFFICE-04</div>
+      <div class="cam-time" id="cam-t1">--:--</div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+      <div class="cam-scene"><div class="cam-desc">Open-plan floor B<br>Attention scores: avg 81%<br>2 employees flagged idle</div></div>
+      <div class="cam-alert-band" style="background:var(--amber);opacity:0.5;"></div>
+    </div>
+    <div class="cam-feed">
+      <div class="cam-label">CAM-TRANSIT-19</div>
+      <div class="cam-time" id="cam-t2">--:--</div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+      <div class="cam-scene"><div class="cam-desc">Metro line 7 · car 3<br>31 passengers identified<br>1 unregistered face</div></div>
+      <div class="cam-alert-band" style="background:var(--red);opacity:0.6;animation:blink 1s step-end infinite;"></div>
+    </div>
+    <div class="cam-feed">
+      <div class="cam-label">CAM-BAR-09</div>
+      <div class="cam-time" id="cam-t3">--:--</div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+      <div class="cam-scene"><div class="cam-desc">The Anchor pub<br>Civic rating: AMBER<br>Conversation audio: active</div></div>
+      <div class="cam-alert-band" style="background:var(--amber);opacity:0.5;"></div>
+    </div>
+    <div class="cam-feed">
+      <div class="cam-label">CAM-HOME-LIVING</div>
+      <div class="cam-time" id="cam-t4">--:--</div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+      <div class="cam-scene"><div class="cam-desc">Living room · 2 adults<br>Conversation: domestic<br>No flags raised</div></div>
+      <div class="cam-alert-band" style="background:var(--green);opacity:0.4;"></div>
+    </div>
+    <div class="cam-feed">
+      <div class="cam-label">CAM-CLINIC-02</div>
+      <div class="cam-time" id="cam-t5">--:--</div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+      <div class="cam-scene"><div class="cam-desc">GP waiting room<br>Patient mood: anxious<br>Appointment reason: logged</div></div>
+      <div class="cam-alert-band" style="background:var(--green);opacity:0.4;"></div>
+    </div>
+    <div class="cam-feed">
+      <div class="cam-label">CAM-BEDROOM-01</div>
+      <div class="cam-time" id="cam-t6">--:--</div>
+      <div class="cam-corner tl"></div><div class="cam-corner tr"></div>
+      <div class="cam-corner bl"></div><div class="cam-corner br"></div>
+      <div class="cam-scene"><div class="cam-desc">Biometric sensor active<br>Sleep quality: 58/100<br>⚠ Chronic concern pattern</div></div>
+      <div class="cam-alert-band" style="background:var(--amber);opacity:0.5;"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ADULT PROFILES ─── -->
+
+<section class="fade-in">
+  <div class="section-label">MODULE 04 — CITIZEN PROFILES</div>
+  <div class="section-title">Three adults. <em>Three lives under watch.</em></div>
+  <div class="child-cards">
+    <div class="child-card green">
+      <div class="child-name">Amara F.</div>
+      <div class="child-age">AGE 41 · SCORE: 904 · STATUS: TRUSTED CITIZEN</div>
+      <div class="child-stat"><span class="child-stat-label">Routine predictability</span><span class="child-stat-val" style="color:var(--green)">97%</span></div>
+      <div class="child-stat"><span class="child-stat-label">Political expression</span><span class="child-stat-val">Minimal</span></div>
+      <div class="child-stat"><span class="child-stat-label">Social contacts flagged</span><span class="child-stat-val">0</span></div>
+      <div class="child-stat"><span class="child-stat-label">Spontaneous behaviour</span><span class="child-stat-val" style="color:var(--amber)">Rare</span></div>
+      <div class="child-note">Exemplary record. Volunteer civic monitor. Her colleagues describe her as "reliable." She has not changed her mind about anything on record in four years.</div>
+    </div>
+    <div class="child-card amber">
+      <div class="child-name">Erik L.</div>
+      <div class="child-age">AGE 29 · SCORE: 641 · STATUS: MONITORED</div>
+      <div class="child-stat"><span class="child-stat-label">Routine predictability</span><span class="child-stat-val" style="color:var(--amber)">61%</span></div>
+      <div class="child-stat"><span class="child-stat-label">Political expression</span><span class="child-stat-val" style="color:var(--amber)">Elevated</span></div>
+      <div class="child-stat"><span class="child-stat-label">Social contacts flagged</span><span class="child-stat-val">3</span></div>
+      <div class="child-stat"><span class="child-stat-label">Workplace performance</span><span class="child-stat-val" style="color:var(--green)">High</span></div>
+      <div class="child-note">Attended a public protest in 2039. No criminal record. Applies for jobs he is qualified for; repeatedly rejected at background-check stage. No reason given.</div>
+    </div>
+    <div class="child-card red">
+      <div class="child-name">Tobias T.</div>
+      <div class="child-age">AGE 52 · SCORE: 389 · STATUS: RESTRICTED</div>
+      <div class="child-stat"><span class="child-stat-label">Routine predictability</span><span class="child-stat-val" style="color:var(--red)">34%</span></div>
+      <div class="child-stat"><span class="child-stat-label">Travel permissions</span><span class="child-stat-val" style="color:var(--red)">Regional only</span></div>
+      <div class="child-stat"><span class="child-stat-label">Financial access</span><span class="child-stat-val" style="color:var(--amber)">Conditional</span></div>
+      <div class="child-stat"><span class="child-stat-label">Last human review</span><span class="child-stat-val">Never</span></div>
+      <div class="child-note">Disputes his score through official channels. The appeal system is automated. His score has dropped 14 points since he began appealing.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── ANXIETY SECTION ─── -->
+
+<div class="anxiety-section fade-in">
+  <div class="section-label">MODULE 05 — PSYCHOLOGICAL INDICATORS</div>
+  <div class="section-title" style="margin-bottom:0;">What the data <em>doesn't show</em></div>
+  <div style="margin-bottom:40px; font-size:14px; color:var(--muted); margin-top:8px; font-family:'Share Tech Mono', monospace; letter-spacing:1px;">LONGITUDINAL STUDY — ADULTS AGE 25–65 UNDER CONTINUOUS AI MONITORING (n=31,440)</div>
+  <div class="anxiety-bars">
+    <div class="anxiety-row">
+      <div class="anxiety-label">Self-censorship (speech)</div>
+      <div class="anxiety-track"><div class="anxiety-fill" style="width:0%;" data-width="79%" data-color="#ff3344"></div></div>
+      <div class="anxiety-pct">79%</div>
+    </div>
+    <div class="anxiety-row">
+      <div class="anxiety-label">Self-censorship (thought)</div>
+      <div class="anxiety-track"><div class="anxiety-fill" style="width:0%;" data-width="61%" data-color="#ff3344"></div></div>
+      <div class="anxiety-pct">61%</div>
+    </div>
+    <div class="anxiety-row">
+      <div class="anxiety-label">Chronic low-grade anxiety</div>
+      <div class="anxiety-track"><div class="anxiety-fill" style="width:0%;" data-width="73%" data-color="#ff3344"></div></div>
+      <div class="anxiety-pct">73%</div>
+    </div>
+    <div class="anxiety-row">
+      <div class="anxiety-label">Behavioral compliance</div>
+      <div class="anxiety-track"><div class="anxiety-fill" style="width:0%;" data-width="94%" data-color="#00ff88"></div></div>
+      <div class="anxiety-pct">94%</div>
+    </div>
+    <div class="anxiety-row">
+      <div class="anxiety-label">Willingness to dissent</div>
+      <div class="anxiety-track"><div class="anxiety-fill" style="width:0%;" data-width="11%" data-color="#ffaa00"></div></div>
+      <div class="anxiety-pct">11%</div>
+    </div>
+    <div class="anxiety-row">
+      <div class="anxiety-label">Sense of authentic self</div>
+      <div class="anxiety-track"><div class="anxiety-fill" style="width:0%;" data-width="22%" data-color="#ff3344"></div></div>
+      <div class="anxiety-pct">22%</div>
+    </div>
+  </div>
+</div>
+
+<!-- ─── DUALITY ─── -->
+
+<section class="fade-in">
+  <div class="section-label">MODULE 06 — THE TRADE-OFF</div>
+  <div class="section-title">What we <em>gain</em>. What we <em>lose</em>.</div>
+  <div class="duality-grid">
+    <div class="duality-col">
+      <div class="duality-heading">The System Offers</div>
+      <div class="duality-item">Lower crime rates through deterrence and prediction</div>
+      <div class="duality-item">Faster emergency response via biometric alerts</div>
+      <div class="duality-item">Optimized workplaces and measurable productivity</div>
+      <div class="duality-item">Early health interventions before symptoms appear</div>
+      <div class="duality-item">Fraud and corruption made nearly impossible</div>
+      <div class="duality-item">A sense of order — someone is always watching</div>
+    </div>
+    <div class="duality-col dark">
+      <div class="duality-heading">The System Takes</div>
+      <div class="duality-item">The right to hold an opinion before it's fully formed</div>
+      <div class="duality-item">The possibility of a conversation no one else hears</div>
+      <div class="duality-item">The freedom to change your mind without a record</div>
+      <div class="duality-item">The experience of being truly alone with yourself</div>
+      <div class="duality-item">The dignity of a mistake that simply disappears</div>
+      <div class="duality-item">A sense of order — someone is always watching</div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── CLOSING QUOTE ─── -->
+
+<div class="pull-quote fade-in">
+  <blockquote>"We did not lose our freedom all at once. We traded it away, incrementally, for convenience, for safety, for efficiency — until the day we realised we could no longer remember what it felt like to think a thought that belonged only to us."</blockquote>
+  <cite>— Speculative fiction, author unknown, 2044</cite>
+</div>
+
+<footer>
+  OBSERVED SOCIETY · SPECULATIVE DESIGN EXPLORATION<br>
+  ALL CITIZEN DATA IS FICTIONAL · THIS PAGE IS A THOUGHT EXPERIMENT<br>
+  ░░░ WHAT KIND OF FUTURE DO WE WANT TO BUILD? ░░░
+</footer>
+
+<a class="back" href="index.html">return to log</a>
+
+<script>
+  // Clock
+  function updateClock() {
+    const now = new Date();
+    const t = now.toTimeString().slice(0,8);
+    document.getElementById('clock-display').textContent = t;
+    ['cam-t1','cam-t2','cam-t3','cam-t4','cam-t5','cam-t6'].forEach(id => {
+      const el = document.getElementById(id);
+      if(el) el.textContent = t;
+    });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+
+  // Citizen counter flicker
+  let baseCount = 8241997;
+  setInterval(() => {
+    baseCount += Math.floor(Math.random() * 3);
+    document.getElementById('citizen-count').textContent =
+      'CITIZENS TRACKED: ' + baseCount.toLocaleString();
+  }, 2000);
+
+  // Eye follows mouse
+  const pupil = document.getElementById('pupilGroup');
+  document.addEventListener('mousemove', e => {
+    const cx = window.innerWidth / 2;
+    const cy = window.innerHeight * 0.35;
+    const dx = (e.clientX - cx) / window.innerWidth * 12;
+    const dy = (e.clientY - cy) / window.innerHeight * 8;
+    pupil.style.transform = `translate(${dx}px, ${dy}px)`;
+  });
+
+  // Intersection Observer for animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        // Animate metric bars
+        entry.target.querySelectorAll('[data-width]').forEach(bar => {
+          setTimeout(() => {
+            bar.style.width = bar.dataset.width;
+            if(bar.dataset.color) bar.style.background = bar.dataset.color;
+          }, 200);
+        });
+        // Animate timeline events
+        entry.target.querySelectorAll('.timeline-event').forEach((ev, i) => {
+          setTimeout(() => ev.classList.add('visible'), i * 150);
+        });
+      }
+    });
+  }, { threshold: 0.15 });
+
+  document.querySelectorAll('.fade-in, #score-section, .anxiety-section').forEach(el => {
+    observer.observe(el);
+  });
+
+  // Score ring animation: 763/1000 → dashoffset = 408*(1 - 0.763) ≈ 97
+  const scoreArc = document.getElementById('scoreArc');
+  const ringObserver = new IntersectionObserver(entries => {
+    if(entries[0].isIntersecting) {
+      setTimeout(() => {
+        scoreArc.style.strokeDashoffset = '97';
+      }, 400);
+    }
+  }, {threshold: 0.3});
+  ringObserver.observe(document.getElementById('score-section'));
+</script>
+
+</body>
+</html>

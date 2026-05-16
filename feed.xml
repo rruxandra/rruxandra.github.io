@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Tue, 12 May 2026 23:29:32 +0200</lastBuildDate>
+    <lastBuildDate>Sat, 16 May 2026 21:30:00 +0200</lastBuildDate>
+
+    <item>
+      <title>The Observed Society</title>
+      <link>https://rruxandra.github.io/watched.html</link>
+      <description>A speculative dashboard for a future where every conversation is logged, every hesitation scored, and every adult learns to perform their life rather than live it.</description>
+      <pubDate>Sat, 16 May 2026 21:30:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/watched.html</guid>
+    </item>
 
     <item>
       <title>The Continuous Experiment</title>
