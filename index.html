@@ -330,7 +330,7 @@
 
   <div class="status">
     <span><span class="blink">●</span> &nbsp;CH.01 / OPEN FREQUENCY</span>
-    <span>RX 2026.06 / LOG_004</span>
+    <span>RX 2026.06 / LOG_005</span>
   </div>
 
   <header>
@@ -483,23 +483,35 @@
     </a>
 
     <!-- ── ENTRY 05 ────────────────────────────────────────── -->
-    <div class="row row--wip" aria-disabled="true">
+    <a class="row" href="silent-timelines-echo.html">
       <div class="num">No. <b>05</b></div>
       <div class="visual">
-        <svg viewBox="0 0 100 100" fill="none" stroke-width="1.5" xmlns="http://www.w3.org/2000/svg">
-          <path d="M5,75 C25,75 25,25 50,25 C75,25 75,75 95,75"/>
-          <path d="M5,85 C25,85 25,15 50,15 C75,15 75,85 95,85" stroke-dasharray="3 3"/>
-          <circle cx="5"  cy="75" r="2.5" fill="currentColor" stroke="none"/>
-          <circle cx="95" cy="75" r="2.5" fill="currentColor" stroke="none"/>
+        <svg viewBox="0 0 100 100" fill="none" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg">
+          <!-- ghost branches fan left -->
+          <path d="M50,92 Q36,72 18,50" stroke-dasharray="1.5 3.5" opacity="0.22"/>
+          <path d="M50,92 Q40,74 26,56" stroke-dasharray="1.5 3" opacity="0.32"/>
+          <path d="M50,92 Q44,75 34,58" stroke-dasharray="1.5 2.5" opacity="0.42"/>
+          <!-- main path (solid, bright) -->
+          <path d="M50,92 Q50,68 50,10" opacity="0.95"/>
+          <!-- branch point rings -->
+          <circle cx="50" cy="72" r="1.4" fill="currentColor" stroke="none" opacity="0.50"/>
+          <circle cx="50" cy="50" r="1.1" fill="currentColor" stroke="none" opacity="0.35"/>
+          <!-- ghost branches fan right -->
+          <path d="M50,92 Q56,75 66,58" stroke-dasharray="1.5 2.5" opacity="0.42"/>
+          <path d="M50,92 Q60,74 74,56" stroke-dasharray="1.5 3" opacity="0.32"/>
+          <path d="M50,92 Q64,72 82,50" stroke-dasharray="1.5 3.5" opacity="0.22"/>
+          <!-- sub-branches off main -->
+          <path d="M50,72 Q42,60 30,46" stroke-dasharray="1 4" opacity="0.14"/>
+          <path d="M50,72 Q58,60 70,46" stroke-dasharray="1 4" opacity="0.14"/>
         </svg>
       </div>
       <div class="body">
-        <span class="tags">Note · trajectory<span class="wip">in progress</span></span>
-        <h2 class="title">Parallel <i>near-misses</i></h2>
-        <p class="desc">What happens when ideas almost touch but never do — a meditation on the geometry of almost.</p>
+        <span class="tags">Note · longing</span>
+        <h2 class="title">Silent <i>timelines</i> echo</h2>
+        <p class="desc">On the feeling that rhymes with nostalgia but arrives when you imagine a future you will never live — and miss it anyway.</p>
       </div>
-      <div class="open-cell">Drafting<span class="arrow">···</span></div>
-    </div>
+      <div class="open-cell">Open<span class="arrow">↗</span></div>
+    </a>
 
     <!-- ── ADD MORE ENTRIES BELOW THIS LINE ─────────────────
     <a class="row" href="thought-03.html">
@@ -523,7 +535,7 @@
   <footer>
     <span class="end">END OF TRANSMISSION</span>
     <a class="feed" href="feed.xml">SUBSCRIBE / FEED<span class="arrow">↗</span></a>
-    <span>04 logged · 01 drafting</span>
+    <span>05 logged</span>
   </footer>
 
 </div>

@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Fri, 13 Jun 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Fri, 13 Jun 2026 20:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>Silent Timelines Echo</title>
+      <link>https://rruxandra.github.io/silent-timelines-echo.html</link>
+      <description>On the feeling that rhymes with nostalgia but arrives when you imagine a future you will never live — and miss it anyway.</description>
+      <pubDate>Fri, 13 Jun 2026 20:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/silent-timelines-echo.html</guid>
+    </item>
 
     <item>
       <title>The Flock Problem</title>
