@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Fri, 13 Jun 2026 20:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Sat, 14 Jun 2026 12:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>The Zero-Trust Society</title>
+      <link>https://rruxandra.github.io/the-zero-trust-society.html</link>
+      <description>On a society that has run out of trust — and why the repair is not to rebuild it, but to make it something you no longer need.</description>
+      <pubDate>Sat, 14 Jun 2026 12:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-zero-trust-society.html</guid>
+    </item>
 
     <item>
       <title>Silent Timelines Echo</title>
