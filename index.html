@@ -330,7 +330,7 @@
 
   <div class="status">
     <span><span class="blink">●</span> &nbsp;CH.01 / OPEN FREQUENCY</span>
-    <span>RX 2026.06 / LOG_008</span>
+    <span>RX 2026.06 / LOG_009</span>
   </div>
 
   <header>
@@ -620,6 +620,38 @@
       <div class="open-cell">Open<span class="arrow">↗</span></div>
     </a>
 
+    <!-- ── ENTRY 09 ────────────────────────────────────────── -->
+    <a class="row" href="regression-to-the-mean.html">
+      <div class="num">No. <b>09</b></div>
+      <div class="visual">
+        <svg viewBox="0 0 100 100" fill="none" stroke-width="1.3" xmlns="http://www.w3.org/2000/svg">
+          <!-- baseline / the axis of the distribution -->
+          <line x1="9" y1="79" x2="91" y2="79" opacity="0.28"/>
+          <!-- the broad original distribution (faint, dashed) — the wide space of ideas -->
+          <path d="M11,79 C30,79 35,45 50,45 C65,45 70,79 89,79" stroke-dasharray="2 3" opacity="0.4"/>
+          <!-- the collapsed distribution: a narrow spike at the mean -->
+          <path d="M41,79 C47,79 47,17 50,17 C53,17 53,79 59,79" opacity="0.95"/>
+          <!-- the mean tick -->
+          <line x1="50" y1="79" x2="50" y2="85" opacity="0.7"/>
+          <!-- outliers flagged and pulled inward (dot + inward arrow) -->
+          <circle cx="22" cy="72" r="1.6" fill="currentColor" stroke="none"/>
+          <path d="M26,72 L33,72 M31,70 L33,72 L31,74" opacity="0.7"/>
+          <circle cx="78" cy="72" r="1.6" fill="currentColor" stroke="none"/>
+          <path d="M74,72 L67,72 M69,70 L67,72 L69,74" opacity="0.7"/>
+          <!-- the lone deviation: out past the curve, bright, escaping up-right -->
+          <line x1="78" y1="40" x2="90" y2="26" stroke-dasharray="1 3" opacity="0.45"/>
+          <circle cx="91" cy="24" r="2.3" fill="currentColor" stroke="none"/>
+          <path d="M86,27 L91,24 M91,24 L88,29" opacity="0.85"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="tags">Note · conformity</span>
+        <h2 class="title">Regression to the <i>mean</i></h2>
+        <p class="desc">On the machine we were promised would explode the space of ideas — and why a tool that returns the most probable answer may quietly pull everyone toward the average, flagging each genuinely new thing as a mistake.</p>
+      </div>
+      <div class="open-cell">Open<span class="arrow">↗</span></div>
+    </a>
+
     <!-- ── ADD MORE ENTRIES BELOW THIS LINE ─────────────────
     <a class="row" href="thought-03.html">
       <div class="num">No. <b>03</b></div>
@@ -642,7 +674,7 @@
   <footer>
     <span class="end">END OF TRANSMISSION</span>
     <a class="feed" href="feed.xml">SUBSCRIBE / FEED<span class="arrow">↗</span></a>
-    <span>08 logged</span>
+    <span>09 logged</span>
   </footer>
 
 </div>
