@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Tue, 23 Jun 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Sat, 04 Jul 2026 12:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>The Patient Fire</title>
+      <link>https://rruxandra.github.io/the-patient-fire.html</link>
+      <description>On biology as the hidden engine of history — that the great deed was a symptom, and the chemistry a person never chose was the hand that built the empire, or the watch.</description>
+      <pubDate>Sat, 04 Jul 2026 12:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-patient-fire.html</guid>
+    </item>
 
     <item>
       <title>Regression to the Mean</title>
