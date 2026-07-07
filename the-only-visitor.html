@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Only Visitor — On a page that counts nothing, and the one trace it can still draw</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root {
+    --bg: #05090b;
+    --bg-2: #0a1113;
+    --ink: #e2efe9;
+    --ink-dim: #7c938b;
+    --ink-faint: #33413c;
+    --sig: #5cf0c2;      /* phosphor — the visitor */
+    --sig-hot: #b6ffe7;
+    --sig-dim: #2a6c58;
+    --rule: rgba(226, 239, 233, 0.10);
+    --panel: rgba(92, 240, 194, 0.16);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 14, 'SOFT' 50, 'WONK' 0;
+    font-weight: 350;
+    line-height: 1.55;
+    letter-spacing: 0.01em;
+    overflow: hidden;                 /* no scroll — one screen */
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  /* Film grain */
+  .grain {
+    position: fixed; inset: 0; z-index: 100;
+    pointer-events: none; opacity: 0.06; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+  /* Vignette + faint phosphor wash */
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(ellipse at center, transparent 42%, rgba(5, 9, 11, 0.7) 100%),
+      linear-gradient(180deg, rgba(92, 240, 194, 0.05) 0%, transparent 30%, transparent 78%, rgba(92, 240, 194, 0.05) 100%);
+  }
+
+  /* corner labels */
+  .meta, .meta-r {
+    position: fixed; top: 26px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .meta { left: 28px; }
+  .meta span { color: var(--sig); }
+  .meta-r { right: 40px; }
+
+  .back {
+    position: fixed; bottom: 22px; left: 28px; z-index: 60;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--ink-faint); text-decoration: none; transition: color 0.3s ease;
+  }
+  .back:hover { color: var(--sig); }
+  .back::before { content: "← "; }
+
+  /* ---- one-screen composition ---- */
+  main {
+    position: relative; z-index: 10;
+    height: 100dvh;
+    display: grid;
+    grid-template-rows: 1fr auto 1fr;
+    align-items: center;
+    padding: 84px 28px 64px;
+    gap: clamp(18px, 3vh, 40px);
+  }
+
+  .top    { align-self: end;   text-align: center; }
+  .bottom { align-self: start; text-align: center; }
+
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.34em; text-transform: uppercase;
+    color: var(--sig); margin-bottom: clamp(18px, 2.6vh, 30px);
+    opacity: 0; animation: rise 1.3s 0.15s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+    font-weight: 300;
+    font-size: clamp(44px, 8.5vw, 118px);
+    line-height: 0.9; letter-spacing: -0.035em; color: var(--ink);
+    opacity: 0; animation: rise 1.5s 0.3s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  h1 em {
+    font-style: italic; color: var(--sig); font-weight: 300;
+    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+  }
+  .lede {
+    font-size: clamp(15px, 1.55vw, 20px); color: var(--ink-dim);
+    max-width: 46ch; margin: clamp(20px, 3vh, 34px) auto 0;
+    line-height: 1.5; font-style: italic;
+    opacity: 0; animation: rise 1.5s 0.55s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .lede em { color: var(--ink); font-style: italic; }
+
+  /* ---- the instrument ---- */
+  .instrument {
+    justify-self: center;
+    width: min(760px, 92vw);
+    opacity: 0; animation: rise 1.6s 0.8s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .scope {
+    position: relative;
+    height: clamp(128px, 22vh, 190px);
+    border: 1px solid var(--panel);
+    background:
+      radial-gradient(ellipse at center, rgba(92,240,194,0.05), transparent 72%),
+      var(--bg-2);
+    overflow: hidden;
+  }
+  .scope::after {           /* scanlines */
+    content: ''; position: absolute; inset: 0; pointer-events: none; z-index: 3;
+    background: repeating-linear-gradient(0deg, transparent 0 2px, rgba(0,0,0,0.16) 2px 3px);
+    opacity: 0.5;
+  }
+  canvas#scope { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+
+  /* readout rows over the scope */
+  .row-label {
+    position: absolute; left: 0; right: 0; z-index: 4;
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 10px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-dim); pointer-events: none;
+  }
+  .row-label.t { top: 0; }
+  .row-label.b { bottom: 0; }
+  .row-label .dot { color: var(--sig); }
+  .clock {
+    font-size: 15px; letter-spacing: 0.16em;
+    color: var(--sig-hot);
+    font-variation-settings: normal;
+  }
+  .clock small { color: var(--ink-dim); font-size: 10.5px; letter-spacing: 0.2em; }
+  .away { color: #d98c6a; }
+
+  /* ---- bottom ---- */
+  .coda {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: 'opsz' 40, 'SOFT' 70;
+    font-size: clamp(19px, 2.3vw, 30px); line-height: 1.3;
+    letter-spacing: -0.012em; color: var(--ink);
+    max-width: 24ch; margin: 0 auto;
+  }
+  .coda em { font-style: italic; color: var(--sig); font-variation-settings: 'opsz' 40, 'SOFT' 100, 'WONK' 1; }
+  .colophon {
+    margin-top: clamp(16px, 2.4vh, 26px);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .colophon b { color: var(--sig-dim); font-weight: 500; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (max-width: 720px) {
+    .meta { left: 18px; top: 16px; font-size: 10px; }
+    .meta-r { right: 20px; top: 16px; font-size: 10px; }
+    main { padding: 64px 20px 56px; }
+    .lede { max-width: 34ch; }
+    .back { left: 18px; bottom: 14px; }
+    .row-label { padding: 8px 11px; letter-spacing: 0.14em; }
+  }
+  @media (max-height: 560px) {
+    .lede { display: none; }
+    .scope { height: 108px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<div class="meta">signal <span>·</span> no analytics</div>
+<div class="meta-r">№ 11</div>
+<a class="back" href="index.html">return to log</a>
+
+<main>
+
+  <div class="top">
+    <div class="kicker">this page keeps no records</div>
+    <h1>The Only <em>Visitor</em></h1>
+    <p class="lede">The half-thoughts here, most of them sketched by a machine, go mostly unread. Nothing is counted, nothing is stored, no one is watching. And still, for these few seconds, <em>you stayed</em>.</p>
+  </div>
+
+  <div class="instrument">
+    <div class="scope">
+      <canvas id="scope"></canvas>
+      <div class="row-label t">
+        <span>presence · measured here in your browser</span>
+        <span class="clock" id="clock">00:00 <small id="state">here</small></span>
+      </div>
+      <div class="row-label b">
+        <span><span class="dot">●</span>&nbsp; 1 reader now · you</span>
+        <span id="ledger">saved&nbsp;0 · sent&nbsp;0</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="bottom">
+    <p class="coda">Someone cared enough to stay. <em>That was the whole metric.</em></p>
+    <div class="colophon">no cookies · no pixel · <b>nothing leaves this browser</b></div>
+  </div>
+
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById('scope');
+  const ctx = canvas.getContext('2d');
+  const clockEl = document.getElementById('clock');
+  const stateEl = document.getElementById('state');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  let W = 0, H = 0, mid = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    W = Math.max(1, r.width); H = Math.max(1, r.height); mid = H / 2;
+    canvas.width = W * DPR; canvas.height = H * DPR;
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // scrolling waveform buffer — a fixed window of the recent past
+  const STEP = 2;                       // px between samples
+  let N = 1;
+  function ensureBuf() { N = Math.max(2, Math.ceil(W / STEP) + 2); if (buf.length !== N) buf = new Array(N).fill(0); }
+  let buf = [0];
+
+  // presence: idle "breathing" + spikes when the reader stirs
+  let activity = 0;                     // decays each frame, bumped by events
+  let present = true;                   // tab visible & focused
+  function stir(amount) { if (present) activity = Math.min(1, activity + amount); }
+
+  window.addEventListener('mousemove', () => stir(0.20), { passive: true });
+  window.addEventListener('pointerdown', () => stir(0.55), { passive: true });
+  window.addEventListener('keydown', () => stir(0.5));
+  window.addEventListener('touchmove', () => stir(0.30), { passive: true });
+  window.addEventListener('wheel', () => stir(0.45), { passive: true });   // a scroll that goes nowhere still counts
+
+  function setPresent(v) {
+    present = v;
+    stateEl.textContent = v ? 'here' : 'away';
+    stateEl.classList.toggle('away', !v);
+    if (!v) activity = 0;
+  }
+  document.addEventListener('visibilitychange', () => setPresent(!document.hidden));
+  window.addEventListener('blur', () => setPresent(false));
+  window.addEventListener('focus', () => setPresent(true));
+
+  // engaged time — counts only while the reader is actually here
+  let engaged = 0;      // seconds
+  function fmt(s) {
+    const m = Math.floor(s / 60), ss = Math.floor(s % 60);
+    return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
+  }
+
+  let last = performance.now();
+  let phase = 0;
+  function frame(now) {
+    const dt = Math.min(50, now - last); last = now;
+    ensureBuf();
+
+    if (present) engaged += dt / 1000;
+    clockEl.firstChild.textContent = fmt(engaged) + ' ';
+
+    // advance the trace one sample
+    phase += dt * (reduce ? 0.0016 : 0.0032);
+    activity *= present ? (reduce ? 0.90 : 0.93) : 0.6;
+    const breath = present ? (reduce ? 0.06 : 0.11) * Math.sin(phase) : 0.015;
+    const jitter = present ? activity * (Math.sin(phase * 6.3) * 0.5 + (Math.sin(phase * 17.1 + 1.3) * 0.5)) : 0;
+    const v = breath + jitter;          // roughly [-1, 1]
+    buf.push(v); while (buf.length > N) buf.shift();
+
+    // ---- draw ----
+    ctx.clearRect(0, 0, W, H);
+
+    // phosphor grid
+    ctx.strokeStyle = 'rgba(92,240,194,0.06)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = 0; x <= W; x += 44) { ctx.moveTo(x + 0.5, 0); ctx.lineTo(x + 0.5, H); }
+    for (let y = mid % 44; y <= H; y += 44) { ctx.moveTo(0, y + 0.5); ctx.lineTo(W, y + 0.5); }
+    ctx.stroke();
+    // baseline
+    ctx.strokeStyle = 'rgba(92,240,194,0.14)';
+    ctx.beginPath(); ctx.moveTo(0, mid + 0.5); ctx.lineTo(W, mid + 0.5); ctx.stroke();
+
+    // the trace — older samples on the left, "now" at the right edge
+    const amp = mid * 0.82;
+    const n = buf.length;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.shadowColor = 'rgba(92,240,194,0.85)';
+    ctx.shadowBlur = 10;
+    ctx.strokeStyle = 'rgba(92,240,194,0.9)';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    for (let i = 0; i < n; i++) {
+      const x = W - (n - 1 - i) * STEP;
+      const y = mid - buf[i] * amp;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // the leading cursor — "now", the living edge of the visit
+    const cy = mid - buf[n - 1] * amp;
+    const pulse = present ? (0.65 + 0.35 * Math.sin(now * 0.006)) : 0.3;
+    const g = ctx.createRadialGradient(W - 1, cy, 0, W - 1, cy, 9);
+    g.addColorStop(0, `rgba(182,255,231,${0.95 * pulse})`);
+    g.addColorStop(1, 'rgba(182,255,231,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(W - 1, cy, 9, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(214,255,240,${pulse})`;
+    ctx.beginPath(); ctx.arc(W - 1, cy, 2, 0, Math.PI * 2); ctx.fill();
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
