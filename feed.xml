@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Tue, 07 Jul 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Mon, 13 Jul 2026 12:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>The Database in the Room</title>
+      <link>https://rruxandra.github.io/the-database-in-the-room.html</link>
+      <description>You can't query the future — SELECT future FROM llm just returns NULL. So hold the model beside something we already know: the database. Once the loud frontier of the '90s wars, now load-bearing furniture no one notices. Not a forecast — a mirror. And the winners weren't Oracle; they were Postgres and SQLite, the engines that won by vanishing.</description>
+      <pubDate>Mon, 13 Jul 2026 12:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-database-in-the-room.html</guid>
+    </item>
 
     <item>
       <title>The Only Visitor</title>

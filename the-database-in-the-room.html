@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Database in the Room — an LLM metaphor, not a forecast</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root{
+    --bg:#08090b;
+    --bg-raise:#0d0f12;
+    --hair:#1c2026;
+    --hair-strong:#2b3038;
+
+    /* 1994 — amber phosphor, the exciting era */
+    --amber:#ffab2e;
+    --amber-dim:#a6701f;
+    --amber-ghost:#4a3413;
+
+    /* 2026 — cold flat grey, the boring era */
+    --steel:#aeb6bf;
+    --steel-dim:#6b747d;
+    --steel-ghost:#3a4048;
+
+    --null:#565f68;
+    --ink:#c9ced4;
+    --ink-dim:#7d848c;
+
+    --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+    --serif:'Fraunces',Georgia,serif;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--mono);
+    font-size:15px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+    padding:clamp(14px,3vw,40px);
+    overflow-x:hidden;
+  }
+
+  .console{
+    max-width:760px;
+    margin:0 auto;
+    background:var(--bg-raise);
+    border:1px solid var(--hair-strong);
+    border-radius:8px;
+    overflow:hidden;
+    box-shadow:0 30px 80px -40px #000, 0 0 0 1px #000 inset;
+  }
+
+  /* --- window chrome --- */
+  .bar{
+    display:flex;align-items:center;gap:14px;
+    padding:12px 18px;
+    border-bottom:1px solid var(--hair-strong);
+    background:linear-gradient(#101318,#0b0d10);
+    font-size:11px;letter-spacing:.14em;
+    color:var(--ink-dim);text-transform:uppercase;
+  }
+  .dots{display:flex;gap:7px}
+  .dots i{width:10px;height:10px;border-radius:50%;background:var(--hair-strong);display:block}
+  .bar .back{margin-left:auto;color:var(--ink-dim);text-decoration:none;border:1px solid var(--hair-strong);
+    padding:3px 8px;border-radius:4px;font-size:10px;transition:color .3s,border-color .3s}
+  .bar .back:hover{color:var(--amber);border-color:var(--amber-ghost)}
+  .bar .ro{color:var(--steel-dim);border:1px solid var(--hair-strong);
+    padding:3px 8px;border-radius:4px;font-size:10px}
+
+  .body{padding:clamp(22px,5vw,54px) clamp(18px,5vw,54px)}
+
+  /* --- query lines --- */
+  .prompt{color:var(--ink-dim)}
+  .kw{color:var(--amber);font-weight:700}
+  .q{
+    font-size:clamp(24px,6vw,42px);
+    line-height:1.15;
+    font-weight:500;
+    letter-spacing:-.01em;
+    margin:6px 0;
+  }
+  .q .kw{font-weight:700}
+  .meta{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim);margin-top:14px}
+  .meta b{color:var(--steel)}
+
+  .null{
+    font-size:clamp(30px,9vw,64px);
+    font-weight:700;
+    letter-spacing:.04em;
+    color:var(--null);
+    margin:14px 0 4px;
+    display:inline-block;
+  }
+  .norows{
+    font-size:12px;letter-spacing:.1em;color:var(--amber-dim);
+    text-transform:uppercase;margin-top:8px;
+  }
+
+  hr.rule{border:0;border-top:1px solid var(--hair);margin:clamp(34px,6vw,58px) 0}
+  hr.rule.warm{border-top:1px solid var(--amber-ghost)}
+  hr.rule.cold{border-top:1px solid var(--steel-ghost)}
+
+  /* --- reflective prose (human voice = serif) --- */
+  .say{font-family:var(--serif);font-size:clamp(19px,3.4vw,25px);line-height:1.5;color:var(--ink);letter-spacing:.005em}
+  .say.small{font-size:clamp(16px,2.6vw,19px);color:var(--ink-dim)}
+  .say em{font-style:italic}
+  .eyebrow{font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--ink-dim);margin-bottom:14px}
+
+  /* --- era blocks --- */
+  .era{position:relative;border-radius:6px;padding:clamp(20px,4vw,34px);border:1px solid var(--hair)}
+  .era .year{font-size:clamp(46px,13vw,96px);font-weight:700;line-height:.9;letter-spacing:-.02em}
+  .era .h{font-size:clamp(20px,4vw,30px);font-weight:700;letter-spacing:.02em;text-transform:uppercase;margin-top:6px}
+  .era .sub{font-family:var(--serif);font-style:italic;color:var(--ink-dim);margin:6px 0 20px;font-size:clamp(15px,2.6vw,18px)}
+  .era p{font-family:var(--serif);font-size:clamp(16px,2.7vw,19px);line-height:1.55;color:var(--ink)}
+  .tags{list-style:none;margin-top:22px;display:grid;gap:9px}
+  .tags li{font-size:12.5px;letter-spacing:.03em;padding-left:20px;position:relative;color:var(--ink-dim)}
+  .tags li::before{content:'›';position:absolute;left:2px;top:-1px}
+
+  /* 1994 warm block */
+  .era.warm{
+    border-color:var(--amber-ghost);
+    background:radial-gradient(120% 140% at 0% 0%, #1a1206 0%, #0d0b08 60%, var(--bg-raise) 100%);
+  }
+  .era.warm .year,.era.warm .h{color:var(--amber);text-shadow:0 0 22px rgba(255,171,46,.28)}
+  .era.warm .tags li::before{color:var(--amber-dim)}
+  .era.warm::after{ /* faint CRT scanlines, period detail */
+    content:'';position:absolute;inset:0;border-radius:6px;pointer-events:none;
+    background:repeating-linear-gradient(0deg,rgba(255,171,46,.05) 0 1px,transparent 1px 4px);
+    mix-blend-mode:screen;opacity:.5;
+  }
+
+  /* 2026 cold block */
+  .era.cold{
+    border-color:var(--steel-ghost);
+    background:linear-gradient(180deg,#0c0e11,var(--bg-raise));
+  }
+  .era.cold .year,.era.cold .h{color:var(--steel)}
+  .era.cold .tags li::before{color:var(--steel-dim)}
+
+  .between{text-align:center;color:var(--ink-dim);font-size:11px;letter-spacing:.24em;text-transform:uppercase;margin:clamp(18px,4vw,30px) 0;position:relative}
+  .between::before,.between::after{content:'';position:absolute;top:50%;width:34%;height:1px;background:var(--hair)}
+  .between::before{left:0}.between::after{right:0}
+  .between .fade{background:linear-gradient(90deg,var(--amber-dim),var(--steel-dim));-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:700}
+
+  /* --- result table (the extension) --- */
+  .sqlcomment{color:var(--amber-dim);font-size:13px;margin-bottom:6px}
+  .table-wrap{border:1px solid var(--hair-strong);border-radius:6px;overflow:hidden;margin-top:16px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{
+    text-align:left;font-weight:500;text-transform:uppercase;letter-spacing:.1em;font-size:10.5px;
+    color:var(--ink-dim);padding:11px 14px;background:#0a0c0f;border-bottom:1px solid var(--hair-strong);
+  }
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--hair);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  td.name{font-weight:700;white-space:nowrap}
+  .lost td.name{color:var(--ink-dim)}
+  .lost td{color:var(--ink-dim)}
+  .oracle td.name{color:var(--amber)}
+  .oracle{background:linear-gradient(90deg,rgba(255,171,46,.06),transparent)}
+  .won td.name{color:var(--steel)}
+  .won{background:linear-gradient(90deg,rgba(174,182,191,.06),transparent)}
+  .cost-hi{color:var(--amber);font-weight:700}
+  .cost-lo{color:var(--steel)}
+  .rankx{color:var(--null)}
+  .tnote{font-size:11px;color:var(--ink-dim);letter-spacing:.05em;margin-top:10px;padding-left:2px}
+
+  .cursor{display:inline-block;width:10px;height:1.05em;background:var(--amber);
+    transform:translateY(2px);margin-left:3px;box-shadow:0 0 12px var(--amber)}
+  .cursor.cold{background:var(--steel);box-shadow:none}
+  @keyframes blink{0%,49%{opacity:1}50%,100%{opacity:0}}
+  .cursor{animation:blink 1.05s steps(1) infinite}
+
+  .footline{margin-top:clamp(30px,6vw,50px);font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--null)}
+
+  /* return to log — a prompt back out of the console */
+  .retlog{
+    display:inline-flex;align-items:center;gap:9px;
+    margin-top:clamp(30px,6vw,50px);
+    font-family:var(--mono);font-size:12px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--ink-dim);text-decoration:none;
+    border:1px solid var(--hair-strong);border-radius:6px;
+    padding:12px 18px;background:#0a0c0f;
+    transition:color .3s,border-color .3s,background .3s;
+  }
+  .retlog:hover{color:var(--amber);border-color:var(--amber-ghost);background:rgba(255,171,46,.05)}
+  .retlog .ar{transition:transform .3s}
+  .retlog:hover .ar{transform:translateX(-3px)}
+
+  /* reveal on scroll */
+  .rise{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+  .rise.in{opacity:1;transform:none}
+
+  @media (max-width:520px){
+    .table-wrap{overflow-x:auto}
+    table{min-width:520px}
+  }
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    .cursor{animation:none}
+    .rise{opacity:1;transform:none;transition:none}
+    .era.warm::after{display:none}
+  }
+</style>
+</head>
+<body>
+<main class="console">
+  <div class="bar">
+    <span class="dots"><i></i><i></i><i></i></span>
+    <span>query · a comparison</span>
+    <a class="back" href="index.html">‹ return to log</a>
+    <span class="ro">read-only</span>
+  </div>
+
+  <div class="body">
+
+    <!-- ── OPENING QUERY ── -->
+    <section class="rise">
+      <div class="prompt">&gt; run query</div>
+      <div class="q"><span class="kw">SELECT</span> future<br><span class="kw">FROM</span> llm;</div>
+      <div class="meta"><b>1 row returned</b> · 0.00s</div>
+      <div class="null">NULL</div>
+      <div class="norows">future IS NULL ↓ so here is a metaphor instead</div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── THE METAPHOR ── -->
+    <section class="rise">
+      <div class="eyebrow">a metaphor, not a forecast</div>
+      <p class="say">Maybe large language models don't stay a revolution. Maybe they become a <em>database</em> — essential everywhere, invisible the moment they work.</p>
+    </section>
+
+    <hr class="rule warm">
+
+    <!-- ── 1994 ── -->
+    <section class="era warm rise">
+      <div class="year">1994</div>
+      <div class="h">The Database Wars</div>
+      <div class="sub">the most exciting technology in the building</div>
+      <p>Oracle, Sybase, Informix and IBM traded benchmarks like blows. Pour every record into one engine, ask it anything, watch intelligence fall out. The company that queried best would win.</p>
+      <ul class="tags">
+        <li>vendor keynotes drew crowds</li>
+        <li>"query your whole business"</li>
+        <li>careers built on the platform</li>
+        <li>the future, clearly</li>
+      </ul>
+    </section>
+
+    <div class="between rise">the loud ones lost · <span class="fade">the quiet ones won</span></div>
+
+    <!-- ── 2026 ── -->
+    <section class="era cold rise">
+      <div class="year">2026</div>
+      <div class="h">Load-Bearing Furniture</div>
+      <div class="sub">underneath everything, exciting to no one</div>
+      <p>The database won so completely it disappeared. It runs every app you touched today and no one wrote a thread about it. Fundamental — and thoroughly, permanently boring.</p>
+      <ul class="tags">
+        <li>a config value in a .env file</li>
+        <li>chosen once, forgotten</li>
+        <li>only noticed when it breaks</li>
+        <li>infrastructure, not news</li>
+      </ul>
+    </section>
+
+    <hr class="rule cold">
+
+    <!-- ── THE TWIST ── -->
+    <section class="rise">
+      <p class="say">Swap one word and the same silhouette shows through. This isn't a timeline of what happens next — it's a mirror. Every marvel gets re-read, in the end, as plumbing.</p>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── EXTENSION: THE WINNERS WERE NOT THE FRONTRUNNERS ── -->
+    <section class="rise">
+      <div class="eyebrow">but re-run the standings</div>
+      <p class="say small">The 1994 headliners didn't win. The trophy went to two engines that weren't even on stage.</p>
+
+      <div class="sqlcomment" style="margin-top:26px">-- SELECT winner FROM database_wars ORDER BY reality;</div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>engine</th>
+              <th>1994 rank</th>
+              <th>2026 status</th>
+              <th>cost</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="oracle">
+              <td class="name">Oracle</td>
+              <td>#1</td>
+              <td>still here. bloated, load-bearing, quietly resented</td>
+              <td class="cost-hi">$$$$ / core</td>
+            </tr>
+            <tr class="lost">
+              <td class="name">Sybase</td>
+              <td>contender</td>
+              <td>absorbed into SAP → went quiet</td>
+              <td class="rankx">—</td>
+            </tr>
+            <tr class="lost">
+              <td class="name">Informix</td>
+              <td>contender</td>
+              <td>absorbed into IBM → a footnote</td>
+              <td class="rankx">—</td>
+            </tr>
+            <tr class="won">
+              <td class="name">PostgreSQL</td>
+              <td class="rankx">not present</td>
+              <td>the serious default nobody argues about</td>
+              <td class="cost-lo">$0 · open source</td>
+            </tr>
+            <tr class="won">
+              <td class="name">SQLite</td>
+              <td class="rankx">not present</td>
+              <td>inside every phone, browser and app · silent</td>
+              <td class="cost-lo">$0 · ~1T deployments</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="tnote">5 rows · winners flagged where deployment ≫ noise</div>
+    </section>
+
+    <hr class="rule">
+
+    <section class="rise">
+      <p class="say">The point isn't that the database won. It's <em>who</em> won. Postgres, by being an open project instead of a vendor. SQLite most completely of all — a library you've never configured, running in the device in your hand. It won by vanishing. Oracle just persists, mostly as an invoice.</p>
+      <p class="say small" style="margin-top:20px">Read a model through the same lens and the advice inverts: don't watch the frontier launch. Watch for the SQLite — the one that wins without ever being chosen.</p>
+    </section>
+
+    <hr class="rule cold">
+
+    <!-- ── CLOSING QUERY ── -->
+    <section class="rise">
+      <div class="q" style="font-size:clamp(20px,4.6vw,30px)"><span class="kw">SELECT</span> hype <span class="kw">FROM</span> llm<br><span class="kw">WHERE</span> year = <span style="color:var(--steel)">2036</span>;</div>
+      <div class="meta"><b>1 row returned</b></div>
+      <div class="null" style="font-size:clamp(26px,7vw,48px)">NULL</div>
+    </section>
+
+    <hr class="rule">
+
+    <!-- ── REMINDER ── -->
+    <section class="rise">
+      <p class="say small">Not a prediction — a reminder that <em>fundamental</em> and <em>thrilling</em> are different states, and most technologies pass from the second into the first. The database did. Electricity did. Maybe models are mid-trip. Maybe the metaphor is wrong. No one knows.</p>
+      <div class="footline">end of result set<span class="cursor cold"></span></div>
+    </section>
+
+    <!-- ── RETURN ── -->
+    <section class="rise">
+      <a class="retlog" href="index.html"><span class="ar">‹</span> return to log</a>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  const io = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12});
+  document.querySelectorAll('.rise').forEach(el=>io.observe(el));
+</script>
+</body>
+</html>
