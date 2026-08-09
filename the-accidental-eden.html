@@ -1,0 +1,1048 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Accidental Eden — On Hubris, Serendipity, and the Thermostat of Civilization</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root {
+    --bg:          #050608;
+    --ink:         #f4efe6;   /* warm bone ivory */
+    --ink-dim:     #aaa498;
+    --ink-faint:   #5a544a;
+    --wild-fire:   #ff3b2b;   /* volcanic magma red */
+    --wild-ash:    #ff7700;   /* eruption ember amber */
+    --jolly-sun:   #ffc83b;   /* radiant solar gold */
+    --jolly-sky:   #1cd9ac;   /* vibrant emerald sky cyan */
+    --jolly-blue:  #3b9eff;   /* cheerful sky blue */
+    --rule:        rgba(244, 239, 230, 0.1);
+    --rule-on:      rgba(244, 239, 230, 0.22);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 14, 'SOFT' 50, 'WONK' 0;
+    font-weight: 350;
+    line-height: 1.58;
+    letter-spacing: 0.01em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+    transition: background 0.8s ease;
+  }
+
+  /* ── Film grain ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 100;
+    pointer-events: none; opacity: 0.04; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── Reactive background weather canvas ── */
+  canvas#field {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ── Vignette ── */
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(3,4,5,0.75) 100%);
+  }
+
+  /* ── Progress rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: '';
+    position: absolute; top: 0; left: -1px;
+    width: 3px; height: var(--p, 0%);
+    background: linear-gradient(180deg, var(--wild-fire) 0%, var(--jolly-sun) 50%, var(--jolly-sky) 100%);
+    transition: height 0.18s linear;
+  }
+
+  /* ── Header HUD / Meta ── */
+  .meta {
+    position: fixed; top: 28px; left: 28px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: rgba(5,6,8,0.75); padding: 5px 10px; border-radius: 3px;
+    backdrop-filter: blur(8px); border: 1px solid var(--rule);
+  }
+  .meta span { color: var(--jolly-sun); }
+
+  .meta-r {
+    position: fixed; top: 28px; right: 40px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: rgba(5,6,8,0.75); padding: 5px 10px; border-radius: 3px;
+    backdrop-filter: blur(8px); border: 1px solid var(--rule);
+  }
+
+  main { position: relative; z-index: 10; }
+
+  /* ── HERO ─────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: flex-end;
+    padding: 0 7vw 10vh; position: relative;
+  }
+  .hero-body { position: relative; max-width: 940px; }
+
+  .hero .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--jolly-sun);
+    margin-bottom: 36px;
+    opacity: 0; animation: rise 1.4s 0.2s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+    font-weight: 300;
+    font-size: clamp(52px, 9.5vw, 150px);
+    line-height: 0.92; letter-spacing: -0.045em;
+    color: var(--ink);
+    opacity: 0; animation: rise 1.7s 0.35s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero h1 em {
+    font-style: italic; color: var(--jolly-sun);
+    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+    font-weight: 300;
+    text-shadow: 0 0 40px rgba(255,200,59,0.35);
+  }
+
+  .hero .lede {
+    max-width: 640px;
+    font-size: clamp(17px, 1.6vw, 22px);
+    color: var(--ink-dim); margin-top: 40px;
+    line-height: 1.6; font-style: italic;
+    opacity: 0; animation: rise 1.6s 0.65s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero .lede em { color: var(--ink); font-style: normal; }
+
+  .hero .scroll-cue {
+    position: absolute; bottom: 36px; right: 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--ink-dim);
+    writing-mode: vertical-rl;
+    opacity: 0; animation: rise 1.4s 1.1s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero .scroll-cue::after {
+    content: '';
+    display: block; width: 1px; height: 40px;
+    background: linear-gradient(180deg, var(--ink-dim), transparent);
+    margin: 10px auto 0;
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(22px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.35; transform: scaleY(0.55); transform-origin: top; }
+    50%       { opacity: 1;    transform: scaleY(1); }
+  }
+
+  /* ── STAGES ────────────────────────────────────────────── */
+  .stage {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 100px 7vw; position: relative;
+    border-top: 1px solid var(--rule);
+  }
+
+  .stage-inner {
+    max-width: 720px; width: 100%; position: relative;
+    padding: 2.5rem 2.5rem 2.5rem 2.2rem;
+    border-left: 3px solid var(--rule-on);
+    background: rgba(7, 9, 12, 0.88);
+    backdrop-filter: blur(16px);
+    border-radius: 6px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  }
+
+  /* Stage Theme Accents */
+  .stage[data-theme="wild"] .stage-inner {
+    border-left-color: var(--wild-fire);
+    box-shadow: 0 20px 60px rgba(255, 59, 43, 0.15);
+  }
+  .stage[data-theme="jolly"] .stage-inner {
+    border-left-color: var(--jolly-sun);
+    background: rgba(12, 20, 18, 0.82);
+    box-shadow: 0 20px 60px rgba(255, 200, 59, 0.15);
+  }
+  .stage[data-theme="split"] .stage-inner {
+    border-left-color: var(--jolly-sky);
+  }
+
+  /* stage labels */
+  .stage .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.36em;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 12px;
+  }
+  .stage[data-theme="wild"] .label b  { color: var(--wild-fire); }
+  .stage[data-theme="jolly"] .label b { color: var(--jolly-sun); }
+  .stage[data-theme="split"] .label b { color: var(--jolly-sky); }
+
+  /* weather status tag above each act */
+  .weather-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em;
+    text-transform: uppercase;
+    padding: 5px 10px; border-radius: 3px;
+    margin-bottom: 20px; font-weight: 500;
+  }
+  .stage[data-theme="wild"] .weather-badge  { color: #ff5544; background: rgba(255,59,43,0.18); border: 1px solid rgba(255,59,43,0.4); }
+  .stage[data-theme="jolly"] .weather-badge { color: #ffca36; background: rgba(255,200,59,0.18); border: 1px solid rgba(255,200,59,0.4); }
+  .stage[data-theme="split"] .weather-badge { color: #28e3b5; background: rgba(28,217,172,0.18); border: 1px solid rgba(28,217,172,0.4); }
+
+  /* ghost numeral */
+  .stage .st-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(48px, 7vw, 95px);
+    font-weight: 700; line-height: 1; letter-spacing: -0.05em;
+    position: absolute; top: -15px; right: 20px;
+    user-select: none; pointer-events: none;
+  }
+  .stage[data-theme="wild"] .st-num  { color: rgba(255, 59, 43, 0.08); }
+  .stage[data-theme="jolly"] .st-num { color: rgba(255, 200, 59, 0.08); }
+  .stage[data-theme="split"] .st-num { color: rgba(28, 217, 172, 0.08); }
+
+  /* body text */
+  .stage p {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: 'opsz' 36, 'SOFT' 60, 'WONK' 0;
+    font-weight: 350;
+    font-size: clamp(19px, 1.9vw, 25px);
+    line-height: 1.48; letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+  .stage p + p { margin-top: 1.1rem; }
+  .stage p em {
+    font-style: italic; color: var(--jolly-sun);
+    font-variation-settings: 'opsz' 36, 'SOFT' 100, 'WONK' 1;
+  }
+  .stage[data-theme="wild"] p em  { color: var(--wild-fire); text-shadow: 0 0 24px rgba(255,59,43,0.35); }
+  .stage[data-theme="jolly"] p em { color: var(--jolly-sun); text-shadow: 0 0 24px rgba(255,200,59,0.35); }
+
+  .stage .mono-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 0.78em; letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .stage[data-theme="wild"] .mono-tag  { color: var(--wild-fire); }
+  .stage[data-theme="jolly"] .mono-tag { color: var(--jolly-sun); }
+
+  /* Catalog / Callout boxes */
+  .catalog { margin: 1.4rem 0; border-top: 1px solid var(--rule); }
+  .catalog .item {
+    display: grid; grid-template-columns: 11rem 1fr; gap: 1rem;
+    padding: 0.85rem 0; border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  @media (max-width: 640px) {
+    .catalog .item { grid-template-columns: 1fr; gap: 0.3rem; }
+  }
+  .catalog .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .stage[data-theme="wild"] .catalog .term  { color: var(--wild-fire); }
+  .stage[data-theme="jolly"] .catalog .term { color: var(--jolly-sun); }
+
+  .catalog .gloss {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(15px, 1.55vw, 19px);
+    line-height: 1.4; color: var(--ink-dim);
+  }
+
+  /* ── ACT III: SIDE-BY-SIDE CARDS WITH EMBEDDED PATH TRAILS ── */
+  .stage.split-stage {
+    padding: 100px 4vw;
+  }
+  .split-stage-wrapper {
+    max-width: 1240px; width: 100%; margin: 0 auto;
+    position: relative; z-index: 10;
+  }
+  .split-intro {
+    max-width: 740px; margin-bottom: 1.5rem;
+    padding: 2rem; border-left: 3px solid var(--jolly-sky);
+    background: rgba(7, 9, 12, 0.88);
+    backdrop-filter: blur(16px);
+    border-radius: 6px;
+  }
+
+  /* Fork Connecting SVG Header Diagram */
+  .fork-connector {
+    width: 100%; max-width: 850px; margin: 0.8rem auto 2rem;
+    display: block; overflow: visible;
+  }
+
+  /* Dual Column Side-by-Side Grid */
+  .bifurcation-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  }
+  @media (max-width: 900px) {
+    .bifurcation-grid { grid-template-columns: 1fr; }
+  }
+
+  /* Side-by-Side Path Cards */
+  .path-card {
+    position: relative;
+    padding: 2.2rem 2rem;
+    border-radius: 8px;
+    backdrop-filter: blur(18px);
+    border: 2px solid var(--rule);
+    transition: all 0.4s cubic-bezier(.2,.7,.2,1);
+    overflow: hidden;
+  }
+
+  /* Card A: Volcanic Storm Path */
+  .path-card.card-a {
+    background: rgba(16, 8, 9, 0.92);
+    border-color: rgba(255, 59, 43, 0.45);
+    box-shadow: 0 15px 40px rgba(255, 59, 43, 0.12);
+  }
+  .path-card.card-a::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--wild-fire), var(--wild-ash));
+  }
+  .path-card.card-a:hover {
+    border-color: var(--wild-fire);
+    transform: translateY(-4px);
+  }
+
+  /* Card B: Jolly Golden Sky Path */
+  .path-card.card-b {
+    background: rgba(14, 28, 24, 0.88);
+    border-color: rgba(255, 200, 59, 0.55);
+    box-shadow: 0 15px 40px rgba(255, 200, 59, 0.15);
+  }
+  .path-card.card-b::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px;
+    background: linear-gradient(90deg, var(--jolly-sun), var(--jolly-sky));
+  }
+  .path-card.card-b:hover {
+    border-color: var(--jolly-sun);
+    transform: translateY(-4px);
+  }
+
+  /* Card Header & Status */
+  .card-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 1.2rem; border-bottom: 1px solid var(--rule);
+    padding-bottom: 0.8rem;
+  }
+  .card-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.22em;
+    text-transform: uppercase; font-weight: 500;
+  }
+  .card-a .card-tag { color: var(--wild-fire); }
+  .card-b .card-tag { color: var(--jolly-sun); }
+
+  .card-weather-status {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.15em;
+    text-transform: uppercase; padding: 3px 7px; border-radius: 2px;
+    font-weight: 500;
+  }
+  .card-a .card-weather-status { background: rgba(255,59,43,0.2); color: #ff6655; }
+  .card-b .card-weather-status { background: rgba(255,200,59,0.2); color: #ffca36; }
+
+  .card-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 40px; font-weight: 700; line-height: 0.9;
+    letter-spacing: -0.05em; opacity: 0.2;
+  }
+  .card-a .card-num { color: var(--wild-fire); }
+  .card-b .card-num { color: var(--jolly-sun); }
+
+  .card-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(22px, 1.9vw, 28px);
+    line-height: 1.15; letter-spacing: -0.02em;
+    margin-bottom: 1.2rem;
+  }
+  .card-a .card-title em { color: var(--wild-fire); font-style: italic; }
+  .card-b .card-title em { color: var(--jolly-sun); font-style: italic; }
+
+  /* Embedded Milestone Path Trail inside each card */
+  .card-path-trail {
+    position: relative;
+    padding-left: 1.8rem;
+    margin-top: 1rem;
+  }
+  .card-path-trail::before {
+    content: '';
+    position: absolute; top: 6px; bottom: 6px; left: 6px;
+    width: 2px;
+  }
+  .card-a .card-path-trail::before {
+    background: linear-gradient(180deg, var(--wild-fire) 0%, var(--wild-ash) 50%, #881111 100%);
+    box-shadow: 0 0 10px rgba(255,59,43,0.5);
+  }
+  .card-b .card-path-trail::before {
+    background: linear-gradient(180deg, var(--jolly-sun) 0%, var(--jolly-sky) 50%, var(--jolly-blue) 100%);
+    box-shadow: 0 0 10px rgba(255,200,59,0.5);
+  }
+
+  .path-milestone {
+    position: relative;
+    margin-bottom: 1.4rem;
+  }
+  .path-milestone:last-child { margin-bottom: 0; }
+
+  .path-node-pin {
+    position: absolute;
+    top: 3px; left: -2.25rem;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 2px solid var(--rule-on);
+    transition: all 0.3s ease;
+  }
+  .card-a .path-node-pin {
+    border-color: var(--wild-fire);
+    box-shadow: 0 0 10px rgba(255,59,43,0.8);
+    background: #250606;
+  }
+  .card-b .path-node-pin {
+    border-color: var(--jolly-sun);
+    box-shadow: 0 0 10px rgba(255,200,59,0.8);
+    background: #14221a;
+  }
+
+  .milestone-step-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px; letter-spacing: 0.18em;
+    text-transform: uppercase; margin-bottom: 3px;
+    font-weight: 500;
+  }
+  .card-a .milestone-step-tag { color: var(--wild-fire); }
+  .card-b .milestone-step-tag { color: var(--jolly-sun); }
+
+  .milestone-text {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(14px, 1.15vw, 17px);
+    line-height: 1.5; color: var(--ink-dim);
+  }
+  .milestone-text strong { color: var(--ink); font-weight: 400; }
+
+  /* reveals */
+  .stage-inner > *, .split-intro > *, .path-card {
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 1.1s cubic-bezier(.2,.7,.2,1), transform 1.1s cubic-bezier(.2,.7,.2,1);
+  }
+  .stage.in-view .stage-inner > *, .stage.in-view .split-intro > *, .stage.in-view .path-card {
+    opacity: 1; transform: none;
+  }
+  .stage.in-view .path-card:nth-child(2) { transition-delay: 0.2s; }
+
+  /* ── CODA ─────────────────────────────────────────────── */
+  .coda {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 100px 28px; position: relative;
+    border-top: 1px solid var(--rule);
+  }
+  .coda-inner { max-width: 720px; position: relative; padding: 2.5rem; background: rgba(7,9,12,0.85); border-radius: 8px; backdrop-filter: blur(16px); }
+
+  .coda .mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.32em;
+    text-transform: uppercase; color: var(--jolly-sky);
+    margin-bottom: 24px;
+  }
+  .coda h2 {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: 'opsz' 144, 'SOFT' 100, 'WONK' 1;
+    font-weight: 300; font-style: italic;
+    font-size: clamp(32px, 4.8vw, 68px);
+    line-height: 1.08; letter-spacing: -0.03em;
+    color: var(--ink); margin-bottom: 24px;
+  }
+  .coda h2 em { font-style: italic; color: var(--jolly-sun); }
+  .coda p {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(18px, 1.8vw, 23px);
+    line-height: 1.5; color: var(--ink-dim);
+    margin-bottom: 1.5rem;
+  }
+  .coda p em { color: var(--ink); font-style: normal; }
+
+  /* nav back link */
+  .back-link {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin-top: 1.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--jolly-sky);
+    text-decoration: none; border-bottom: 1px solid transparent;
+    transition: all 0.2s ease;
+  }
+  .back-link:hover { border-bottom-color: var(--jolly-sky); }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<canvas id="field"></canvas>
+<div class="vignette"></div>
+<div class="rail"></div>
+
+<div class="meta">SIGNAL // <span>TRANSMISSION 013</span></div>
+<div class="meta-r">RX 2026.08 / LOG_013</div>
+
+<main>
+  <!-- ── HERO ─────────────────────────────────────────────── -->
+  <section class="hero">
+    <div class="hero-body">
+      <div class="kicker">ESSAY // ON CLIMATE, HUBRIS, AND DISCOVERY</div>
+      <h1>The Accidental <em>Eden</em></h1>
+      <div class="lede">
+        Are we truly capable of engineering our way out of planetary crises by master design—or is human progress fundamentally a history of <em>stumbling upon miracles</em>?
+      </div>
+    </div>
+    <div class="scroll-cue">SCROLL TO EXAMINE</div>
+  </section>
+
+  <!-- ── PROLOGUE ─────────────────────────────────────────── -->
+  <section class="stage" data-theme="split">
+    <div class="stage-inner">
+      <div class="label">PROLOGUE // <b>THE MASTER PLANNER'S ILLUSION</b></div>
+      <div class="weather-badge">☁️ ATMOSPHERE: APPROACHING THE THERMOSTAT</div>
+      <div class="st-num">00</div>
+      <p>
+        We like to imagine history as a straight line of deliberate genius. Faced with climate change, our default posture is grand engineering: carbon markets, orbital mirrors, and top-down treaties. We assume that because we built the industrial world by design, we can repair it by design.
+      </p>
+      <p>
+        Yet our foundational breakthroughs were accidents: penicillin was ruined petri mold, nitrogen fertilizer was an attempt to make explosives, and steam engines were built to drain flooded coal pits. If history's greatest leaps are serendipitous, can we really command climate change to vanish on a deadline?
+      </p>
+    </div>
+  </section>
+
+  <!-- ── PART I: THE ANCESTRAL WILD ───────────────────────── -->
+  <section class="stage" data-theme="wild" id="act1">
+    <div class="stage-inner">
+      <div class="label">ACT I // <b>THE ANCESTRAL WILD</b></div>
+      <div class="weather-badge">🌋 WEATHER: VOLCANOES, MEGADROUGHTS &amp; TORRENTIAL STORMS</div>
+      <div class="st-num">01</div>
+      <p>
+        For 99% of human existence—the Pleistocene—Earth was a violent, erratic weather machine. Volcanic super-eruptions blotted out the sun, glaciers moved in decades, and severe droughts turned river basins to dust.
+      </p>
+      <p>
+        Pleistocene humans had modern brains and language, yet built no cities and left no written history. <em>They spent their lives running from weather disasters and killing each other over survival</em>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── PART II: THE HOLOCENE TRUCE ──────────────────────── -->
+  <section class="stage" data-theme="jolly" id="act2">
+    <div class="stage-inner">
+      <div class="label">ACT II // <b>THE HOLOCENE TRUCE</b></div>
+      <div class="weather-badge">☀️ WEATHER: JOLLY SUNBEAMS &amp; GOLDEN SKIES</div>
+      <div class="st-num">02</div>
+      <p>
+        Roughly 11,700 years ago, Earth entered the <span class="mono-tag">Holocene</span>—an epoch of unprecedented relative stability. While punctuated by minor shifts like the 8.2-kiloyear cooling event, mean global temperatures settled into a far gentler climate envelope compared to the wild Pleistocene swings.
+      </p>
+      <p>
+        Agriculture was born not because humans grew smarter, but because <em>the weather allowed crops to stay put</em>. We built cities, compounded science, and mistook this rare planetary truce for our natural right.
+      </p>
+      <div class="catalog">
+        <div class="item">
+          <div class="term">Permanent Granary</div>
+          <div class="gloss">Predictable sunshine allowed permanent settlements and freed thinkers to invent metallurgy and mathematics.</div>
+        </div>
+        <div class="item">
+          <div class="term">Accumulated Science</div>
+          <div class="gloss">Under stable skies, knowledge compounded across centuries instead of dying with the tribe.</div>
+        </div>
+        <div class="item">
+          <div class="term">The Great Mistake</div>
+          <div class="gloss">We renamed our accidental sanctuary "Civilization" while quietly unscrewing the bolts of the thermostat.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── PART III: THE GREAT BIFURCATION (SIDE-BY-SIDE PATHS) ── -->
+  <section class="stage split-stage" data-theme="split" id="act3">
+    <div class="split-stage-wrapper">
+      <div class="split-intro">
+        <div class="label">ACT III // <b>THE BIFURCATION AT THE THERMOSTAT</b></div>
+        <div class="weather-badge">🌋☀️ DUAL ATMOSPHERIC PATHS // THE FORK IN HUMAN HISTORY</div>
+        <div class="st-num">03</div>
+        <p>
+          Now, the Holocene truce is fracturing. History splits into two opposing weather trails:
+        </p>
+      </div>
+
+      <!-- Fork Connector SVG Banner -->
+      <svg class="fork-connector" viewBox="0 0 800 90" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 400 0 L 400 30" stroke="#1cd9ac" stroke-width="4" stroke-linecap="round"/>
+        <circle cx="400" cy="30" r="5" fill="#1cd9ac"/>
+        <path d="M 400 30 C 360 60, 200 55, 180 90" stroke="#ff3b2b" stroke-width="3" stroke-dasharray="5 4"/>
+        <circle cx="180" cy="85" r="4" fill="#ff3b2b"/>
+        <path d="M 400 30 C 440 60, 600 55, 620 90" stroke="#ffc83b" stroke-width="3"/>
+        <circle cx="620" cy="85" r="4" fill="#ffc83b"/>
+      </svg>
+
+      <!-- SIDE-BY-SIDE DUAL OPTION GRID WITH EMBEDDED MILESTONE PATHS -->
+      <div class="bifurcation-grid">
+
+        <!-- POSSIBILTY A: THE RECURRENT DARK -->
+        <article class="path-card card-a">
+          <div class="card-header">
+            <div>
+              <div class="card-tag">POSSIBILITY A // FAILURE</div>
+              <div class="card-weather-status" style="margin-top: 5px;">🌋 WEATHER: ERUPTIONS, MEGADROUGHTS &amp; STORMS</div>
+            </div>
+            <div class="card-num">03-A</div>
+          </div>
+
+          <h3 class="card-title">The Recurrent Dark: <em>The Broken Thermostat</em></h3>
+
+          <!-- Embedded Milestone Path Trail -->
+          <div class="card-path-trail">
+            <!-- Milestone 01 -->
+            <div class="path-milestone">
+              <div class="path-node-pin"></div>
+              <div class="milestone-step-tag">PATH 01 // HUBRIS &amp; COLLAPSE</div>
+              <div class="milestone-text">
+                Centralized global treaties collapse under geopolitical rivalry. Well-intentioned geo-engineering experiments trigger unforeseen atmospheric feedback loops, while rigid master plans move far too slowly to match exponential permafrost carbon release.
+              </div>
+            </div>
+
+            <!-- Milestone 02 -->
+            <div class="path-milestone">
+              <div class="path-node-pin"></div>
+              <div class="milestone-step-tag">PATH 02 // WEATHER VOLATILITY</div>
+              <div class="milestone-text">
+                The Holocene truce dissolves. Earth snaps back to extreme ancestral climate chaos: severe multi-decade droughts turn continental breadbaskets into dust bowls, sea levels drown coastal megacities, and violent torrential downpours wash away remaining topsoil.
+              </div>
+            </div>
+
+            <!-- Milestone 03 -->
+            <div class="path-milestone">
+              <div class="path-node-pin"></div>
+              <div class="milestone-step-tag">PATH 03 // PLEISTOCENE REGRESSION</div>
+              <div class="milestone-text">
+                Humanity descends back into the ancient survival trap. Billions of climate refugees spend their lives <strong>surviving, running away from weather disasters, and fighting each other</strong> over shrinking freshwater aquifers and fertile soil. The brief 10,000-year dream of civilization collapses back into nomadic survival.
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <!-- POSSIBILTY B: THE SECOND SANCTUARY -->
+        <article class="path-card card-b">
+          <div class="card-header">
+            <div>
+              <div class="card-tag">POSSIBILITY B // SUCCESS</div>
+              <div class="card-weather-status" style="margin-top: 5px;">☀️ WEATHER: JOLLY GOLDEN SKY &amp; REGENERATIVE EQUILIBRIUM</div>
+            </div>
+            <div class="card-num">03-B</div>
+          </div>
+
+          <h3 class="card-title">The Second Sanctuary: <em>The Prosperous Continuum</em></h3>
+
+          <!-- Embedded Milestone Path Trail -->
+          <div class="card-path-trail">
+            <!-- Milestone 01 -->
+            <div class="path-milestone">
+              <div class="path-node-pin"></div>
+              <div class="milestone-step-tag">PATH 01 // STRUCTURED SERENDIPITY</div>
+              <div class="milestone-text">
+                Humanity manages to solve climate change—not through flawless central bureaucracy alone, but through high-intent experimentation combined with unexpected, accidental discoveries.
+              </div>
+            </div>
+
+            <!-- Milestone 02 -->
+            <div class="path-milestone">
+              <div class="path-node-pin"></div>
+              <div class="milestone-step-tag">PATH 02 // ACCIDENTAL BREAKTHROUGHS</div>
+              <div class="milestone-text">
+                A team working on battery materials accidentally stumbles upon a room-temperature catalyst that strips carbon from ambient air at a fraction of theoretical cost. Or an unexpected discovery in plasma physics makes fusion power so cheap that ocean desalinization, carbon capture, and atmospheric restoration become energy-trivial.
+              </div>
+            </div>
+
+            <!-- Milestone 03 -->
+            <div class="path-milestone">
+              <div class="path-node-pin"></div>
+              <div class="milestone-step-tag">PATH 03 // THE PROSPEROUS CONTINUUM</div>
+              <div class="milestone-text">
+                The climate thermostat is actively restored and stabilized. The temporary Holocene truce evolves into an engineered planetary equilibrium under cheerful golden skies. The <strong>prosperous timeline of human progress continues uninterrupted</strong>—unlocking energy abundance, ecosystem restoration, deep technology, and planetary expansion.
+              </div>
+            </div>
+          </div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CODA ─────────────────────────────────────────────── -->
+  <section class="coda">
+    <div class="coda-inner">
+      <div class="mark">CODA // THE CURATOR AND THE DICE</div>
+      <h2>Can We Solve <em>Big Problems</em>?</h2>
+      <p>
+        We cannot force the miracle, but we can build the laboratory. Central master plans risk bureaucracy, but waiting passively for luck means burning.
+      </p>
+      <p>
+        The real secret of human genius is <em>structured serendipity</em>—running thousands of high-intent experiments so that when luck strikes, someone is awake enough to notice. We survived the Pleistocene by running; now we must roll the dice with intention.
+      </p>
+
+      <a href="index.html" class="back-link">← RETURN TO TRANSMISSION LOG</a>
+    </div>
+  </section>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Advanced Canvas Weather Engine ────────────────────────
+  const canvas = document.getElementById('field');
+  const ctx = canvas.getContext('2d');
+  let W = 0, H = 0, DPR = 1;
+  const TAU = Math.PI * 2;
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    canvas.width  = W * DPR; canvas.height = H * DPR;
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+
+  let progress = 0;
+  function updateProgress() {
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    progress = docH > 0 ? Math.min(1, Math.max(0, window.scrollY / docH)) : 0;
+    document.documentElement.style.setProperty('--p', (progress * 100).toFixed(2) + '%');
+
+    // Dynamic Body Background Color Shift
+    if (progress >= 0.50 && progress < 0.76) {
+      // Act II (Jolly Golden Atmosphere) - Bright warm cerulean sky!
+      document.body.style.background = '#0c1a2b';
+    } else if (progress >= 0.25 && progress < 0.50) {
+      // Act I (Wild Volcanic Storm) - Dark obsidian fire
+      document.body.style.background = '#0e0404';
+    } else {
+      document.body.style.background = '#050608';
+    }
+  }
+
+  // ── 1. Frantic Volcanic Ash Embers & Heavy Rain (Wild Storm) ────
+  const VOLCANO_EMBERS_COUNT = 180;
+  const volcanoEmbers = [];
+  for (let i = 0; i < VOLCANO_EMBERS_COUNT; i++) {
+    volcanoEmbers.push({
+      x: Math.random() * 1600,
+      y: Math.random() * 1000,
+      r: Math.random() * 3.8 + 0.8,
+      vy: -Math.random() * 4.5 - 2.0, // fast upward surge
+      vx: (Math.random() - 0.5) * 8.0,  // wild horizontal wind gust
+      seed: Math.random() * TAU,
+      hue: Math.random() < 0.55 ? '#ff3b2b' : (Math.random() < 0.8 ? '#ff7700' : '#ffc83b')
+    });
+  }
+
+  const HEAVY_RAIN_COUNT = 260;
+  const heavyRain = [];
+  for (let i = 0; i < HEAVY_RAIN_COUNT; i++) {
+    heavyRain.push({
+      x: Math.random() * 1600,
+      y: Math.random() * 1000,
+      len: Math.random() * 36 + 20,
+      speed: Math.random() * 28 + 20,
+      opacity: Math.random() * 0.6 + 0.25
+    });
+  }
+
+  // ── 2. Jolly Sunshine Sparkles & Rays (Jolly Weather) ──────
+  const JOLLY_MOTES_COUNT = 90;
+  const jollyMotes = [];
+  for (let i = 0; i < JOLLY_MOTES_COUNT; i++) {
+    jollyMotes.push({
+      x: Math.random() * 1400,
+      y: Math.random() * 1000,
+      r: Math.random() * 3.5 + 1.2,
+      vx: (Math.random() - 0.5) * 0.8,
+      vy: -Math.random() * 0.8 - 0.3,
+      seed: Math.random() * TAU
+    });
+  }
+
+  let lightningTimer = 0;
+  let lightningAlpha = 0;
+  let time = 0;
+
+  // ── RENDER FUNCTION: Wild Volcanic Storm & Drought ─────────
+  function drawDramaticWildWeather(startX, endX, intensity) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(startX, 0, endX - startX, H);
+    ctx.clip();
+
+    // 1. Dark Volcanic Eruption Smoke & Heat Haze Horizon
+    const wildGrd = ctx.createLinearGradient(startX, H, startX, 0);
+    wildGrd.addColorStop(0, `rgba(55, 10, 8, ${0.9 * intensity})`);
+    wildGrd.addColorStop(0.4, `rgba(28, 6, 8, ${0.94 * intensity})`);
+    wildGrd.addColorStop(1, `rgba(10, 4, 6, ${0.98 * intensity})`);
+    ctx.fillStyle = wildGrd;
+    ctx.fillRect(startX, 0, endX - startX, H);
+
+    // Eruption Plume Glowing at Horizon
+    const eruptionGrd = ctx.createRadialGradient(startX + (endX - startX) * 0.3, H, 10, startX + (endX - startX) * 0.3, H, 500);
+    eruptionGrd.addColorStop(0, `rgba(255, 59, 43, ${0.55 * intensity})`);
+    eruptionGrd.addColorStop(0.5, `rgba(255, 119, 0, ${0.28 * intensity})`);
+    eruptionGrd.addColorStop(1, 'transparent');
+    ctx.fillStyle = eruptionGrd;
+    ctx.fillRect(startX, 0, endX - startX, H);
+
+    // 2. FRANTIC & DRAMATIC Volcanic Ash Embers (High Velocity Storm Gusts)
+    for (let i = 0; i < volcanoEmbers.length; i++) {
+      const e = volcanoEmbers[i];
+      if (e.x >= startX - 80 && e.x <= endX + 80) {
+        e.y += e.vy + Math.cos(time * 8 + e.seed) * 1.5;
+        e.x += e.vx + Math.sin(time * 12 + e.seed * 3) * 5.5 + Math.cos(time * 9) * 3.5; // frantic wind oscillation
+        if (e.y < -30) { e.y = H + 30; e.x = startX + Math.random() * (endX - startX); }
+        if (e.x < startX - 80) e.x = endX + 60;
+        if (e.x > endX + 80) e.x = startX - 60;
+
+        ctx.fillStyle = e.hue;
+        ctx.globalAlpha = (0.6 + 0.4 * Math.sin(time * 8 + e.seed * 5)) * intensity;
+        ctx.beginPath();
+        ctx.arc(e.x, e.y, e.r * (0.8 + 0.5 * Math.sin(time * 10)), 0, TAU);
+        ctx.fill();
+
+        // Ember trail glow
+        ctx.strokeStyle = e.hue;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(e.x, e.y);
+        ctx.lineTo(e.x - e.vx * 1.5, e.y - e.vy * 1.5);
+        ctx.stroke();
+        ctx.globalAlpha = 1.0;
+      }
+    }
+
+    // 3. Heavy Torrential Rain
+    ctx.lineWidth = 1.8;
+    for (let i = 0; i < heavyRain.length; i++) {
+      const r = heavyRain[i];
+      if (r.x >= startX - 80 && r.x <= endX + 80) {
+        r.y += r.speed;
+        r.x -= 6.0; // severe tempest wind slope
+        if (r.y > H + 40) { r.y = -30; r.x = startX + Math.random() * (endX - startX + 160); }
+
+        ctx.strokeStyle = `rgba(255, 110, 95, ${r.opacity * intensity})`;
+        ctx.beginPath();
+        ctx.moveTo(r.x, r.y);
+        ctx.lineTo(r.x - 12, r.y + r.len);
+        ctx.stroke();
+      }
+    }
+
+    // 4. FREQUENT & DRAMATIC Volcanic Storm Lightning Strikes
+    if (lightningAlpha > 0.02) {
+      // Sky flash overlay
+      ctx.fillStyle = `rgba(255, 180, 150, ${lightningAlpha * intensity * 0.65})`;
+      ctx.fillRect(startX, 0, endX - startX, H);
+
+      // Main Lightning Bolt
+      ctx.strokeStyle = `rgba(255, 240, 220, ${lightningAlpha * intensity})`;
+      ctx.lineWidth = 3.0;
+      ctx.shadowColor = '#ff3b2b';
+      ctx.shadowBlur = 15;
+      ctx.beginPath();
+      let lx = startX + (endX - startX) * (0.2 + Math.sin(time * 17) * 0.3);
+      let ly = 0;
+      ctx.moveTo(lx, ly);
+      for (let s = 0; s < 7; s++) {
+        lx += (Math.sin(s * 9 + time) * 45) + (Math.random() - 0.5) * 70;
+        ly += H / 7;
+        ctx.lineTo(lx, ly);
+      }
+      ctx.stroke();
+
+      // Secondary Branching Bolt
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = `rgba(255, 200, 180, ${lightningAlpha * intensity * 0.8})`;
+      ctx.beginPath();
+      let lx2 = startX + (endX - startX) * 0.7;
+      let ly2 = H * 0.2;
+      ctx.moveTo(lx2, ly2);
+      for (let s = 0; s < 5; s++) {
+        lx2 += (Math.random() - 0.5) * 60;
+        ly2 += H / 6;
+        ctx.lineTo(lx2, ly2);
+      }
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    ctx.restore();
+  }
+
+  // ── RENDER FUNCTION: Jolly Golden Sky & Sunbeams ──────────
+  function drawJollySunlitWeather(startX, endX, intensity) {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(startX, 0, endX - startX, H);
+    ctx.clip();
+
+    // 1. Vibrant Cerulean Sky Blue & Warm Horizon Gold Background
+    const skyGrd = ctx.createLinearGradient(startX, 0, startX, H);
+    skyGrd.addColorStop(0, `rgba(14, 45, 80, ${0.92 * intensity})`);   // deep cerulean sky
+    skyGrd.addColorStop(0.55, `rgba(32, 90, 140, ${0.82 * intensity})`); // sunny sky blue
+    skyGrd.addColorStop(1, `rgba(255, 190, 45, ${0.45 * intensity})`);  // warm golden horizon
+    ctx.fillStyle = skyGrd;
+    ctx.fillRect(startX, 0, endX - startX, H);
+
+    // 2. Radiant Pure Golden Sun Disk Orb (Top Right - Cheerful & Happy)
+    const sunX = Math.min(W * 0.78, endX - 130);
+    const sunY = 130;
+
+    // Glowing Outer Radial Sun Atmosphere Halo
+    const sunOrbGrd = ctx.createRadialGradient(sunX, sunY, 15, sunX, sunY, 400);
+    sunOrbGrd.addColorStop(0, `rgba(255, 255, 230, ${0.98 * intensity})`);      // white-gold core
+    sunOrbGrd.addColorStop(0.18, `rgba(255, 235, 60, ${0.90 * intensity})`);    // cheerful solar yellow
+    sunOrbGrd.addColorStop(0.42, `rgba(255, 185, 30, ${0.50 * intensity})`);    // warm golden amber
+    sunOrbGrd.addColorStop(0.75, `rgba(255, 130, 20, ${0.15 * intensity})`);    // soft solar warmth
+    sunOrbGrd.addColorStop(1, 'transparent');
+    ctx.fillStyle = sunOrbGrd;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 400, 0, TAU);
+    ctx.fill();
+
+    // Solid Bright Cheerful Sun Core Disk
+    const coreGrd = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, 55);
+    coreGrd.addColorStop(0, `rgba(255, 255, 245, ${0.99 * intensity})`);
+    coreGrd.addColorStop(0.7, `rgba(255, 235, 70, ${0.95 * intensity})`);
+    coreGrd.addColorStop(1, `rgba(255, 200, 40, ${0.85 * intensity})`);
+    ctx.fillStyle = coreGrd;
+    ctx.beginPath();
+    ctx.arc(sunX, sunY, 55, 0, TAU);
+    ctx.fill();
+
+    // 3. Jolly Multi-Layered Rotating Sunbeams
+    const beamCount = 10;
+    for (let b = 0; b < beamCount; b++) {
+      const angle = (b / beamCount) * Math.PI * 2 + Math.sin(time * 0.3 + b) * 0.04;
+      ctx.fillStyle = `rgba(255, 235, 130, ${0.09 * intensity})`;
+      ctx.beginPath();
+      ctx.moveTo(sunX, sunY);
+      ctx.lineTo(sunX + Math.cos(angle - 0.12) * 1500, sunY + Math.sin(angle - 0.12) * 1500);
+      ctx.lineTo(sunX + Math.cos(angle + 0.12) * 1500, sunY + Math.sin(angle + 0.12) * 1500);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    // 4. Cheerful Floating Golden Sun Sparkles & Solar Motes
+    for (let i = 0; i < jollyMotes.length; i++) {
+      const m = jollyMotes[i];
+      if (m.x >= startX - 20 && m.x <= endX + 20) {
+        m.x += Math.sin(time * 1.5 + m.seed) * 0.8;
+        m.y += m.vy;
+        if (m.y < -20) { m.y = H + 20; m.x = startX + Math.random() * (endX - startX); }
+
+        const glow = 0.5 + 0.5 * Math.sin(time * 3 + m.seed * 4);
+        ctx.fillStyle = i % 2 === 0 ? `rgba(255, 225, 60, ${glow * intensity})` : `rgba(255, 245, 170, ${glow * intensity})`;
+        ctx.beginPath();
+        ctx.arc(m.x, m.y, m.r * (0.8 + glow * 0.4), 0, TAU);
+        ctx.fill();
+      }
+    }
+
+    ctx.restore();
+  }
+
+  // ── MAIN ANIMATION FRAME LOOP ──────────────────────────────
+  function frame() {
+    time += 0.016;
+
+    // Balanced Lightning Trigger for Storm Weather (Fires every ~3.5 - 5 seconds)
+    lightningTimer++;
+    if (lightningTimer > 110 && Math.random() < 0.08) {
+      lightningAlpha = 1.0; // bright flash
+      lightningTimer = 0;
+    }
+    if (lightningAlpha > 0) lightningAlpha *= 0.82; // fast dramatic fade
+
+    // Render weather sections based on scroll progress
+    if (progress < 0.22) {
+      // Prologue: Atmospheric transition
+      drawDramaticWildWeather(0, W, 0.4);
+      drawJollySunlitWeather(0, W, 0.5);
+    } else if (progress >= 0.22 && progress < 0.50) {
+      // Act I: THE ANCESTRAL WILD (Volcanoes, Eruptions, Frantic Torrential Rain & Lightning!)
+      drawDramaticWildWeather(0, W, 1.0);
+    } else if (progress >= 0.50 && progress < 0.76) {
+      // Act II: THE HOLOCENE TRUCE (Jolly Sunbeams, Bright Golden Skies & Harmony!)
+      drawJollySunlitWeather(0, W, 1.0);
+    } else if (progress >= 0.76 && progress < 0.94) {
+      // Act III: DUAL WEATHER ZONE (Volcanic Storm on Left vs Jolly Sunshine on Right!)
+      const midX = W > 900 ? W * 0.5 : W;
+      drawDramaticWildWeather(0, midX, 1.0);
+      drawJollySunlitWeather(W > 900 ? midX : 0, W, 1.0);
+
+      // Split Divider Line on Canvas
+      if (W > 900) {
+        ctx.strokeStyle = 'rgba(255, 200, 59, 0.4)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([6, 6]);
+        ctx.beginPath();
+        ctx.moveTo(midX, 0);
+        ctx.lineTo(midX, H);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    } else {
+      // Coda: Golden Sunlit Equilibrium
+      drawJollySunlitWeather(0, W, 0.85);
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  // ── Init & Observers ─────────────────────────────────────
+  resize();
+  window.addEventListener('resize', resize);
+  updateProgress();
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  requestAnimationFrame(frame);
+
+  const obs = new IntersectionObserver(
+    (entries) => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); }),
+    { threshold: 0.18 }
+  );
+  document.querySelectorAll('.stage, .coda, .path-card').forEach(s => obs.observe(s));
+})();
+</script>
+</body>
+</html>
