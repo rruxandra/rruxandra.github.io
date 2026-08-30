@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Well-Lit Room — On Smart People and Poorly Defined Problems</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root {
+    --bg:        #07070a;   /* the room, unlit */
+    --ink:       #ece6d9;   /* bone */
+    --ink-dim:   #8f8878;
+    --ink-faint: #4a463d;
+    --lamp:      #ffc069;   /* the pool of light you carry */
+    --mark:      #6fd3d0;   /* what gets resolved inside it */
+    --key:       #e0533b;   /* what is out there, unlit */
+    --rule:      rgba(236, 230, 217, 0.09);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 14, 'SOFT' 45, 'WONK' 0;
+    font-weight: 350;
+    line-height: 1.62;
+    letter-spacing: 0.008em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Film grain ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 100;
+    pointer-events: none; opacity: 0.045; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── The searchlight field ── */
+  canvas#field {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 46%, transparent 34%, rgba(0,0,0,0.72) 100%);
+  }
+
+  /* ── Progress rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: '';
+    position: absolute; top: 0; left: -1px;
+    width: 3px; height: var(--p, 0%);
+    background: linear-gradient(180deg, var(--lamp) 0%, var(--lamp) 42%, var(--key) 100%);
+    transition: height 0.18s linear;
+  }
+
+  /* ── Corner labels ── */
+  .meta {
+    position: fixed; top: 28px; left: 28px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .meta span { color: var(--lamp); }
+  .meta-r {
+    position: fixed; top: 28px; right: 40px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .back {
+    position: fixed; bottom: 22px; left: 28px; z-index: 60;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--ink-faint);
+    text-decoration: none; transition: color 0.3s ease;
+  }
+  .back:hover { color: var(--lamp); }
+  .back::before { content: "\2190  "; }
+
+  main { position: relative; z-index: 10; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 8vw 12vh;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--lamp); margin-bottom: 2.2rem;
+  }
+  h1 {
+    font-size: clamp(3rem, 8.6vw, 6.8rem);
+    font-weight: 300; line-height: 0.94; letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 144, 'SOFT' 20, 'WONK' 1;
+    margin-bottom: 2rem;
+  }
+  h1 em { font-style: italic; font-weight: 400; color: var(--lamp); }
+  .lede {
+    font-size: clamp(1.06rem, 1.9vw, 1.42rem);
+    max-width: 44ch; color: var(--ink); opacity: 0.88;
+  }
+  .lede em { font-style: italic; color: var(--lamp); opacity: 1; }
+  .scroll-cue {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 3.4rem;
+  }
+
+  /* ── Stages ── */
+  .stage {
+    min-height: 88vh;
+    display: flex; align-items: center;
+    padding: 10vh 8vw;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .stage-inner {
+    max-width: 54ch;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 1s ease, transform 1s ease;
+    border-left: 1px solid var(--rule);
+    padding-left: 2.2rem;
+    position: relative;
+  }
+  .stage.in-view .stage-inner { opacity: 1; transform: none; }
+  .stage:nth-child(even) .stage-inner { margin-left: auto; }
+
+  .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--ink-dim); margin-bottom: 1.6rem;
+  }
+  .label b { color: var(--lamp); font-weight: 400; }
+  .st-num {
+    position: absolute; left: -2.2rem; top: -3.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3.2rem; color: var(--ink); opacity: 0.05;
+    letter-spacing: -0.04em; pointer-events: none;
+  }
+  .stage p {
+    font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+    margin-bottom: 1.35rem;
+  }
+  .stage p em { font-style: italic; color: var(--lamp); }
+  .stage p b { font-weight: 500; color: var(--ink); }
+  .stage a.xref {
+    color: var(--mark); text-decoration: none;
+    border-bottom: 1px solid rgba(111, 211, 208, 0.35); padding-bottom: 1px;
+  }
+  .stage a.xref:hover { color: var(--lamp); border-bottom-color: var(--lamp); }
+  .quiet {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 2.2rem;
+    padding-top: 1rem; border-top: 1px solid var(--rule);
+  }
+
+  /* ── Coda ── */
+  .coda {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 14vh 8vw; max-width: 1180px; margin: 0 auto;
+  }
+  .coda-inner { max-width: 56ch; }
+  .coda h2 {
+    font-size: clamp(1.8rem, 4.4vw, 3.1rem);
+    font-weight: 300; line-height: 1.08; letter-spacing: -0.025em;
+    font-variation-settings: 'opsz' 120, 'SOFT' 20, 'WONK' 1;
+    margin-bottom: 2rem;
+  }
+  .coda h2 em { font-style: italic; color: var(--key); }
+  .coda p { font-size: clamp(1.02rem, 1.4vw, 1.2rem); margin-bottom: 1.35rem; }
+  .coda p em { font-style: italic; color: var(--lamp); }
+  .colophon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 3.4rem;
+    padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    line-height: 2.1;
+  }
+  .colophon i { font-style: normal; color: var(--ink-dim); }
+
+  @media (max-width: 720px) {
+    .meta   { left: 16px; top: 16px; font-size: 9.5px; }
+    .meta-r { right: 20px; top: 16px; font-size: 9.5px; }
+    .back   { left: 16px; font-size: 9px; }
+    .hero   { padding: 0 6vw 12vh; }
+    .stage  { padding: 8vh 6vw; min-height: auto; }
+    .stage-inner { padding-left: 1.2rem; }
+    .st-num { left: -1.2rem; top: -3rem; font-size: 2.4rem; }
+    .coda   { padding: 12vh 6vw; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .stage-inner { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="field"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="rail"></div>
+
+<div class="meta">an essay <span>·</span> in motion</div>
+<div class="meta-r">№ 14</div>
+<a class="back" href="index.html">return to log</a>
+
+<main>
+
+  <section class="hero">
+    <div class="kicker">intelligence is a lamp · it lights a circle, not a room</div>
+    <h1>The Well-Lit<br><em>Room</em></h1>
+    <p class="lede">Smart people make terrible decisions at a rate that should embarrass the idea of smartness. Not because the thinking is weak. <em>Because it is pointed at the only part of the room with a light on.</em></p>
+    <div class="scroll-cue">scroll</div>
+  </section>
+
+  <section class="stage" data-stage="1">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">01</div>
+      <div class="label">the ruler <b>· no. 01</b></div>
+      <p>Every instrument for measuring a mind is built from problems that can be scored: fixed rules, a boundary, one agreed answer. Whether to take the job, move across the world, have the child: none of those.</p>
+      <p><em>We built a careful ruler for one class of thing, and assumed the number described the person.</em></p>
+      <div class="quiet">we measured the part that answers back</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="2">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">02</div>
+      <div class="label">the advocate <b>· no. 02</b></div>
+      <p>More intelligence does not help here, and the reason is the whole problem. Watch yourself make a list of pros and cons. The columns come out close, and then one of them quietly grows, because the answer was in the room before the list was. <em>The list was never a scale. It was a defence.</em></p>
+      <p>So a quick mind does not merely arrive at the wrong answer. <b>It furnishes it</b>, and meets every objection before you can raise one.</p>
+      <div class="quiet">the list was never a scale · it was a defence</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="3">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">03</div>
+      <div class="label">two dials <b>· no. 03</b></div>
+      <p><a class="xref" href="the-patient-fire.html">The Patient Fire</a> argued that temperament is a dose you were handed, not a virtue you earned. A person is issued two instruments: a <b>processor</b>, speed with symbols, and a <b>regulator</b>, how loudly the alarm rings. Nobody checks that they arrived at the same setting.</p>
+      <p><em>So the world is full of magnificent engines on a chassis no one inspected</em>, steered by a nervous system that panics early and rationalises beautifully.</p>
+      <div class="quiet">the dose makes the man · the dose was two rolls</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="4">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">04</div>
+      <div class="label">where the error goes <b>· no. 04</b></div>
+      <p>Skill is intelligence multiplied by a closed loop: act, get scored, correct. Chess returns a verdict in seconds, so twenty years of it makes a master. A life returns nothing for fifteen years, then something unattributable.</p>
+      <p>Remove the scoring and the loop still turns, but what accumulates is not accuracy. It is <b>conviction.</b> The unscored decades make a person who is not more right, only much harder to argue with.</p>
+      <div class="quiet">scored, it becomes skill · silent, it becomes certainty</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="5">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">05</div>
+      <div class="label">the same mistake, larger <b>· no. 05</b></div>
+      <p>The species has the same profile. <a class="xref" href="the-accidental-eden.html">The Accidental Eden</a> made the case that the Holocene was a truce we were handed, not a competence we developed: eleven thousand mild years, and <em>we mistook the lighting for our eyesight.</em></p>
+      <p>Climate is not failing because it is hard. Fusion is hard. It is failing because the rules move and the loop closes in a century. So we turn back toward the light, solve the solvable piece brilliantly, and file it as progress.</p>
+      <div class="quiet">we keep solving the part that scores us</div>
+    </div>
+  </section>
+
+  <section class="coda" data-stage="6">
+    <div class="coda-inner">
+      <h2>The keys are <em>in the dark</em></h2>
+      <p>This is not an argument against being smart. It is an argument about the exchange rate. Speed inside the circle is where exams and careers and arguments are won, so we keep converting our lives into circle-shaped problems.</p>
+      <p>What helps out here is not horsepower. Name which kind of problem you are in. Make it score you sooner: small, reversible, soon. Ask someone standing at a different angle, because they can see your face and you cannot.</p>
+      <p>We call it intelligence. It is a lamp. It shows one circle in brilliant detail and tells you nothing about the room. <em>The keys were never under it.</em></p>
+      <div class="colophon">there is no clever way around that · you have to go out and feel around<br>after adam mastroianni · <i>life ain't chess</i></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── progress rail + reveals ────────────────────────────── */
+  var rail = document.querySelector('.rail');
+  var prog = 0;
+  function onScroll() {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    prog = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
+    if (rail) rail.style.setProperty('--p', (prog * 100).toFixed(2) + '%');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('in-view'); });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.stage, .coda').forEach(function (s) { io.observe(s); });
+
+  /* ════════════════════════════════════════════════════════
+     THE SEARCHLIGHT FIELD
+
+     The room is a lattice of things that could be understood.
+     Unlit, each one is a smear of noise. A pool of light drifts
+     across it: whatever it touches resolves into a crisp, marked,
+     finished thing, and then decays back into noise behind it.
+     Clarity is only ever local, and only ever temporary.
+
+     Scrolling shrinks the pool. You begin feeling well-lit and
+     end holding a small lamp in a large dark room, where the
+     shapes that were always out there drift, unresolved.
+     ════════════════════════════════════════════════════════ */
+  var cv = document.getElementById('field');
+  var ctx = cv.getContext('2d');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 0, H = 0, DPR = 1;
+  var cells = [], keys = [];
+  var SP = 44;                      /* lattice spacing */
+
+  function rnd(s) {                 /* deterministic per-cell noise */
+    var x = Math.sin(s * 12.9898) * 43758.5453;
+    return x - Math.floor(x);
+  }
+
+  function build() {
+    DPR = Math.min(2, window.devicePixelRatio || 1);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+
+    cells = [];
+    var cols = Math.ceil(W / SP) + 2, rows = Math.ceil(H / SP) + 2;
+    for (var j = 0; j < rows; j++) {
+      for (var i = 0; i < cols; i++) {
+        var s = i * 73.13 + j * 191.7;
+        cells.push({
+          x: (i - 0.5) * SP + (rnd(s) - 0.5) * SP * 0.55,
+          y: (j - 0.5) * SP + (rnd(s + 5.1) - 0.5) * SP * 0.55,
+          a: rnd(s + 11.3) * Math.PI * 2,      /* orientation of the smear */
+          g: rnd(s + 21.7),                    /* which mark it resolves into */
+          w: 0.55 + rnd(s + 31.9) * 0.9,       /* drift speed */
+          m: 0                                  /* memory of having been lit */
+        });
+      }
+    }
+
+    /* the things that are out there. They never resolve. */
+    keys = [];
+    for (var k = 0; k < 7; k++) {
+      keys.push({
+        x: rnd(k * 17.3 + 3) * W,
+        y: rnd(k * 29.1 + 7) * H,
+        r: 26 + rnd(k * 41.7) * 46,
+        p: rnd(k * 53.9) * Math.PI * 2,
+        v: 0.00006 + rnd(k * 61.3) * 0.00009
+      });
+    }
+  }
+
+  /* the lamp */
+  var lx = 0, ly = 0, tx = -1, ty = -1;
+  window.addEventListener('pointermove', function (e) {
+    tx = e.clientX; ty = e.clientY;
+  }, { passive: true });
+
+  function smooth(e0, e1, v) {
+    var t = Math.min(1, Math.max(0, (v - e0) / (e1 - e0)));
+    return t * t * (3 - 2 * t);
+  }
+
+  function frame(t) {
+    ctx.clearRect(0, 0, W, H);
+
+    /* the pool shrinks as the essay goes on: from a lit room to a lamp */
+    var R = (0.56 - 0.34 * prog) * Math.min(W, H) * (W < 640 ? 1.15 : 1);
+    var core = R * 0.5;
+
+    /* it drifts on its own, and leans toward the pointer if there is one */
+    var dx = W * (0.5 + 0.17 * Math.sin(t * 0.000175) + 0.05 * Math.sin(t * 0.00041 + 2.1));
+    var dy = H * (0.46 + 0.15 * Math.sin(t * 0.000131 + 1.3));
+    if (tx >= 0) { dx = dx * 0.45 + tx * 0.55; dy = dy * 0.45 + ty * 0.55; }
+    lx += (dx - lx) * 0.045; ly += (dy - ly) * 0.045;
+
+    /* ── the things out there, only ever a suggestion ── */
+    for (var k = 0; k < keys.length; k++) {
+      var K = keys[k];
+      var kx = K.x + Math.cos(K.p + t * K.v) * 34;
+      var ky = K.y + Math.sin(K.p * 1.7 + t * K.v * 1.3) * 26;
+      var kd = Math.hypot(kx - lx, ky - ly);
+      /* they fade OUT in the light: look straight at them and they are not there */
+      var vis = 0.030 + 0.055 * prog;
+      vis *= 1 - smooth(R * 1.15, core, kd);
+      ctx.beginPath();
+      ctx.arc(kx, ky, K.r, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(224, 83, 59,' + vis.toFixed(4) + ')';
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(kx, ky, K.r * 0.44, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(224, 83, 59,' + (vis * 0.9).toFixed(4) + ')';
+      ctx.fill();
+    }
+
+    /* ── the pool of light itself ── */
+    var gl = ctx.createRadialGradient(lx, ly, 0, lx, ly, R);
+    gl.addColorStop(0,    'rgba(255, 192, 105, 0.115)');
+    gl.addColorStop(0.42, 'rgba(255, 192, 105, 0.052)');
+    gl.addColorStop(1,    'rgba(255, 192, 105, 0)');
+    ctx.fillStyle = gl;
+    ctx.fillRect(0, 0, W, H);
+
+    /* ── the lattice ── */
+    for (var i = 0; i < cells.length; i++) {
+      var c = cells[i];
+      var px = c.x + Math.sin(t * 0.00008 * c.w + c.a) * 4.5;
+      var py = c.y + Math.cos(t * 0.00007 * c.w + c.a * 1.7) * 4.5;
+      var d = Math.hypot(px - lx, py - ly);
+
+      var lit = 1 - smooth(core, R, d);
+      c.m = Math.max(lit, c.m * 0.986);       /* it stays clear a moment, then goes */
+      var after = Math.max(0, c.m - lit);
+
+      /* unresolved: a smear of noise, which is the room's actual state */
+      var fz = (1 - lit) * 0.30;
+      if (fz > 0.012) {
+        ctx.fillStyle = 'rgba(236, 230, 217,' + (fz * 0.24).toFixed(4) + ')';
+        for (var n = 0; n < 3; n++) {
+          var ox = Math.cos(c.a + n * 2.1) * (3.4 + n * 2.6);
+          var oy = Math.sin(c.a + n * 2.1) * (3.4 + n * 2.6);
+          ctx.beginPath();
+          ctx.arc(px + ox, py + oy, 1.5 - n * 0.32, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      /* resolved: a small, crisp, finished mark */
+      var A = lit + after * 0.42;
+      if (A > 0.02) {
+        ctx.strokeStyle = after > lit
+          ? 'rgba(255, 192, 105,' + (A * 0.5).toFixed(4) + ')'
+          : 'rgba(111, 211, 208,' + (A * 0.82).toFixed(4) + ')';
+        ctx.lineWidth = 1.1;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        if (c.g < 0.62) {                     /* a tick: marked correct */
+          ctx.moveTo(px - 4.2, py + 0.2);
+          ctx.lineTo(px - 1.1, py + 3.4);
+          ctx.lineTo(px + 4.6, py - 3.8);
+        } else if (c.g < 0.86) {              /* a rule */
+          ctx.moveTo(px - 4.4, py); ctx.lineTo(px + 4.4, py);
+        } else {                              /* a closed box */
+          ctx.rect(px - 3.2, py - 3.2, 6.4, 6.4);
+        }
+        ctx.stroke();
+      }
+    }
+
+    if (!reduced) raf = requestAnimationFrame(frame);
+  }
+
+  var raf = 0;
+  function boot() {
+    build();
+    lx = W * 0.5; ly = H * 0.46;
+    if (raf) cancelAnimationFrame(raf);
+    if (reduced) { frame(0); } else { raf = requestAnimationFrame(frame); }
+  }
+  var rz;
+  window.addEventListener('resize', function () {
+    clearTimeout(rz); rz = setTimeout(boot, 180);
+  });
+  boot();
+})();
+</script>
+</body>
+</html>
