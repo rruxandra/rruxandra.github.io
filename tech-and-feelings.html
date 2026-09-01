@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tech and Feelings — On the Channels We Keep Opening</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root {
+    --bg:        #08070d;   /* the dark before any channel opens */
+    --ink:       #ece7dd;
+    --ink-dim:   #8b8578;
+    --ink-faint: #4a4554;
+    --sig:       #7ad7ff;   /* the channel */
+    --feel:      #ff6f91;   /* what arrives through it */
+    --warm:      #ffb861;   /* the body */
+    --rule:      rgba(236, 231, 221, 0.09);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Fraunces', Georgia, serif;
+    font-variation-settings: 'opsz' 14, 'SOFT' 45, 'WONK' 0;
+    font-weight: 350;
+    line-height: 1.62;
+    letter-spacing: 0.008em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── Film grain ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 100;
+    pointer-events: none; opacity: 0.04; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── The channel stack ── */
+  canvas#field {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 44%, rgba(8,7,13,0.55) 20%, rgba(8,7,13,0.86) 78%, rgba(0,0,0,0.94) 100%);
+  }
+
+  /* ── Progress rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: '';
+    position: absolute; top: 0; left: -1px;
+    width: 3px; height: var(--p, 0%);
+    background: linear-gradient(180deg, var(--sig) 0%, var(--feel) 62%, var(--warm) 100%);
+    transition: height 0.18s linear;
+  }
+
+  /* ── Corner labels ── */
+  .meta {
+    position: fixed; top: 28px; left: 28px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .meta span { color: var(--sig); }
+  .meta-r {
+    position: fixed; top: 28px; right: 40px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .back {
+    position: fixed; bottom: 22px; left: 28px; z-index: 60;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.28em;
+    text-transform: uppercase; color: var(--ink-faint);
+    text-decoration: none; transition: color 0.3s ease;
+  }
+  .back:hover { color: var(--sig); }
+  .back::before { content: "\2190  "; }
+
+  /* ── Channel counter ── */
+  .chan {
+    position: fixed; bottom: 22px; right: 40px; z-index: 60;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+  .chan b { color: var(--sig); font-weight: 400; }
+
+  main { position: relative; z-index: 10; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 8vw 12vh;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.24em; text-transform: uppercase;
+    color: var(--sig); margin-bottom: 2.2rem;
+  }
+  h1 {
+    font-size: clamp(3rem, 8.6vw, 6.8rem);
+    font-weight: 300; line-height: 0.94; letter-spacing: -0.03em;
+    font-variation-settings: 'opsz' 144, 'SOFT' 20, 'WONK' 1;
+    margin-bottom: 2rem;
+  }
+  h1 em { font-style: italic; font-weight: 400; color: var(--feel); }
+  .lede {
+    font-size: clamp(1.06rem, 1.9vw, 1.42rem);
+    max-width: 46ch; color: var(--ink); opacity: 0.88;
+  }
+  .lede em { font-style: italic; color: var(--sig); opacity: 1; }
+  .scroll-cue {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.32em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 3.4rem;
+  }
+
+  /* ── Stages ── */
+  .stage {
+    min-height: 88vh;
+    display: flex; align-items: center;
+    padding: 10vh 8vw;
+    max-width: 1180px; margin: 0 auto;
+  }
+  .stage-inner {
+    max-width: 54ch;
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 1s ease, transform 1s ease;
+    border-left: 1px solid var(--rule);
+    padding-left: 2.2rem;
+    position: relative;
+  }
+  .stage.in-view .stage-inner { opacity: 1; transform: none; }
+  .stage:nth-child(even) .stage-inner { margin-left: auto; }
+
+  .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--ink-dim); margin-bottom: 1.6rem;
+  }
+  .label b { color: var(--sig); font-weight: 400; }
+  .st-num {
+    position: absolute; left: -2.2rem; top: -3.6rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 3.2rem; color: var(--ink); opacity: 0.05;
+    letter-spacing: -0.04em; pointer-events: none;
+  }
+  .stage p {
+    font-size: clamp(1.02rem, 1.4vw, 1.2rem);
+    margin-bottom: 1.35rem;
+  }
+  .stage p em { font-style: italic; color: var(--sig); }
+  .stage p b { font-weight: 500; color: var(--ink); }
+  .stage a.xref {
+    color: var(--feel); text-decoration: none;
+    border-bottom: 1px solid rgba(255, 111, 145, 0.35); padding-bottom: 1px;
+  }
+  .stage a.xref:hover { color: var(--sig); border-bottom-color: var(--sig); }
+  .quiet {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 2.2rem;
+    padding-top: 1rem; border-top: 1px solid var(--rule);
+  }
+
+  /* ── The open channels, listed ── */
+  .ports {
+    margin: 2.2rem 0 0.4rem;
+    border-top: 1px solid var(--rule);
+  }
+  .port {
+    display: grid;
+    grid-template-columns: 1.6rem 8.5rem 1fr;
+    gap: 0.9rem;
+    align-items: baseline;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .port .dot {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; color: var(--warm);
+  }
+  .port .nm {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-dim);
+  }
+  .port .tx { font-size: 0.98rem; line-height: 1.5; }
+  .port .tx em { font-style: italic; color: var(--warm); }
+  @media (max-width: 620px) {
+    .port { grid-template-columns: 1.2rem 1fr; }
+    .port .nm { grid-column: 2; }
+    .port .tx { grid-column: 2; }
+  }
+
+  /* ── Coda ── */
+  .coda {
+    min-height: 100vh; display: flex; flex-direction: column; justify-content: center;
+    padding: 14vh 8vw; max-width: 1180px; margin: 0 auto;
+  }
+  .coda-inner { max-width: 56ch; }
+  .coda h2 {
+    font-size: clamp(1.8rem, 4.4vw, 3.1rem);
+    font-weight: 300; line-height: 1.08; letter-spacing: -0.025em;
+    font-variation-settings: 'opsz' 120, 'SOFT' 20, 'WONK' 1;
+    margin-bottom: 2rem;
+  }
+  .coda h2 em { font-style: italic; color: var(--feel); }
+  .coda p { font-size: clamp(1.02rem, 1.4vw, 1.2rem); margin-bottom: 1.35rem; }
+  .coda p em { font-style: italic; color: var(--sig); }
+  .coda p b { font-weight: 500; color: var(--ink); }
+  .colophon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-faint); margin-top: 3.4rem;
+    padding-top: 1.2rem; border-top: 1px solid var(--rule);
+    line-height: 2.1;
+  }
+  .colophon i { font-style: normal; color: var(--ink-dim); }
+
+  @media (max-width: 720px) {
+    .meta   { left: 16px; top: 16px; font-size: 9.5px; }
+    .meta-r { right: 20px; top: 16px; font-size: 9.5px; }
+    .back   { left: 16px; font-size: 9px; }
+    .chan   { right: 20px; font-size: 9px; }
+    .hero   { padding: 0 6vw 12vh; }
+    .stage  { padding: 8vh 6vw; min-height: auto; }
+    .stage-inner { padding-left: 1.2rem; }
+    .st-num { left: -1.2rem; top: -3rem; font-size: 2.4rem; }
+    .coda   { padding: 12vh 6vw; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    .stage-inner { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="field"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="rail"></div>
+
+<div class="meta">an essay <span>·</span> in motion</div>
+<div class="meta-r">№ 15</div>
+<a class="back" href="index.html">return to log</a>
+<div class="chan">channels open <b id="chan-n">1</b> / 7</div>
+
+<main>
+
+  <section class="hero">
+    <div class="kicker">photo, then video, then music, then nothing for a decade</div>
+    <h1>Tech and<br><em>Feelings</em></h1>
+    <p class="lede">The photo made us feel something. Video made us feel more. <em>Music told us what to feel.</em> Each one opened another channel into the body. Then it stopped, and it has been stuck there ever since.</p>
+    <div class="scroll-cue">scroll</div>
+  </section>
+
+  <section class="stage" data-stage="1">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">01</div>
+      <div class="label">the still <b>· channel 01</b></div>
+      <p>A square photograph, badly lit. One second of somebody else's trip: a beach, a road, a window in a town you have never been to.</p>
+      <p>It gives you almost nothing, which is why it works. The day around it is missing, so you supply the day — the heat, the drive, who they were with. <b>Most of the feeling was yours.</b></p>
+      <div class="quiet">one second · and you filled in the day</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="2">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">02</div>
+      <div class="label">time <b>· channel 02</b></div>
+      <p>Then the frames moved. Video did not show more of the world than a photo did; it showed how long things took. The half-second before someone answers. A face changing halfway through a sentence. <em>Most of what we read as feeling in another person is timing.</em></p>
+      <p>There was less left for you to fill in, and it worked better anyway.</p>
+      <div class="quiet">the half-second before someone answers</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="3">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">03</div>
+      <div class="label">music <b>· channel 03</b></div>
+      <p><em>Music told us what to feel.</em></p>
+      <p>Scroll past a clip with the sound off and nothing happens. Turn it on, and four seconds later you have stopped scrolling. The video did not get better. The song told you how to take it.</p>
+      <p>The deciding was done for you somewhere around the second bar. <b>You can hear it happening and it still works.</b></p>
+      <div class="quiet">sound off, nothing · sound on, you stay</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="4">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">04</div>
+      <div class="label">the pattern <b>· channel 04</b></div>
+      <p>None of it was about picture quality. Nobody was ever moved by a higher bitrate.</p>
+      <p>What changed each time was how far past your thinking the thing could get before you noticed. <em>So what else is there?</em></p>
+      <div class="quiet">how far past your thinking it gets</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="5">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">05</div>
+      <div class="label">what we tried <b>· channel 05</b></div>
+      <p>After music, everything anyone tried came up short.</p>
+      <div class="ports">
+        <div class="port">
+          <span class="dot">◆</span><span class="nm">haptics</span>
+          <span class="tx">There are genuinely clever apps for this. They pull the rhythm out of whatever is playing and drive the phone's vibration off it, so the track is in your hand as well as your ears. <em>And the feeling is not quite there.</em> You notice the phone doing it, which is the whole problem.</span>
+        </div>
+        <div class="port">
+          <span class="dot">◆</span><span class="nm">light</span>
+          <span class="tx">Screens and bulbs that flash along with the track. It looks great for a minute. Then it is <em>a light in the room keeping time</em>, and the song is somewhere else.</span>
+        </div>
+        <div class="port">
+          <span class="dot">◆</span><span class="nm">smell</span>
+          <span class="tx">Attempted on and off since the 1950s, and it has never once worked. <em>Nothing suggests that is about to change.</em></span>
+        </div>
+      </div>
+      <p>None of them are bad ideas. They add a sensation while the song is playing, and the sensation stays separate from it.</p>
+      <div class="quiet">still waiting on the second thing that works</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="6">
+    <div class="stage-inner">
+      <div class="st-num" aria-hidden="true">06</div>
+      <div class="label">what might be next <b>· channels 06—07</b></div>
+      <p>People keep trying this one. Headsets already track your eyes, the watch already has your pulse, the feed already counts how long you hovered — joining them up is the easy part, and somebody attempts it every few years, usually announced as a wellbeing feature. It never survives contact with anyone outside the demo. It reads as being watched back, and people will not have it in the room.</p>
+      <p>A gentler one: a branch of the vagus nerve runs just under the skin of the outer ear, the same patch an earbud rests against all day. <b>No headphone does this today</b> — the hardware just happens to already sit in the right place. A small current there changes how calm you are rather than what you are looking at, and nobody has made that feel like anything yet.</p>
+      <p>Then one with no sensor in it at all. A film alone and the same film next to a friend are two different films. <em>Half of what we call a good evening is just knowing someone else is in the room, hearing the same thing at the same moment</em> — and a feed of a hundred million people has somehow never once felt like that.</p>
+      <div class="quiet">none of these have happened yet</div>
+    </div>
+  </section>
+
+  <section class="coda" data-stage="7">
+    <div class="coda-inner">
+      <h2>Nobody has found it <em>yet</em></h2>
+      <p>Music is still the last thing that clearly worked, and that was more than a decade ago. Everything since has been a demo: good for a minute, until you can see the feature.</p>
+      <p>It might be the feed that measures you, and we would probably take it. Or a current in the ear that nobody has made feel like anything. Or something with no hardware in it at all — knowing that someone else is watching at the same time as you, and feeling close to them for it.</p>
+      <p><em>For now the songs are still doing all of it.</em></p>
+      <div class="colophon">a decade since the last one that worked<br>notes on media, bodies and <i>what hasn't landed yet</i></div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ── progress rail + reveals ────────────────────────────── */
+  var rail = document.querySelector('.rail');
+  var chanN = document.getElementById('chan-n');
+  var prog = 0;
+  function onScroll() {
+    var h = document.documentElement.scrollHeight - window.innerHeight;
+    prog = h > 0 ? Math.min(1, Math.max(0, window.scrollY / h)) : 0;
+    if (rail) rail.style.setProperty('--p', (prog * 100).toFixed(2) + '%');
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  var io = new IntersectionObserver(function (es) {
+    es.forEach(function (e) { if (e.isIntersecting) e.target.classList.add('in-view'); });
+  }, { threshold: 0.2 });
+  document.querySelectorAll('.stage, .coda').forEach(function (s) { io.observe(s); });
+
+  /* ════════════════════════════════════════════════════════
+     THE CHANNEL STACK
+
+     Seven lanes, stacked from the floor up. Each is a channel
+     into a person: the still frame (flat, silent, waiting), time,
+     music, touch, the nerve in the ear, the loop that watches
+     back, and the others feeling it with you.
+
+     Scrolling opens them one at a time. The dashed rule above the
+     stack is the gap — the part the viewer still has to supply.
+     It closes as the channels fill in.
+
+     In the coda everything switches off but the first lane, and
+     the gap opens all the way back up.
+     ════════════════════════════════════════════════════════ */
+  var cv = document.getElementById('field');
+  var ctx = cv.getContext('2d');
+  var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var W = 0, H = 0, DPR = 1, N = 200;
+
+  var LANES = [
+    { col: [139, 133, 120], kind: 'still' },
+    { col: [122, 215, 255], kind: 'time'  },
+    { col: [255, 111, 145], kind: 'music' },
+    { col: [255, 184,  97], kind: 'touch' },
+    { col: [255, 184,  97], kind: 'nerve' },
+    { col: [122, 215, 255], kind: 'loop'  },
+    { col: [255, 111, 145], kind: 'we'    }
+  ];
+
+  function resize() {
+    DPR = Math.min(window.devicePixelRatio || 1, 2);
+    W = window.innerWidth; H = window.innerHeight;
+    cv.width = Math.floor(W * DPR); cv.height = Math.floor(H * DPR);
+    cv.style.width = W + 'px'; cv.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    N = W < 700 ? 110 : 200;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function smooth(a, b, x) {
+    if (b <= a) return x >= b ? 1 : 0;
+    var t = Math.min(1, Math.max(0, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  }
+
+  /* how open is lane i, given scroll p */
+  function openness(i, p) {
+    var start = 0.02 + i * 0.115;
+    var a = smooth(start, start + 0.085, p);
+    if (i > 0) a *= (1 - smooth(0.88, 0.995, p));   /* the coda closes them */
+    return a;
+  }
+
+  /* the shape a channel makes */
+  function sample(kind, x, t) {
+    switch (kind) {
+      case 'still': return 0;
+      case 'time':  return Math.sin(x * 3.1 + t * 0.55);
+      case 'music': return Math.sin(x * 8.4 + t * 1.5) * 0.75 +
+                           Math.sin(x * 16.9 + t * 2.1) * 0.25;
+      case 'touch': var s = Math.sin(x * 1.7 + t * 0.9);
+                    return Math.sign(s) * Math.pow(Math.abs(s), 0.35);
+      case 'nerve': var b = Math.sin(x * 1.05 + t * 0.32) * 0.5;
+                    var sp = Math.pow(Math.max(0, Math.sin(x * 9.4 - t * 1.55)), 14);
+                    return b + sp * 0.85;
+      case 'loop':  return Math.sin(x * 6.1 + t * 1.1) *
+                           (0.35 + 0.65 * Math.abs(Math.sin(t * 0.42)));
+      case 'we':    return Math.sin(x * 5.3 + t * 1.25);
+    }
+    return 0;
+  }
+
+  function drawLane(i, y, a, t) {
+    var L = LANES[i], c = L.col;
+    var amp = (H * 0.024) * (0.35 + 0.65 * a);
+    var alpha = 0.08 + 0.30 * a;
+    var reps = L.kind === 'we' ? 3 : 1;
+
+    for (var r = 0; r < reps; r++) {
+      var off = (r - 1) * 5;
+      ctx.beginPath();
+      for (var k = 0; k <= N; k++) {
+        var x = k / N;
+        var v = sample(L.kind, x * 6.2831 + r * 0.9, t) * a;
+        var px = x * W;
+        var py = y + off - v * amp;
+        if (k === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.strokeStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' +
+                        (alpha / reps).toFixed(3) + ')';
+      ctx.lineWidth = L.kind === 'touch' ? 2.2 : 1.1;
+      ctx.stroke();
+    }
+
+    /* the still frame is dots, not a wave — one instant, held */
+    if (L.kind === 'still') {
+      ctx.fillStyle = 'rgba(' + c[0] + ',' + c[1] + ',' + c[2] + ',' + (0.22 + 0.24 * a).toFixed(3) + ')';
+      for (var d = 0; d <= 22; d++) {
+        ctx.beginPath();
+        ctx.arc((d / 22) * W, y, 1.3, 0, 6.2832);
+        ctx.fill();
+      }
+    }
+  }
+
+  function frame(now) {
+    var t = reduced ? 0 : now / 1000;
+    ctx.clearRect(0, 0, W, H);
+
+    var base = H * 0.955, step = H * 0.071, top = base, opened = 0;
+
+    for (var i = 0; i < LANES.length; i++) {
+      var a = openness(i, prog);
+      var y = base - i * step;
+      if (a > 0.01) { drawLane(i, y, a, t); }
+      if (a > 0.5) { top = y; opened++; }
+    }
+
+    /* the gap: what the viewer still has to supply */
+    var gy = top - step * 0.62;
+    ctx.save();
+    ctx.setLineDash([3, 7]);
+    ctx.strokeStyle = 'rgba(236,231,221,0.14)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(W * 0.04, gy); ctx.lineTo(W * 0.96, gy);
+    ctx.stroke();
+    ctx.restore();
+
+    if (gy > 0) {
+      var g = ctx.createLinearGradient(0, gy, 0, 0);
+      g.addColorStop(0, 'rgba(236,231,221,0)');
+      g.addColorStop(1, 'rgba(236,231,221,0.055)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, gy);
+    }
+
+    if (chanN) {
+      var shown = Math.max(1, opened);
+      if (chanN.textContent !== String(shown)) chanN.textContent = shown;
+    }
+
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

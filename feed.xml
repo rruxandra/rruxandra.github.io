@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Sun, 30 Aug 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Tue, 01 Sep 2026 12:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>Tech and Feelings</title>
+      <link>https://rruxandra.github.io/tech-and-feelings.html</link>
+      <description>The photo made us feel something. Video made us feel more. Music told us what to feel. Everything attempted since — apps that vibrate the phone on the beat, lights pulsing with the track, smell — adds a sensation while the song plays and stays separate from it. On eye and pulse tracking read back by the feed, a branch of the vagus nerve under the skin of the outer ear, the warmth of someone watching at the same time, and why nobody has found the next one yet.</description>
+      <pubDate>Tue, 01 Sep 2026 12:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/tech-and-feelings.html</guid>
+    </item>
 
     <item>
       <title>The Well-Lit Room</title>
