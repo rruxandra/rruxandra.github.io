@@ -20,7 +20,7 @@
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body { height: 100%; }
+  html, body { min-height: 100%; }
   body {
     background: var(--bg);
     color: var(--ink);
@@ -71,7 +71,8 @@
   /* ---- one-screen composition ---- */
   main {
     position: relative; z-index: 10;
-    height: 100dvh;
+    min-height: 100vh;                /* fallback: older iOS/Android ignore dvh */
+    min-height: 100dvh;
     display: grid;
     grid-template-rows: 1fr auto 1fr;
     align-items: center;
@@ -227,6 +228,8 @@
     .lede { max-width: 34ch; }
     .back { left: 18px; bottom: 14px; }
     .row-label { padding: 8px 11px; letter-spacing: 0.14em; }
+    .tale-sec { padding-left: 18px; padding-right: 18px; }
+    .stage { height: clamp(230px, 34vh, 320px); }
   }
   @media (max-height: 560px) {
     .lede { display: none; }
@@ -332,9 +335,10 @@
     return String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0');
   }
 
-  let last = performance.now();
+  let last = null;                    // seeded from the first rAF stamp — never mix clocks
   let phase = 0;
   function frame(now) {
+    if (last === null) last = now;
     const dt = Math.min(50, now - last); last = now;
     ensureBuf();
 
@@ -405,7 +409,9 @@
   let W = 0, H = 0, DPR = Math.min(window.devicePixelRatio || 1, 2);
   function resize() {
     const r = cv.getBoundingClientRect();
-    W = Math.max(1, r.width); H = Math.max(1, r.height);
+    const w = Math.max(1, Math.round(r.width)), h = Math.max(1, Math.round(r.height));
+    if (w === W && h === H) return;   // mobile address bars fire resize constantly
+    W = w; H = h;
     cv.width = W * DPR; cv.height = H * DPR;
     c.setTransform(DPR, 0, 0, DPR, 0, 0);
     if (reduce) drawStill();
@@ -423,6 +429,8 @@
   const lerp = (a, b, t) => a + (b - a) * t;
   const clamp01 = t => Math.min(1, Math.max(0, t));
   const hopY = (t, hops, h) => -Math.abs(Math.sin(clamp01(t) * hops * Math.PI)) * h;
+
+  let S = 1;                                      // scene scale — the story fits any screen
 
   const NP = 5;                                   // pieces in the little monument
   const SCAT = [0.07, 0.145, 0.11, 0.20, 0.165]; // where they lie at first (fractions of W)
@@ -449,13 +457,14 @@
     c.fillStyle = `rgba(92,240,194,${alpha * 0.22})`;
     c.lineWidth = 1.3;
     if (i === NP - 1) {
-      sparkle(x, y, 7, alpha, now * 0.0008);
+      sparkle(x, y, 7 * S, alpha, now * 0.0008);
     } else if (i % 2) {
       c.beginPath();
-      c.moveTo(x, y - 6); c.lineTo(x + 6, y); c.lineTo(x, y + 6); c.lineTo(x - 6, y);
+      const d = 6 * S;
+      c.moveTo(x, y - d); c.lineTo(x + d, y); c.lineTo(x, y + d); c.lineTo(x - d, y);
       c.closePath(); c.fill(); c.stroke();
     } else {
-      c.beginPath(); c.arc(x, y, 5.5, 0, Math.PI * 2); c.fill(); c.stroke();
+      c.beginPath(); c.arc(x, y, 5.5 * S, 0, Math.PI * 2); c.fill(); c.stroke();
     }
     c.restore();
   }
@@ -518,11 +527,12 @@
   // one frame; k = -1 before it begins, END after it ends
   function render(k, p, now) {
     c.clearRect(0, 0, W, H);
+    S = Math.max(0.58, Math.min(1.1, Math.min(W / 760, H / 340)));
     const gy = H * 0.80;
-    const bx = W * 0.30, showX = W * 0.60;
+    const bx = W * 0.27, showX = W * 0.58;
     drawGround(gy);
 
-    const stackY = j => gy - 6 - j * 12;
+    const stackY = j => gy - (6 + j * 12) * S;
 
     // ---- the little one's state ----
     let ax = bx, ayoff = 0, sq = 1, gazeX = 0, gazeY = 0, mood = '', tilt = 0, aAlpha = 1;
@@ -541,47 +551,47 @@
       const scx = SCAT[seg] * W;
       if (q < 0.4) {                       // out to the piece
         const t2 = q / 0.4;
-        ax = lerp(bx, scx + 12, ease(t2)); ayoff = hopY(t2, 2, 12);
+        ax = lerp(bx, scx + 12 * S, ease(t2)); ayoff = hopY(t2, 2, 12 * S);
         gazeX = -3; gazeY = 2;
       } else if (q < 0.6) {                // pick it up
         const t2 = (q - 0.4) / 0.2;
-        ax = scx + 12; sq = 1 - 0.22 * Math.sin(Math.PI * t2);
+        ax = scx + 12 * S; sq = 1 - 0.22 * Math.sin(Math.PI * t2);
         carried = seg;
-        cx2 = lerp(scx, scx + 12, t2); cy2 = lerp(gy - 6, gy - 34, ease(t2));
+        cx2 = lerp(scx, scx + 12 * S, t2); cy2 = lerp(gy - 6 * S, gy - 34 * S, ease(t2));
         gazeX = -3; gazeY = 3;
       } else {                             // carry it home
         const t2 = (q - 0.6) / 0.4;
-        ax = lerp(scx + 12, bx, ease(t2)); ayoff = hopY(t2, 2, 12);
-        carried = seg; cx2 = ax; cy2 = gy - 34 + ayoff;
+        ax = lerp(scx + 12 * S, bx, ease(t2)); ayoff = hopY(t2, 2, 12 * S);
+        carried = seg; cx2 = ax; cy2 = gy - 34 * S + ayoff;
         gazeX = 3; gazeY = 1;
       }
     } else if (k === 1) {
       built = NP;
-      ax = bx - 26; ayoff = hopY(p, 2, 15);
-      mood = ayoff < -4 ? 'happy' : '';
+      ax = bx - 26 * S; ayoff = hopY(p, 2, 15 * S);
+      mood = ayoff < -4 * S ? 'happy' : '';
       gazeX = 3; gazeY = -2;
       starA = 0.9 + 0.3 * Math.sin(now * 0.012);
     } else if (k === 2) {
       built = NP;
       stackX = lerp(bx, showX, ease(p)) + Math.sin(p * 30) * 1.2;
-      ax = stackX - 24; sq = 0.85; tilt = 0.16;
-      ayoff = hopY(p * 5 % 1, 1, 3);
+      ax = stackX - 24 * S; sq = 0.85; tilt = 0.16;
+      ayoff = hopY(p * 5 % 1, 1, 3 * S);
       gazeX = 4; gazeY = 1;
     } else if (k === 3) {
       built = NP; stackX = showX;
-      ax = showX - 30;
-      if (p < 0.55) ayoff = hopY(p / 0.55, 2, 11);
+      ax = showX - 30 * S;
+      if (p < 0.55) ayoff = hopY(p / 0.55, 2, 11 * S);
       gazeX = 4; gazeY = -3;
       starA = 0.9 + 0.3 * Math.sin(now * 0.01);
     } else if (k === 4) {
       built = NP; stackX = showX;
-      ax = showX - 30;
-      if (p > 0.25 && p < 0.4) ayoff = hopY((p - 0.25) / 0.15, 1, 9);   // one more hopeful hop
+      ax = showX - 30 * S;
+      if (p > 0.25 && p < 0.4) ayoff = hopY((p - 0.25) / 0.15, 1, 9 * S);   // one more hopeful hop
       gazeX = 4; gazeY = -3;
     } else if (k === 5) {
       built = NP; stackX = showX;
       const s2 = ease(p);
-      ax = lerp(showX - 30, showX - 20, ease(clamp01(p * 1.4)));
+      ax = lerp(showX - 30 * S, showX - 20 * S, ease(clamp01(p * 1.4)));
       sq = lerp(1, 0.78, s2);
       gazeX = lerp(4, -1, s2); gazeY = lerp(-3, 4, ease(clamp01(s2 * 2)));
       if (p > 0.3) mood = 'sad';
@@ -591,8 +601,8 @@
     } else if (k === 6) {
       // it leaves the way it came — and keeps going, until it isn't there
       built = NP; stackX = showX;
-      ax = lerp(showX - 20, -40, ease(p));
-      ayoff = hopY(p, 4, 6) * (1 - 0.3 * p);
+      ax = lerp(showX - 20 * S, -40 * S, ease(p));
+      ayoff = hopY(p, 4, 6 * S) * (1 - 0.3 * p);
       sq = 0.8; mood = 'sad';
       aAlpha = 0.8 * (1 - clamp01((p - 0.72) / 0.28));
       gazeX = -4; gazeY = 3;
@@ -614,14 +624,14 @@
         const dj = (NP - 1 - j) * 0.07;
         const fp = clamp01((p - dj) / 0.38);
         const dp = clamp01((p - dj - 0.34) / 0.55);
-        const fx = showX + (j % 2 ? 1 : -1) * (6 + j * 7) * fp;
-        const fy = lerp(stackY(j), gy - 5, fp * fp);
+        const fx = showX + (j % 2 ? 1 : -1) * (6 + j * 7) * S * fp;
+        const fy = lerp(stackY(j), gy - 5 * S, fp * fp);
         piece(j, fx, fy, 0.4 * (1 - dp), now);
         if (dp > 0 && dp < 1) {
           c.fillStyle = `rgba(92,240,194,${(1 - dp) * 0.25})`;
           for (let m = 0; m < 3; m++) {
             c.beginPath();
-            c.arc(fx + (m - 1) * 6, fy - dp * 24 - m * 5, 1, 0, Math.PI * 2);
+            c.arc(fx + (m - 1) * 6 * S, fy - (dp * 24 + m * 5) * S, 1, 0, Math.PI * 2);
             c.fill();
           }
         }
@@ -630,7 +640,7 @@
       for (let j = 0; j < NP; j++) {
         const isStar = j === NP - 1;
         if (k <= 0 && j >= built && j !== carried) {
-          piece(j, SCAT[j] * W, gy - 6, 0.75 + 0.1 * Math.sin(now * 0.002 + j), now);
+          piece(j, SCAT[j] * W, gy - 6 * S, 0.75 + 0.1 * Math.sin(now * 0.002 + j), now);
         } else if (j === carried) {
           piece(j, cx2, cy2, 0.9, now);
         } else if (j < built || k >= 1) {
@@ -649,15 +659,15 @@
     } else if (k >= 5) {
       oshift = 10;
     }
-    creature(W * 0.80 + oshift, gy, 26, 1 + 0.015 * Math.sin(now * 0.0014), {
-      gray: true, alpha: 1, gazeX: ogx, gazeY: ogy2, blink: oblink
+    creature(W * 0.80 + oshift * S, gy, 26 * S, 1 + 0.015 * Math.sin(now * 0.0014), {
+      gray: true, alpha: 1, gazeX: ogx * S, gazeY: ogy2 * S, blink: oblink
     });
 
     // ---- the little one ----
     if (aAlpha > 0.01) {
       const ablink = !mood && ((now / 1000 + 1.3) % 4.2) < 0.12;
-      creature(ax, gy + ayoff, 13, sq, {
-        alpha: aAlpha, gazeX, gazeY, mood, blink: ablink, tilt, glow: 7 * aAlpha
+      creature(ax, gy + ayoff, 13 * S, sq, {
+        alpha: aAlpha, gazeX: gazeX * S, gazeY: gazeY * S, mood, blink: ablink, tilt, glow: 7 * aAlpha
       });
     }
   }
@@ -669,19 +679,38 @@
 
   resize();
   window.addEventListener('resize', resize);
-  if (reduce) { drawStill(); return; }
+  window.addEventListener('orientationchange', () => setTimeout(resize, 250));
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) resize(); });
 
   // it happens once, and only once someone is there to see it.
-  // clicking the scene lets you witness it again — the creature itself never retries.
-  let start = null;
-  const io = new IntersectionObserver(entries => {
-    for (const e of entries) if (e.isIntersecting && start === null) { resize(); start = performance.now(); }
-  }, { threshold: 0.35 });
-  io.observe(cv.parentElement);
-  document.addEventListener('visibilitychange', () => { if (!document.hidden) resize(); });
-  cv.parentElement.addEventListener('click', () => { start = performance.now(); });
+  // tapping the scene lets you witness it again — the creature itself never retries.
+  let start = null, cue = false;
+  const stage = cv.parentElement;
+  function begin() { resize(); if (start === null) cue = true; }
+  stage.addEventListener('click', () => { resize(); start = null; cue = true; });
+
+  if (reduce) { drawStill(); return; }   // motion only if this visitor wants it
+
+  if ('IntersectionObserver' in window) {
+    // a low threshold so short screens can still trip it
+    const io = new IntersectionObserver(entries => {
+      for (const e of entries) if (e.isIntersecting && start === null) { begin(); io.disconnect(); }
+    }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+    io.observe(stage);
+  } else {
+    const onScroll = () => {
+      const r = stage.getBoundingClientRect();
+      if (r.top < innerHeight * 0.85 && r.bottom > 0) {
+        begin();
+        window.removeEventListener('scroll', onScroll);
+      }
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  }
 
   function frame(now) {
+    if (cue) { start = now; cue = false; }      // the clock is the one rAF hands us
     const t = start === null ? -1 : now - start;
     let acc = 0, p = 1, k = END;
     if (t < 0) k = -1;
