@@ -216,6 +216,18 @@
     opacity: 0.5;
   }
   canvas#tale { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; }
+  .stage { cursor: pointer; }
+  .tap-hint {
+    position: absolute; z-index: 4; left: 50%; top: 50%;
+    transform: translate(-50%, -50%);
+    padding: 9px 16px;
+    background: rgba(5, 9, 11, 0.72);
+    border: 1px solid var(--panel);
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--sig); cursor: pointer;
+  }
   @keyframes rise {
     from { opacity: 0; transform: translateY(20px); }
     to   { opacity: 1; transform: translateY(0); }
@@ -280,6 +292,7 @@
   <h2 class="tale-title">Nothing</h2>
   <div class="stage">
     <canvas id="tale"></canvas>
+    <button class="tap-hint" id="tale-play" type="button" hidden>tap to play</button>
   </div>
 </section>
 
@@ -689,9 +702,20 @@
   function begin() { resize(); if (start === null) cue = true; }
   stage.addEventListener('click', () => { resize(); start = null; cue = true; });
 
-  if (reduce) { drawStill(); return; }   // motion only if this visitor wants it
+  // Reduced motion (iOS also reports it in Low Power Mode) means: don't play
+  // unprompted. It must never mean a frozen frame with no way forward.
+  const hint = document.getElementById('tale-play');
+  let hold = reduce;
+  if (hold) hint.hidden = false;
+  hint.addEventListener('click', e => { e.stopPropagation(); hold = false; hint.hidden = true; resize(); start = null; cue = true; });
+  stage.addEventListener('click', () => { hold = false; hint.hidden = true; });
+  const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const onPref = () => { if (!mq.matches && hold) { hold = false; hint.hidden = true; begin(); } };
+  mq.addEventListener ? mq.addEventListener('change', onPref) : mq.addListener(onPref);
 
-  if ('IntersectionObserver' in window) {
+  if (hold) {
+    // nothing auto-starts; the loop below holds the opening frame until asked
+  } else if ('IntersectionObserver' in window) {
     // a low threshold so short screens can still trip it
     const io = new IntersectionObserver(entries => {
       for (const e of entries) if (e.isIntersecting && start === null) { begin(); io.disconnect(); }
@@ -711,6 +735,7 @@
 
   function frame(now) {
     if (cue) { start = now; cue = false; }      // the clock is the one rAF hands us
+    if (hold && start === null) { render(-1, 0, 0); return requestAnimationFrame(frame); }
     const t = start === null ? -1 : now - start;
     let acc = 0, p = 1, k = END;
     if (t < 0) k = -1;
