@@ -18,7 +18,10 @@ body.nohud .hud{opacity:0;pointer-events:none}
 h1{font-size:26px;letter-spacing:.32em;font-weight:600;text-transform:uppercase;line-height:1}
 h1 span{color:#7ee8ff}
 .sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-top:8px}
-#legend{top:98px;left:24px;width:310px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.back{display:inline-block;margin-top:12px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color .3s}
+.back:hover{color:#7ee8ff}
+.back::before{content:"\2190  "}
+#legend{top:116px;left:24px;width:310px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .lh{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:4px 8px 8px}
 .strain{display:grid;grid-template-columns:12px 1fr auto;column-gap:10px;row-gap:4px;align-items:center;padding:7px 8px;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:background .2s,border-color .2s}
 .strain:hover{background:rgba(255,255,255,.05)}
@@ -54,10 +57,11 @@ body.paused #paused{display:block}
   #title{top:14px;left:14px}
   h1{font-size:17px;letter-spacing:.24em}
   .sub{font-size:8px;letter-spacing:.1em;margin-top:5px}
+  .back{font-size:9px;letter-spacing:.2em;margin-top:8px}
   #stats{top:14px;right:14px;font-size:10px;line-height:1.6}
   #stats .big{font-size:24px}
   #stats .mhide{display:none}
-  #legend{top:60px;left:14px;width:196px;padding:6px}
+  #legend{top:74px;left:14px;width:196px;padding:6px}
   .lh{font-size:8.5px;letter-spacing:.12em;padding:3px 6px 6px}
   .strain{padding:5px 6px;column-gap:7px}
   .dot{width:9px;height:9px}
@@ -79,6 +83,7 @@ body.paused #paused{display:block}
 <div id="title" class="hud">
   <h1>Vec<span>tor</span></h1>
   <div class="sub">ideas are viruses · minds are hosts</div>
+  <a class="back" href="index.html">return to log</a>
 </div>
 
 <div id="legend" class="hud"><div class="lh">ideas · pick one to arm it</div></div>
