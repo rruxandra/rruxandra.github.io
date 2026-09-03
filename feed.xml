@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Tue, 01 Sep 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Thu, 03 Sep 2026 12:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>Vector</title>
+      <link>https://rruxandra.github.io/vector.html</link>
+      <description>Ideas are viruses and minds are hosts. Five ideas loose in the same population of minds at once — one slow to start and unstoppable once it has company, one that spreads like fire until minds tire of it, one that burns out fast, one that lingers in the gaps. They compete for the same hosts, mutate as they travel, and the strongest is rarely the truest. Drag to orbit, arm an idea, click a mind to plant it.</description>
+      <pubDate>Thu, 03 Sep 2026 12:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/vector.html</guid>
+    </item>
 
     <item>
       <title>Tech and Feelings</title>

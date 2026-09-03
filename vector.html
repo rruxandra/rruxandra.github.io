@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Vector</title>
+<style>
+:root{--fg:#e8ecf4;--dim:rgba(232,236,244,.55);--panel:rgba(8,10,20,.55);--line:rgba(255,255,255,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#05060c;color:var(--fg);font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#gl.drag{cursor:grabbing}
+#gl.pick{cursor:crosshair}
+#vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 45%,rgba(0,0,0,.6) 100%)}
+.hud{position:fixed;z-index:5;transition:opacity .4s}
+body.nohud .hud{opacity:0;pointer-events:none}
+#title{top:22px;left:24px}
+h1{font-size:26px;letter-spacing:.32em;font-weight:600;text-transform:uppercase;line-height:1}
+h1 span{color:#7ee8ff}
+.sub{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-top:8px}
+#legend{top:98px;left:24px;width:310px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
+.lh{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);padding:4px 8px 8px}
+.strain{display:grid;grid-template-columns:12px 1fr auto;column-gap:10px;row-gap:4px;align-items:center;padding:7px 8px;border-radius:7px;cursor:pointer;border:1px solid transparent;transition:background .2s,border-color .2s}
+.strain:hover{background:rgba(255,255,255,.05)}
+.strain.sel{border-color:var(--c);background:rgba(255,255,255,.06)}
+.dot{width:12px;height:12px;border-radius:50%;background:var(--c);box-shadow:0 0 10px var(--c)}
+.name{font-size:12.5px;font-weight:600;letter-spacing:.03em;line-height:1.25}
+.count{font-size:12px;font-variant-numeric:tabular-nums;color:var(--dim)}
+.tag{grid-column:2/4;font-size:10.5px;color:var(--dim);letter-spacing:.02em;margin-top:-2px}
+.bar{grid-column:1/4;height:3px;background:rgba(255,255,255,.06);border-radius:2px;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:var(--c);transition:width .5s}
+.strain.dead .dot{opacity:.25;box-shadow:none}
+.strain.dead .name{color:var(--dim);text-decoration:line-through}
+#stats{top:22px;right:24px;text-align:right;font-size:12px;color:var(--dim);line-height:1.75;letter-spacing:.04em}
+#stats b{color:var(--fg);font-weight:600;font-variant-numeric:tabular-nums}
+#stats .big{font-size:34px;font-weight:300;color:var(--fg);letter-spacing:.02em;line-height:1.1}
+#stats .big b{font-weight:300}
+#log{bottom:24px;left:24px;width:340px;font-size:12px;line-height:1.5}
+#log div{padding:2px 0 2px 10px;border-left:2px solid var(--c,#fff);margin-top:6px;color:var(--fg);opacity:0;animation:in .4s forwards;transition:opacity .6s}
+#log div b{font-weight:600}
+@keyframes in{to{opacity:1}}
+#log div.old{opacity:.32}
+#help{bottom:24px;right:24px;text-align:right;font-size:11px;color:var(--dim);line-height:2;letter-spacing:.06em}
+#help kbd{display:inline-block;min-width:18px;padding:0 5px;border:1px solid rgba(255,255,255,.18);border-radius:4px;font:11px/17px inherit;color:var(--fg);text-align:center;margin:0 2px 0 6px}
+#tip{position:fixed;z-index:6;pointer-events:none;font-size:11.5px;letter-spacing:.04em;padding:6px 10px;background:rgba(8,10,20,.82);border:1px solid var(--line);border-radius:6px;transform:translate(16px,-50%);white-space:nowrap;opacity:0;transition:opacity .15s;line-height:1.5}
+#tip b{font-weight:600}
+#tip small{color:var(--dim)}
+#hint{position:fixed;z-index:5;left:50%;bottom:170px;transform:translateX(-50%);font-size:12px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);animation:pulse 2.4s ease-in-out infinite;pointer-events:none;transition:opacity .8s;white-space:nowrap}
+@keyframes pulse{50%{opacity:.35}}
+#paused{position:fixed;z-index:5;left:50%;top:50%;transform:translate(-50%,-50%);font-size:14px;letter-spacing:.5em;text-transform:uppercase;color:var(--fg);display:none;pointer-events:none}
+body.paused #paused{display:block}
+#fallback{position:fixed;inset:0;display:none;place-items:center;text-align:center;padding:40px;color:var(--dim);font-size:14px;line-height:1.6}
+@media (max-width:720px){
+  #title{top:14px;left:14px}
+  h1{font-size:17px;letter-spacing:.24em}
+  .sub{font-size:8px;letter-spacing:.1em;margin-top:5px}
+  #stats{top:14px;right:14px;font-size:10px;line-height:1.6}
+  #stats .big{font-size:24px}
+  #stats .mhide{display:none}
+  #legend{top:60px;left:14px;width:196px;padding:6px}
+  .lh{font-size:8.5px;letter-spacing:.12em;padding:3px 6px 6px}
+  .strain{padding:5px 6px;column-gap:7px}
+  .dot{width:9px;height:9px}
+  .name{font-size:10.5px}
+  .count{font-size:10.5px}
+  .tag{display:none}
+  #help{display:none}
+  #log{width:190px;bottom:14px;left:14px;font-size:10px}
+  #log div:nth-child(n+4){display:none}
+  #hint{bottom:128px;font-size:10px;letter-spacing:.16em}
+  #tip{font-size:10.5px}
+}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<div id="title" class="hud">
+  <h1>Vec<span>tor</span></h1>
+  <div class="sub">ideas are viruses · minds are hosts</div>
+</div>
+
+<div id="legend" class="hud"><div class="lh">ideas · pick one to arm it</div></div>
+
+<div id="stats" class="hud">
+  <div class="big"><b id="pct">0%</b></div>
+  <div>of all minds infected</div>
+  <div class="mhide">dominant idea <b id="dom">—</b></div>
+  <div class="mhide">carriers in flight <b id="car">0</b></div>
+  <div class="mhide">conversions <b id="conv">0</b></div>
+  <div>epoch <b id="time">00:00</b></div>
+</div>
+
+<div id="log" class="hud"></div>
+
+<div id="help" class="hud">
+  drag to orbit · scroll to zoom · click a mind to plant the armed idea<br>
+  <kbd>1</kbd>–<kbd>5</kbd> arm idea <kbd>space</kbd> pause <kbd>R</kbd> reset <kbd>A</kbd> auto-orbit <kbd>H</kbd> hide ui
+</div>
+
+<div id="hint">click any mind to plant an idea</div>
+<div id="paused">paused</div>
+<div id="tip"></div>
+<div id="fallback">This page needs WebGL to render the neural field.<br>Try a current desktop or mobile browser with hardware acceleration enabled.</div>
+
+<script>
+(function(){
+'use strict';
+const $=s=>document.querySelector(s);
+const canvas=$('#gl');
+const gl=canvas.getContext('webgl',{antialias:true,alpha:false,powerPreference:'high-performance'});
+if(!gl){$('#fallback').style.display='grid';return;}
+
+/* ================= strains ================= */
+const IDEAS=[
+  {name:"Tomorrow can be built",  tag:'slow to start, unstoppable once it has company', color:[1.00,0.78,0.28], virulence:0.75, contagion:0.58, persistence:1.30,
+     arc:t=>0.45+1.05*clamp((t-40)/90,0,1)},
+  {name:"It's all getting worse", tag:'spreads like fire, and minds tire of it',          color:[1.00,0.36,0.40], virulence:1.15, contagion:0.62, persistence:0.90,
+     arc:t=>t<45?1:1-0.75*Math.min(1,(t-45)/75), arcPer:t=>t<40?1:1-0.55*Math.min(1,(t-40)/70)},
+  {name:"Abundance is coming",    tag:'explosive, burns out fast',                        color:[0.25,0.88,1.00], virulence:0.85, contagion:0.42, persistence:0.50},
+  {name:"Nothing really matters", tag:'quiet, patient, lingers in the gaps',              color:[0.70,0.45,1.00], virulence:0.45, contagion:0.55, persistence:0.85},
+  {name:"The system is rigged",   tag:'hard to catch, hard to shake',                     color:[0.45,1.00,0.50], virulence:0.40, contagion:0.55, persistence:1.00},
+];
+function tuneIdeas(t){for(const idea of IDEAS){const s=idea.arc?idea.arc(t):1;idea.vir=idea.virulence*s;idea.con=Math.min(0.9,idea.contagion*s);idea.per=idea.persistence*(idea.arcPer?idea.arcPer(t):1);}}
+const NEUTRAL=[0.30,0.35,0.50];
+const GREEK=['Alpha','Beta','Gamma','Delta','Epsilon','Zeta','Eta','Theta'];
+const N=440, K=7, MAXV=700, MAXR=300, NSTARS=1100, FOV=55*Math.PI/180;
+const css=c=>`rgb(${(c[0]*255)|0},${(c[1]*255)|0},${(c[2]*255)|0})`;
+const clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const tag=(k)=>`<b style="color:${css(IDEAS[k].color)}">${IDEAS[k].name}</b>`;
+
+/* ================= state ================= */
+let minds=[],edges=[],clusters=[],viruses=[],rings=[];
+let simT=0,wallT=0,lastT=0,hudT=0,paused=false,selected=0,hovered=-1,autoOrbit=true,idle=0;
+let spontT=16,evT=1,lastCounts=new Int32Array(IDEAS.length),dominant=new Array(IDEAS.length).fill(false);
+const stats={conversions:0};
+const cam={yaw:0.8,pitch:0.28,dist:340,yawT:0.8,pitchT:0.28,distT:118,target:[0,0,0]};
+const mouse={x:-1,y:-1,in:false};
+let dpr=1,uScale=1,maxPoint=64;
+
+/* ================= gl helpers ================= */
+function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+function makeProg(vs,fs){
+  const p=gl.createProgram();gl.attachShader(p,compile(gl.VERTEX_SHADER,vs));gl.attachShader(p,compile(gl.FRAGMENT_SHADER,fs));gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+  const o={prog:p,a:{},u:{}};
+  const na=gl.getProgramParameter(p,gl.ACTIVE_ATTRIBUTES);for(let i=0;i<na;i++){const n=gl.getActiveAttrib(p,i).name;o.a[n]=gl.getAttribLocation(p,n);}
+  const nu=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS);for(let i=0;i<nu;i++){const n=gl.getActiveUniform(p,i).name;o.u[n]=gl.getUniformLocation(p,n);}
+  return o;
+}
+const VS_PT=`
+attribute vec3 aPos; attribute vec4 aColor; attribute vec2 aSize;
+uniform mat4 uVP; uniform float uScale; uniform float uMaxPoint; uniform float uSizeMul;
+varying vec4 vColor; varying float vDepth; varying float vSeed;
+void main(){
+  vec4 c=uVP*vec4(aPos,1.0); gl_Position=c;
+  float d=max(c.w,0.01);
+  gl_PointSize=min(aSize.x*uSizeMul*uScale/d,uMaxPoint);
+  vColor=aColor; vDepth=d; vSeed=aSize.y;
+}`;
+const FS_PT=`
+precision mediump float;
+varying vec4 vColor; varying float vDepth; varying float vSeed;
+uniform int uMode; uniform float uTime; uniform vec2 uFog; uniform vec3 uFogColor;
+void main(){
+  vec2 p=gl_PointCoord*2.0-1.0; p.y=-p.y;
+  float r=length(p);
+  float fog=1.0-smoothstep(uFog.x,uFog.y,vDepth);
+  if(uMode==0){
+    if(r>1.0) discard;
+    float z=sqrt(max(1.0-r*r,0.0));
+    vec3 n=vec3(p,z);
+    vec3 L=normalize(vec3(0.45,0.6,1.0));
+    float diff=max(dot(n,L),0.0);
+    float rim=pow(1.0-z,2.0);
+    vec3 base=vColor.rgb;
+    vec3 col=base*(0.12+0.88*diff)+base*rim*(0.5+1.6*vColor.a)+vec3(1.0)*pow(diff,30.0)*0.3*(0.3+vColor.a);
+    col=mix(uFogColor,col,fog);
+    gl_FragColor=vec4(col,1.0-smoothstep(0.88,1.0,r));
+  } else if(uMode==1){
+    if(r>1.0) discard;
+    float a=pow(1.0-r,2.2);
+    gl_FragColor=vec4(vColor.rgb*a*vColor.a*fog,1.0);
+  } else if(uMode==2){
+    if(r>1.0) discard;
+    float ang=atan(p.y,p.x)+uTime*(1.5+fract(vSeed)*2.5)+vSeed;
+    float spikes=pow(abs(cos(ang*4.0)),6.0);
+    float edge=0.40+0.5*spikes;
+    float body=1.0-smoothstep(edge-0.12,edge,r);
+    float core=pow(max(1.0-r/0.45,0.0),1.5);
+    float glow=pow(max(1.0-r,0.0),3.0)*0.4;
+    vec3 col=vColor.rgb*(body*0.75+glow)+vec3(1.0)*core*0.6;
+    gl_FragColor=vec4(col*vColor.a*fog,1.0);
+  } else if(uMode==3){
+    if(r>1.0) discard;
+    float ring=1.0-smoothstep(0.0,0.12,abs(r-0.8));
+    float inner=pow(max(1.0-r,0.0),4.0)*0.35;
+    gl_FragColor=vec4(vColor.rgb*(ring+inner)*vColor.a*fog,1.0);
+  } else {
+    if(r>1.0) discard;
+    float a=pow(1.0-r,3.0);
+    float tw=0.7+0.3*sin(uTime*(1.0+fract(vSeed)*3.0)+vSeed*10.0);
+    gl_FragColor=vec4(vColor.rgb*a*vColor.a*tw,1.0);
+  }
+}`;
+const VS_LN=`attribute vec3 aPos; attribute vec4 aColor; uniform mat4 uVP; varying vec4 vColor; varying float vDepth;
+void main(){ vec4 c=uVP*vec4(aPos,1.0); gl_Position=c; vColor=aColor; vDepth=c.w; }`;
+const FS_LN=`precision mediump float; varying vec4 vColor; varying float vDepth; uniform vec2 uFog;
+void main(){ float fog=1.0-smoothstep(uFog.x,uFog.y,vDepth); gl_FragColor=vec4(vColor.rgb*vColor.a*fog,1.0); }`;
+
+const pp=makeProg(VS_PT,FS_PT), lp=makeProg(VS_LN,FS_LN);
+maxPoint=gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE)[1];
+
+const B=()=>gl.createBuffer();
+const buf={pos:B(),nodeCol:B(),nodeSize:B(),haloCol:B(),edgePos:B(),edgeCol:B(),
+  virPos:B(),virCol:B(),virSize:B(),ringPos:B(),ringCol:B(),ringSize:B(),
+  starPos:B(),starCol:B(),starSize:B(),clPos:B(),clCol:B(),clSize:B()};
+function upload(b,data,usage){gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.bufferData(gl.ARRAY_BUFFER,data,usage||gl.DYNAMIC_DRAW);}
+function attrib(loc,b,n){gl.bindBuffer(gl.ARRAY_BUFFER,b);gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,n,gl.FLOAT,false,0,0);}
+function drawPoints(mode,pos,col,size,count,mul){
+  if(count<=0)return;
+  gl.uniform1i(pp.u.uMode,mode);gl.uniform1f(pp.u.uSizeMul,mul);
+  attrib(pp.a.aPos,pos,3);attrib(pp.a.aColor,col,4);attrib(pp.a.aSize,size,2);
+  gl.drawArrays(gl.POINTS,0,count);
+}
+
+/* ================= math ================= */
+function perspective(fovy,aspect,near,far){const f=1/Math.tan(fovy/2),nf=1/(near-far);const m=new Float32Array(16);m[0]=f/aspect;m[5]=f;m[10]=(far+near)*nf;m[11]=-1;m[14]=2*far*near*nf;return m;}
+function lookAt(eye,c,up){
+  let zx=eye[0]-c[0],zy=eye[1]-c[1],zz=eye[2]-c[2],len=Math.hypot(zx,zy,zz);zx/=len;zy/=len;zz/=len;
+  let xx=up[1]*zz-up[2]*zy,xy=up[2]*zx-up[0]*zz,xz=up[0]*zy-up[1]*zx;len=Math.hypot(xx,xy,xz);xx/=len;xy/=len;xz/=len;
+  const yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;
+  const m=new Float32Array(16);
+  m[0]=xx;m[1]=yx;m[2]=zx;m[4]=xy;m[5]=yy;m[6]=zy;m[8]=xz;m[9]=yz;m[10]=zz;
+  m[12]=-(xx*eye[0]+xy*eye[1]+xz*eye[2]);m[13]=-(yx*eye[0]+yy*eye[1]+yz*eye[2]);m[14]=-(zx*eye[0]+zy*eye[1]+zz*eye[2]);m[15]=1;
+  return m;
+}
+function mul4(a,b){const o=new Float32Array(16);for(let i=0;i<4;i++)for(let j=0;j<4;j++){let s=0;for(let k=0;k<4;k++)s+=a[k*4+j]*b[i*4+k];o[i*4+j]=s;}return o;}
+function gauss(){let u=0,v=0;while(u===0)u=Math.random();while(v===0)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+
+/* ================= world ================= */
+let posArr,nodeCol,nodeSize,haloCol,edgePos,edgeCol,scrX,scrY,scrR;
+const virPos=new Float32Array(MAXV*3),virCol=new Float32Array(MAXV*4),virSize=new Float32Array(MAXV*2);
+const ringPos=new Float32Array(MAXR*3),ringCol=new Float32Array(MAXR*4),ringSize=new Float32Array(MAXR*2);
+const clPos=new Float32Array((K+1)*3),clCol=new Float32Array((K+1)*4),clSize=new Float32Array((K+1)*2);
+
+function buildStars(){
+  const p=new Float32Array(NSTARS*3),c=new Float32Array(NSTARS*4),s=new Float32Array(NSTARS*2);
+  for(let i=0;i<NSTARS;i++){
+    const th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1),r=260+Math.random()*180;
+    p[i*3]=r*Math.sin(ph)*Math.cos(th);p[i*3+1]=r*Math.cos(ph);p[i*3+2]=r*Math.sin(ph)*Math.sin(th);
+    const t=Math.random();c[i*4]=0.65+0.35*t;c[i*4+1]=0.72+0.25*t;c[i*4+2]=1.0;c[i*4+3]=0.15+Math.random()*0.5;
+    s[i*2]=0.5+Math.random()*1.5;s[i*2+1]=Math.random()*100;
+  }
+  upload(buf.starPos,p,gl.STATIC_DRAW);upload(buf.starCol,c,gl.STATIC_DRAW);upload(buf.starSize,s,gl.STATIC_DRAW);
+}
+
+function buildWorld(){
+  minds=[];edges=[];clusters=[];viruses=[];rings=[];
+  for(let k=0;k<K;k++){
+    let p,tries=0;
+    do{
+      const r=Math.cbrt(Math.random())*42,th=Math.random()*Math.PI*2,ph=Math.acos(2*Math.random()-1);
+      p=[r*Math.sin(ph)*Math.cos(th),r*Math.cos(ph)*0.65,r*Math.sin(ph)*Math.sin(th)];tries++;
+    }while(tries<80&&clusters.some(q=>Math.hypot(q.c[0]-p[0],q.c[1]-p[1],q.c[2]-p[2])<26));
+    clusters.push({c:p,spread:8+Math.random()*7,members:[],owner:-1,name:GREEK[k]});
+  }
+  for(let i=0;i<N;i++){
+    const ci=Math.floor(Math.random()*K),cl=clusters[ci];
+    const p=[cl.c[0]+gauss()*cl.spread,cl.c[1]+gauss()*cl.spread*0.7,cl.c[2]+gauss()*cl.spread];
+    const base=0.22+Math.random()*0.45;
+    minds.push({p,cluster:ci,owner:-1,inf:0,resist:base,baseResist:base,convertedAt:-99,nb:[],seed:Math.random()*100,size:1,flips:0});
+    cl.members.push(i);
+  }
+  const cen=[0,0,0];
+  for(const m of minds){cen[0]+=m.p[0]/N;cen[1]+=m.p[1]/N;cen[2]+=m.p[2]/N;}
+  for(const m of minds){m.p[0]-=cen[0];m.p[1]-=cen[1];m.p[2]-=cen[2];}
+  for(const cl of clusters){cl.c[0]-=cen[0];cl.c[1]-=cen[1];cl.c[2]-=cen[2];}
+  const set=new Set();
+  const addEdge=(a,b)=>{if(a===b)return;const k=a<b?a*N+b:b*N+a;if(set.has(k))return;set.add(k);edges.push([a,b]);minds[a].nb.push(b);minds[b].nb.push(a);};
+  for(let i=0;i<N;i++){
+    const pi=minds[i].p,d=[];
+    for(let j=0;j<N;j++){if(j===i)continue;const pj=minds[j].p;d.push([(pi[0]-pj[0])**2+(pi[1]-pj[1])**2+(pi[2]-pj[2])**2,j]);}
+    d.sort((a,b)=>a[0]-b[0]);
+    const k=2+Math.floor(Math.random()*3);
+    for(let n=0;n<k;n++)addEdge(i,d[n][1]);
+    if(Math.random()<0.05)addEdge(i,Math.floor(Math.random()*N));
+  }
+  for(const m of minds)m.size=0.55+Math.min(m.nb.length,9)*0.11;
+  posArr=new Float32Array(N*3);nodeCol=new Float32Array(N*4);nodeSize=new Float32Array(N*2);haloCol=new Float32Array(N*4);
+  scrX=new Float32Array(N);scrY=new Float32Array(N);scrR=new Float32Array(N);
+  for(let i=0;i<N;i++){posArr.set(minds[i].p,i*3);nodeSize[i*2+1]=minds[i].seed;}
+  edgePos=new Float32Array(edges.length*6);edgeCol=new Float32Array(edges.length*8);
+  edges.forEach((e,i)=>{edgePos.set(minds[e[0]].p,i*6);edgePos.set(minds[e[1]].p,i*6+3);});
+  upload(buf.pos,posArr,gl.STATIC_DRAW);upload(buf.edgePos,edgePos,gl.STATIC_DRAW);
+  for(let k=0;k<K;k++){clPos.set(clusters[k].c,k*3);clSize[k*2]=clusters[k].spread*5.5;clSize[k*2+1]=k;}
+  clPos.set([0,0,0],K*3);clSize[K*2]=170;clSize[K*2+1]=0;clCol.set([0.12,0.18,0.45,0.10],K*4);
+  upload(buf.clPos,clPos,gl.STATIC_DRAW);upload(buf.clSize,clSize,gl.STATIC_DRAW);
+  const used=new Set();
+  IDEAS.forEach((idea,k)=>{
+    let ci;do{ci=Math.floor(Math.random()*K);}while(used.has(ci)&&used.size<K);used.add(ci);
+    const mem=clusters[ci].members;plant(mem[Math.floor(Math.random()*mem.length)],k,false);
+  });
+}
+
+/* ================= simulation ================= */
+function spawnVirus(i,j,k){
+  if(viruses.length>=MAXV)return;
+  const a=minds[i].p,b=minds[j].p,d=[b[0]-a[0],b[1]-a[1],b[2]-a[2]];
+  const len=Math.hypot(d[0],d[1],d[2])||1;
+  let px,py,pz;
+  if(Math.abs(d[1])<0.9*len){px=-d[2];py=0;pz=d[0];}else{px=0;py=d[2];pz=-d[1];}
+  const pl=Math.hypot(px,py,pz)||1;
+  viruses.push({from:i,to:j,t:0,speed:7+Math.random()*6,len,d,perp:[px/pl,py/pl,pz/pl],idea:k,seed:Math.random()*100});
+}
+function ring(i,color,size,life,alpha){if(rings.length<MAXR)rings.push({i,t:0,life,color,size,alpha});}
+function convert(i,k,strong){
+  const m=minds[i];m.owner=k;m.inf=strong?1:0.35;m.convertedAt=simT;m.resist=Math.min(0.9,m.resist+0.06);m.flips++;
+  ring(i,IDEAS[k].color,strong?10:5,strong?1.3:0.8,strong?1:0.7);stats.conversions++;
+}
+function plant(i,k,byUser){
+  const m=minds[i];
+  if(m.owner===k){m.inf=1;m.convertedAt=simT;ring(i,IDEAS[k].color,10,1.3,1);}else convert(i,k,true);
+  for(const j of m.nb)spawnVirus(i,j,k);
+  if(byUser){log(`you planted ${tag(k)} in mind #${i}`,IDEAS[k].color);hideHint();}
+}
+function arrive(v){
+  const m=minds[v.to],k=v.idea,idea=IDEAS[k];
+  if(m.owner===k){m.inf=Math.min(1,m.inf+0.25);return;}
+  const stale=clamp((simT-m.convertedAt-20)/60,0,1);
+  let prot=m.owner<0?0:m.inf*0.75*Math.min(1.25,IDEAS[m.owner].per);
+  prot*=1-(k===0&&m.owner===1?0.9:0.6)*stale;
+  const incumbency=Math.max(0.03,1-prot);
+  if(Math.random()<idea.con*(1-m.resist)*incumbency*1.4)convert(v.to,k,false);
+  else ring(v.to,idea.color,2.2,0.35,0.35);
+}
+function step(dt){
+  simT+=dt;tuneIdeas(simT);
+  const counts=new Int32Array(IDEAS.length);
+  for(let i=0;i<N;i++){
+    const m=minds[i];
+    if(m.resist>m.baseResist)m.resist=Math.max(m.baseResist,m.resist-dt*0.01);
+    if(m.owner<0)continue;
+    const idea=IDEAS[m.owner];
+    let same=0,other=0;
+    for(const j of m.nb){const o=minds[j].owner;if(o===m.owner)same++;else if(o>=0)other++;}
+    const nn=m.nb.length||1,recent=simT-m.convertedAt<3;
+    const growth=(recent?0.45:0)+(same/nn)*0.28*idea.per;
+    const decay=0.06/idea.per*(1+0.6*other/nn);
+    m.inf=clamp(m.inf+(growth-decay)*dt,0,1);
+    if(m.inf<=0.02&&!recent){m.owner=-1;m.inf=0;continue;}
+    counts[m.owner]++;
+    if(m.inf>0.35&&Math.random()<dt*idea.vir*m.inf){
+      let j=m.nb[Math.floor(Math.random()*nn)];
+      for(let t=0;t<2&&minds[j].owner===m.owner;t++)j=m.nb[Math.floor(Math.random()*nn)];
+      spawnVirus(i,j,m.owner);
+    }
+  }
+  for(let v=viruses.length-1;v>=0;v--){
+    const vr=viruses[v];vr.t+=dt*vr.speed/vr.len;
+    if(vr.t>=1){arrive(vr);viruses[v]=viruses[viruses.length-1];viruses.pop();}
+  }
+  for(let r=rings.length-1;r>=0;r--){const rg=rings[r];rg.t+=dt/rg.life;if(rg.t>=1){rings[r]=rings[rings.length-1];rings.pop();}}
+  spontT-=dt;if(spontT<=0){spontT=6+Math.random()*8;spontaneous(counts);}
+  evT-=dt;if(evT<=0){evT=0.6;checkEvents(counts);}
+  lastCounts=counts;
+}
+function spontaneous(counts){
+  const dead=[];counts.forEach((c,k)=>{if(c===0)dead.push(k);});
+  let k;
+  if(dead.includes(0)&&simT>40)k=0;
+  else if(dead.length&&Math.random()<0.75)k=dead[Math.floor(Math.random()*dead.length)];
+  else if(Math.random()<0.2)k=Math.floor(Math.random()*IDEAS.length);
+  else return;
+  let pool=[];for(let i=0;i<N;i++)if(minds[i].owner<0)pool.push(i);
+  if(!pool.length)for(let i=0;i<N;i++)if(minds[i].inf<0.5)pool.push(i);
+  if(!pool.length)return;
+  const i=pool[Math.floor(Math.random()*pool.length)];
+  plant(i,k,false);
+  log(dead.includes(k)?`${tag(k)} resurfaces in a forgotten mind`:`a lone mind rediscovers ${tag(k)}`,IDEAS[k].color);
+}
+function checkEvents(counts){
+  IDEAS.forEach((idea,k)=>{
+    if(lastCounts[k]>0&&counts[k]===0)log(`${tag(k)} has been forgotten`,idea.color);
+    const share=counts[k]/N;
+    if(share>0.5&&!dominant[k]){dominant[k]=true;log(`${tag(k)} now rules the majority of minds`,idea.color);}
+    if(share<0.4)dominant[k]=false;
+  });
+  for(const cl of clusters){
+    const c=new Int32Array(IDEAS.length);let tot=0;
+    for(const i of cl.members){const o=minds[i].owner;if(o>=0){c[o]++;tot++;}}
+    let best=-1,bc=0;c.forEach((v,k)=>{if(v>bc){bc=v;best=k;}});
+    const share=bc/cl.members.length;
+    if(best>=0&&share>=0.85&&cl.owner!==best){cl.owner=best;log(`${tag(best)} conquered cluster ${cl.name}`,IDEAS[best].color);}
+    else if(share<0.6)cl.owner=-1;
+  }
+}
+
+/* ================= hud ================= */
+const legend=$('#legend'),logEl=$('#log'),tip=$('#tip'),hint=$('#hint');
+IDEAS.forEach((idea,k)=>{
+  const el=document.createElement('div');el.className='strain';el.style.setProperty('--c',css(idea.color));
+  el.innerHTML=`<span class="dot"></span><span class="name">${idea.name}</span><span class="count">0</span><span class="tag">${idea.tag}</span><span class="bar"><i></i></span>`;
+  el.addEventListener('click',()=>select(k));legend.appendChild(el);idea.el=el;
+});
+function select(k){selected=k;IDEAS.forEach((idea,i)=>idea.el.classList.toggle('sel',i===k));}
+function log(text,color){
+  const d=document.createElement('div');d.innerHTML=text;d.style.setProperty('--c',css(color));logEl.prepend(d);
+  while(logEl.children.length>6)logEl.lastChild.remove();
+  [...logEl.children].forEach((c,i)=>c.classList.toggle('old',i>=3));
+}
+if(matchMedia('(hover:none)').matches)hint.textContent='tap any mind to plant an idea';
+let hintShown=true;function hideHint(){if(hintShown){hintShown=false;hint.style.opacity=0;}}
+setTimeout(hideHint,16000);
+function fmt(t){t=Math.floor(t);return String(Math.floor(t/60)).padStart(2,'0')+':'+String(t%60).padStart(2,'0');}
+function updateHUD(){
+  let tot=0,best=-1,bc=0;
+  IDEAS.forEach((idea,k)=>{
+    const c=lastCounts[k];tot+=c;if(c>bc){bc=c;best=k;}
+    idea.el.querySelector('.count').textContent=c;
+    idea.el.querySelector('.bar i').style.width=(c/N*100)+'%';
+    idea.el.classList.toggle('dead',c===0);
+  });
+  $('#pct').textContent=Math.round(tot/N*100)+'%';
+  const dom=$('#dom');dom.textContent=best<0?'—':IDEAS[best].name;dom.style.color=best<0?'':css(IDEAS[best].color);
+  $('#car').textContent=viruses.length;$('#conv').textContent=stats.conversions;$('#time').textContent=fmt(simT);
+}
+function reset(){
+  buildWorld();simT=0;stats.conversions=0;viruses=[];rings=[];dominant.fill(false);lastCounts=new Int32Array(IDEAS.length);
+  logEl.innerHTML='';log('the collective mind has been wiped clean',[0.8,0.85,1]);
+}
+
+/* ================= input ================= */
+const pts=new Map();let dragging=false,moved=0,pinchD=0;
+canvas.addEventListener('pointerdown',e=>{
+  canvas.setPointerCapture(e.pointerId);pts.set(e.pointerId,{x:e.clientX,y:e.clientY});
+  mouse.x=e.clientX;mouse.y=e.clientY;mouse.in=true;idle=0;
+  if(pts.size===1){dragging=true;moved=0;canvas.classList.add('drag');}
+  else if(pts.size===2){const [a,b]=[...pts.values()];pinchD=Math.hypot(a.x-b.x,a.y-b.y);}
+});
+canvas.addEventListener('pointermove',e=>{
+  mouse.x=e.clientX;mouse.y=e.clientY;mouse.in=true;
+  const p=pts.get(e.pointerId);if(!p)return;
+  const dx=e.clientX-p.x,dy=e.clientY-p.y;p.x=e.clientX;p.y=e.clientY;idle=0;
+  if(pts.size===2){const [a,b]=[...pts.values()];const d=Math.hypot(a.x-b.x,a.y-b.y);if(pinchD>0&&d>0)cam.distT=clamp(cam.distT*pinchD/d,35,300);pinchD=d;moved+=10;return;}
+  if(dragging){moved+=Math.abs(dx)+Math.abs(dy);cam.yawT-=dx*0.005;cam.pitchT=clamp(cam.pitchT+dy*0.005,-1.35,1.35);}
+});
+const endPtr=e=>{
+  if(!pts.has(e.pointerId))return;pts.delete(e.pointerId);
+  if(pts.size===0){
+    canvas.classList.remove('drag');
+    if(dragging&&moved<6){const i=pick(e.clientX,e.clientY);if(i>=0)plant(i,selected,true);}
+    dragging=false;
+  }
+  if(e.pointerType==='touch')mouse.in=false;
+};
+canvas.addEventListener('pointerup',endPtr);canvas.addEventListener('pointercancel',endPtr);
+canvas.addEventListener('pointerleave',e=>{if(!dragging)mouse.in=false;});
+canvas.addEventListener('wheel',e=>{e.preventDefault();cam.distT=clamp(cam.distT*Math.exp(e.deltaY*0.0015),35,300);idle=0;},{passive:false});
+window.addEventListener('keydown',e=>{
+  const n=parseInt(e.key,10);
+  if(n>=1&&n<=IDEAS.length)select(n-1);
+  else if(e.code==='Space'){paused=!paused;document.body.classList.toggle('paused',paused);e.preventDefault();}
+  else if(e.key==='r'||e.key==='R')reset();
+  else if(e.key==='h'||e.key==='H')document.body.classList.toggle('nohud');
+  else if(e.key==='a'||e.key==='A'){autoOrbit=!autoOrbit;log(autoOrbit?'auto-orbit on':'auto-orbit off',[0.8,0.85,1]);}
+});
+function pick(x,y){
+  let best=-1,bd=1e12;
+  for(let i=0;i<N;i++){const r=scrR[i];if(r<0)continue;const dx=scrX[i]-x,dy=scrY[i]-y,d=dx*dx+dy*dy,th=(r+12)*(r+12);if(d<th&&d<bd){bd=d;best=i;}}
+  return best;
+}
+
+/* ================= resize ================= */
+function resize(){
+  dpr=Math.min(window.devicePixelRatio||1,innerWidth<720?1.5:2);
+  canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);
+  gl.viewport(0,0,canvas.width,canvas.height);
+  uScale=(canvas.height/2)/Math.tan(FOV/2);
+}
+window.addEventListener('resize',resize);resize();
+
+/* ================= camera ================= */
+function updateCamera(dt){
+  idle+=dt;
+  if(autoOrbit&&!dragging&&idle>2.5){
+    cam.yawT+=dt*0.07;
+    const pt=0.2+Math.sin(wallT*0.1)*0.2;cam.pitchT+=(pt-cam.pitchT)*Math.min(1,dt*0.4);
+  }
+  const s=Math.min(1,dt*7);
+  cam.yaw+=(cam.yawT-cam.yaw)*s;cam.pitch+=(cam.pitchT-cam.pitch)*s;cam.dist+=(cam.distT-cam.dist)*Math.min(1,dt*3);
+  cam.target[1]=Math.sin(wallT*0.23)*2.5;
+}
+
+/* ================= render ================= */
+function render(){
+  const W=canvas.width,H=canvas.height,cssW=innerWidth,cssH=innerHeight;
+  const cp=Math.cos(cam.pitch);
+  const eye=[cam.target[0]+cam.dist*cp*Math.sin(cam.yaw),cam.target[1]+cam.dist*Math.sin(cam.pitch),cam.target[2]+cam.dist*cp*Math.cos(cam.yaw)];
+  const VP=mul4(perspective(FOV,W/H,1,900),lookAt(eye,cam.target,[0,1,0]));
+
+  // project minds for picking
+  for(let i=0;i<N;i++){
+    const x=posArr[i*3],y=posArr[i*3+1],z=posArr[i*3+2];
+    const cx=VP[0]*x+VP[4]*y+VP[8]*z+VP[12],cy=VP[1]*x+VP[5]*y+VP[9]*z+VP[13],cw=VP[3]*x+VP[7]*y+VP[11]*z+VP[15];
+    if(cw>0.01){scrX[i]=(cx/cw*0.5+0.5)*cssW;scrY[i]=(0.5-cy/cw*0.5)*cssH;scrR[i]=minds[i].size*uScale/cw/dpr;}else scrR[i]=-1;
+  }
+  hovered=(mouse.in&&!dragging)?pick(mouse.x,mouse.y):-1;
+  canvas.classList.toggle('pick',hovered>=0);
+  if(hovered>=0){
+    const m=minds[hovered];
+    tip.style.left=scrX[hovered]+'px';tip.style.top=scrY[hovered]+'px';tip.style.opacity=1;
+    tip.innerHTML=`mind #${hovered} · ${m.owner<0?'<b>unclaimed</b>':`${tag(m.owner)} <b>${Math.round(m.inf*100)}%</b>`}<br><small>${m.nb.length} synapses · changed its mind ${m.flips}×</small>`;
+  }else tip.style.opacity=0;
+
+  // node colours
+  for(let i=0;i<N;i++){
+    const m=minds[i];let r,g,b,glow,ha;
+    if(m.owner<0){r=NEUTRAL[0];g=NEUTRAL[1];b=NEUTRAL[2];glow=0;ha=0.05;haloCol[i*4]=r;haloCol[i*4+1]=g;haloCol[i*4+2]=b;}
+    else{const c=IDEAS[m.owner].color,f=0.2+0.8*m.inf;r=NEUTRAL[0]+(c[0]-NEUTRAL[0])*f;g=NEUTRAL[1]+(c[1]-NEUTRAL[1])*f;b=NEUTRAL[2]+(c[2]-NEUTRAL[2])*f;glow=m.inf;ha=0.1+0.5*m.inf;haloCol[i*4]=c[0];haloCol[i*4+1]=c[1];haloCol[i*4+2]=c[2];}
+    if(i===hovered){glow=Math.min(1,glow+0.7);r=Math.min(1,r*1.4+0.15);g=Math.min(1,g*1.4+0.15);b=Math.min(1,b*1.4+0.15);ha+=0.3;}
+    nodeCol[i*4]=r;nodeCol[i*4+1]=g;nodeCol[i*4+2]=b;nodeCol[i*4+3]=glow;haloCol[i*4+3]=ha;
+    const pulse=1+0.07*m.inf*Math.sin(simT*3.1+m.seed);
+    nodeSize[i*2]=m.size*2*pulse*(i===hovered?1.4:1);
+  }
+  // edge colours
+  for(let e=0;e<edges.length;e++){
+    for(let s=0;s<2;s++){
+      const m=minds[edges[e][s]],o=(e*2+s)*4;
+      if(m.owner<0){edgeCol[o]=0.18;edgeCol[o+1]=0.22;edgeCol[o+2]=0.34;edgeCol[o+3]=0.4;}
+      else{const c=IDEAS[m.owner].color;edgeCol[o]=c[0];edgeCol[o+1]=c[1];edgeCol[o+2]=c[2];edgeCol[o+3]=0.12+0.5*m.inf*(0.85+0.15*Math.sin(simT*2+m.seed));}
+    }
+  }
+  // viruses
+  let nv=0;
+  for(const v of viruses){
+    const a=minds[v.from].p,t=v.t,w=Math.sin(t*14+v.seed)*0.5*Math.sin(t*Math.PI);
+    virPos[nv*3]=a[0]+v.d[0]*t+v.perp[0]*w;virPos[nv*3+1]=a[1]+v.d[1]*t+v.perp[1]*w;virPos[nv*3+2]=a[2]+v.d[2]*t+v.perp[2]*w;
+    const c=IDEAS[v.idea].color;virCol[nv*4]=c[0];virCol[nv*4+1]=c[1];virCol[nv*4+2]=c[2];virCol[nv*4+3]=Math.min(1,t*6);
+    virSize[nv*2]=1.15;virSize[nv*2+1]=v.seed;nv++;
+  }
+  // rings
+  let nr=0;
+  for(const r of rings){
+    const p=minds[r.i].p;ringPos[nr*3]=p[0];ringPos[nr*3+1]=p[1];ringPos[nr*3+2]=p[2];
+    ringCol[nr*4]=r.color[0];ringCol[nr*4+1]=r.color[1];ringCol[nr*4+2]=r.color[2];ringCol[nr*4+3]=Math.pow(1-r.t,1.5)*r.alpha;
+    ringSize[nr*2]=(0.8+r.t*r.size)*1.6;ringSize[nr*2+1]=0;nr++;
+  }
+  // cluster auras
+  for(let k=0;k<K;k++){
+    const cl=clusters[k];let r=0,g=0,b=0,w=0;
+    for(const i of cl.members){const m=minds[i];if(m.owner<0)continue;const c=IDEAS[m.owner].color;r+=c[0]*m.inf;g+=c[1]*m.inf;b+=c[2]*m.inf;w+=m.inf;}
+    if(w>0){r/=w;g/=w;b/=w;}
+    clCol[k*4]=r;clCol[k*4+1]=g;clCol[k*4+2]=b;clCol[k*4+3]=0.16*(w/cl.members.length);
+  }
+
+  upload(buf.nodeCol,nodeCol);upload(buf.nodeSize,nodeSize);upload(buf.haloCol,haloCol);upload(buf.edgeCol,edgeCol);
+  upload(buf.virPos,virPos.subarray(0,nv*3));upload(buf.virCol,virCol.subarray(0,nv*4));upload(buf.virSize,virSize.subarray(0,nv*2));
+  upload(buf.ringPos,ringPos.subarray(0,nr*3));upload(buf.ringCol,ringCol.subarray(0,nr*4));upload(buf.ringSize,ringSize.subarray(0,nr*2));
+  upload(buf.clCol,clCol);
+
+  gl.clearColor(0.02,0.024,0.05,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+  gl.enable(gl.DEPTH_TEST);gl.depthFunc(gl.LEQUAL);gl.enable(gl.BLEND);
+  const fogN=cam.dist*0.7,fogF=cam.dist*2.4,tm=simT%1000;
+
+  gl.useProgram(pp.prog);
+  gl.uniformMatrix4fv(pp.u.uVP,false,VP);gl.uniform1f(pp.u.uScale,uScale);gl.uniform1f(pp.u.uMaxPoint,maxPoint);
+  gl.uniform1f(pp.u.uTime,tm);gl.uniform2f(pp.u.uFog,fogN,fogF);gl.uniform3f(pp.u.uFogColor,0.02,0.024,0.05);
+
+  // stars
+  gl.depthMask(false);gl.blendFunc(gl.ONE,gl.ONE);
+  drawPoints(4,buf.starPos,buf.starCol,buf.starSize,NSTARS,1);
+  // solid minds
+  gl.depthMask(true);gl.blendFunc(gl.SRC_ALPHA,gl.ONE_MINUS_SRC_ALPHA);
+  drawPoints(0,buf.pos,buf.nodeCol,buf.nodeSize,N,1);
+  gl.depthMask(false);gl.blendFunc(gl.ONE,gl.ONE);
+  // synapses
+  gl.useProgram(lp.prog);gl.uniformMatrix4fv(lp.u.uVP,false,VP);gl.uniform2f(lp.u.uFog,fogN,fogF);
+  attrib(lp.a.aPos,buf.edgePos,3);attrib(lp.a.aColor,buf.edgeCol,4);gl.drawArrays(gl.LINES,0,edges.length*2);
+  // glows
+  gl.useProgram(pp.prog);
+  drawPoints(1,buf.clPos,buf.clCol,buf.clSize,K+1,1);
+  drawPoints(1,buf.pos,buf.haloCol,buf.nodeSize,N,3.2);
+  drawPoints(2,buf.virPos,buf.virCol,buf.virSize,nv,1);
+  drawPoints(3,buf.ringPos,buf.ringCol,buf.ringSize,nr,1);
+}
+
+/* ================= loop ================= */
+function frame(t){
+  requestAnimationFrame(frame);
+  const now=t/1000,dt=Math.min(0.05,lastT?now-lastT:0.016);lastT=now;wallT+=dt;
+  if(!paused)step(dt);
+  updateCamera(dt);render();
+  hudT+=dt;if(hudT>0.15){hudT=0;updateHUD();}
+}
+tuneIdeas(0);buildStars();buildWorld();select(0);
+log('five ideas wake up inside a sleeping network',[0.8,0.85,1]);
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
