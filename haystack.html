@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Haystack</title>
+<meta name="description" content="An LLM searches through 2,600 fragments of text it has never read, while a skeptic and an enthusiast argue about what it is doing. Are LLMs actually able to discover new things, or are they just searching through garbage very fast? The skeptic counts how much it scans, how many of its matches are junk, and how often it guesses wrong with total confidence. The enthusiast counts the links it makes, the leaps that hold without a single word in common, and the five stories it pieces together from fragments scattered across the whole archive.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Haystack">
+<meta property="og:description" content="An LLM searches 2,600 fragments it has never read while a skeptic and an enthusiast argue about what it is doing. Are LLMs actually able to discover new things, or are they just searching through garbage very fast? An interactive 3D simulation, one file, no libraries.">
+<meta property="og:url" content="https://rruxandra.github.io/haystack.html">
+<meta property="og:image" content="https://rruxandra.github.io/assets/haystack-og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Haystack">
+<meta name="twitter:description" content="An LLM searches 2,600 fragments it has never read while a skeptic and an enthusiast argue about what it is doing. Are LLMs actually able to discover new things, or are they just searching through garbage very fast?">
+<meta name="twitter:image" content="https://rruxandra.github.io/assets/haystack-og.png">
+<link rel="stylesheet" href="assets/space-mono.css">
+<style>
+:root{--fg:#e6e9f0;--dim:rgba(230,233,240,.5);--steel:#9fb3c8;--amber:#ffb454;--panel:rgba(6,7,14,.5);--line:rgba(255,255,255,.08)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:#07080f;color:var(--fg);font-family:"Space Mono",ui-monospace,SFMono-Regular,Menlo,monospace;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none}
+#gl{position:fixed;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}
+#gl.drag{cursor:grabbing}
+#gl.pick{cursor:crosshair}
+#vignette{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 40%,rgba(0,0,0,.55) 100%)}
+.hud{position:fixed;z-index:5;transition:opacity .4s}
+body.nohud .hud{opacity:0!important;pointer-events:none}
+
+#title{top:24px;left:24px}
+h1{font-size:26px;letter-spacing:.3em;font-weight:700;text-transform:uppercase;line-height:1}
+h1 span{color:var(--amber);transition:color .5s}
+.sub{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-top:9px}
+.back{display:inline-block;margin-top:12px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);text-decoration:none;transition:color .3s}
+.back:hover{color:var(--amber)}
+.back::before{content:"\2190  "}
+.about-link{display:inline-block;margin-top:12px;margin-left:18px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);text-decoration:none;cursor:pointer;transition:color .3s}
+.about-link:hover{color:var(--amber)}
+.about-link::before{content:"?  "}
+#about{position:fixed;inset:0;z-index:20;display:none;align-items:center;justify-content:center;background:rgba(4,5,10,.72);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px)}
+#about.on{display:flex}
+#about .card{width:min(640px,calc(100% - 40px));max-height:calc(100% - 40px);overflow:auto;background:rgba(10,11,20,.92);border:1px solid var(--line);border-radius:12px;padding:28px 32px;user-select:text;-webkit-user-select:text}
+#about h2{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--amber);margin-bottom:16px}
+#about p{font-size:12.5px;line-height:1.65;color:#d5dae4;margin-bottom:12px}
+#about p b{color:var(--fg);font-weight:700}
+#about p.s{color:var(--dim);font-size:11px}
+#about .close{display:inline-block;margin-top:8px;font-size:10px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);cursor:pointer}
+#about .close:hover{color:var(--amber)}
+#about code{font-family:inherit;color:var(--amber)}
+#caption .acts{margin-top:22px;display:flex;gap:10px;justify-content:center;pointer-events:auto}
+#caption button{white-space:nowrap;font-family:inherit;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--fg);background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:6px;padding:9px 14px;cursor:pointer;transition:background .2s,border-color .2s}
+#caption button:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.25)}
+#caption .seed{margin-top:12px;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)}
+
+#ledgers{top:24px;right:24px;display:flex;gap:10px}
+.ledger{width:236px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px 8px;backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);transition:opacity .4s,border-color .4s}
+.ledger .lh{font-size:9px;letter-spacing:.2em;text-transform:uppercase;padding-bottom:7px;margin-bottom:6px;border-bottom:1px solid var(--line)}
+.ledger.s .lh{color:var(--steel)}
+.ledger.e .lh{color:var(--amber)}
+.ledger .r{display:flex;justify-content:space-between;align-items:baseline;font-size:10px;letter-spacing:.06em;color:var(--dim);line-height:1.9}
+.ledger .r b{font-weight:700;color:var(--fg);font-size:12px;font-variant-numeric:tabular-nums}
+.ledger.s .r b.hot{color:#e08a7f}
+.ledger .r small{color:var(--dim);font-size:9px;margin-left:4px}
+
+.voice{bottom:96px;width:320px;pointer-events:none;transition:opacity .4s}
+#voice-s{left:24px}
+#voice-e{right:24px;text-align:right}
+.voice .who{font-size:9px;letter-spacing:.26em;text-transform:uppercase;margin-bottom:8px}
+#voice-s .who{color:var(--steel)}
+#voice-e .who{color:var(--amber)}
+.voice .lines p{font-size:12px;line-height:1.5;margin-top:7px;transition:opacity .6s;animation:rise .5s ease-out}
+.voice .lines p:nth-last-child(1){opacity:1}
+.voice .lines p:nth-last-child(2){opacity:.55}
+.voice .lines p:nth-last-child(3){opacity:.3}
+.voice .lines p:nth-last-child(4){opacity:.14}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{transform:none}}
+#voice-s .lines p{color:#c9d4e0}
+#voice-e .lines p{color:#f3dcb8}
+
+#lens{bottom:26px;left:50%;transform:translateX(-50%);width:400px;text-align:center}
+#lens .bar{display:flex;align-items:center;gap:12px}
+#lens .lab{font-size:9px;letter-spacing:.24em;text-transform:uppercase;white-space:nowrap;transition:color .3s,opacity .3s}
+#lens .lab.s{color:var(--steel)}
+#lens .lab.e{color:var(--amber)}
+#lens input{flex:1;-webkit-appearance:none;appearance:none;height:22px;background:transparent;cursor:pointer;margin:0}
+#lens input::-webkit-slider-runnable-track{height:1px;background:linear-gradient(90deg,var(--steel),var(--amber));opacity:.7}
+#lens input::-moz-range-track{height:1px;background:linear-gradient(90deg,var(--steel),var(--amber))}
+#lens input::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:#fff;margin-top:-5.5px;box-shadow:0 0 0 3px rgba(255,255,255,.12),0 0 14px rgba(255,255,255,.35)}
+#lens input::-moz-range-thumb{width:12px;height:12px;border:0;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.12)}
+#lens .hint{margin-top:10px;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);transition:opacity 2s}
+#lens .hint.faded{opacity:.35}
+#lens .hm{display:none}
+
+#hover{pointer-events:none;background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:6px 9px;font-size:10px;letter-spacing:.08em;color:var(--fg);display:none;white-space:nowrap;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+#hover .tn{display:block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;margin-top:3px}
+#hover .g{color:var(--dim)}
+
+#caption{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;opacity:0;pointer-events:none;transition:opacity 1.6s;padding:56px 90px;background:radial-gradient(ellipse at center,rgba(5,5,12,.88) 0%,rgba(5,5,12,.55) 55%,rgba(5,5,12,0) 100%)}
+#caption.on{opacity:1}
+#caption .big{font-size:28px;letter-spacing:.28em;text-transform:uppercase;font-weight:700;text-shadow:0 0 30px rgba(255,255,255,.25)}
+#caption .small{margin-top:14px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim)}
+#caption .small b{font-weight:400}
+#caption .small b.s{color:var(--steel)}
+#caption .small b.e{color:var(--amber)}
+
+#intro{left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;transition:opacity 1.4s;padding:40px 70px;background:radial-gradient(ellipse at center,rgba(5,5,12,.85) 0%,rgba(5,5,12,.5) 55%,rgba(5,5,12,0) 100%);width:min(640px,92vw)}
+#intro.off{opacity:0}
+#intro .l1{font-size:15px;letter-spacing:.16em;text-transform:uppercase;color:var(--fg)}
+#intro .l2{margin-top:10px;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim)}
+#intro .l3{margin-top:18px;font-size:11px;line-height:1.6;color:var(--amber);opacity:.9}
+body.og #vignette{display:none}
+body.og .voice{display:none}
+body.og #caption,body.og #hover,body.og #intro{display:none}
+#paused{left:50%;top:50%;transform:translate(-50%,-50%);font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--dim);display:none;pointer-events:none}
+body.paused #paused{display:block}
+
+@media (max-width:860px){
+  #title{top:14px;left:14px}
+  h1{font-size:17px;letter-spacing:.22em}
+  .sub{font-size:8px;letter-spacing:.12em;margin-top:5px}
+  .back{font-size:8px;letter-spacing:.2em;margin-top:7px}
+  #ledgers{top:14px;right:14px;flex-direction:column;gap:6px}
+  .ledger{width:160px;padding:7px 9px 5px}
+  .ledger .lh{font-size:7.5px;padding-bottom:4px;margin-bottom:3px}
+  .ledger .r{font-size:8.5px;line-height:1.7}
+  .ledger .r b{font-size:10px}
+  .voice{bottom:84px;width:46%}
+  #voice-s{left:12px}
+  #voice-e{right:12px}
+  .voice .who{font-size:7.5px;margin-bottom:4px}
+  .voice .lines p{font-size:9.5px;line-height:1.4;margin-top:4px}
+  .voice .lines p:nth-last-child(3),.voice .lines p:nth-last-child(4){display:none}
+  #lens{bottom:16px;width:calc(100% - 24px)}
+  #lens .lab{font-size:7.5px;letter-spacing:.16em}
+  #lens .hint{font-size:7.5px;letter-spacing:.06em;margin-top:6px}
+  #lens .hd{display:none}
+  #lens .hm{display:inline}
+  #intro{padding:24px 18px}
+  #intro .l1{font-size:11px;letter-spacing:.1em}
+  #intro .l2{font-size:8px;letter-spacing:.14em}
+  #intro .l3{font-size:9.5px;margin-top:12px}
+  #caption .big{font-size:18px;letter-spacing:.2em}
+  #caption .small{font-size:8.5px;letter-spacing:.18em;margin-top:9px}
+  #caption{padding:32px 18px;width:min(560px,96vw)}
+  #caption .small{white-space:normal}
+  #caption button{font-size:8.5px;padding:7px 10px;letter-spacing:.16em}
+  #about .card{padding:20px 18px}
+  #about p{font-size:11px}
+  .about-link{margin-left:12px;font-size:8px;letter-spacing:.2em;margin-top:7px}
+}
+@media (prefers-reduced-motion:reduce){.voice .lines p{animation:none}}
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vignette"></div>
+
+<div id="title" class="hud">
+  <h1>Hay<span>stack</span></h1>
+  <div class="sub">an LLM reads the haystack · a skeptic and an enthusiast disagree</div>
+  <a class="back" href="index.html">return to log</a><a class="about-link" id="aboutLink">how it works</a>
+</div>
+
+<div id="ledgers" class="hud">
+  <div class="ledger s">
+    <div class="lh">what the skeptic counts</div>
+    <div class="r"><span>scanned</span><b id="k-scanned">0</b></div>
+    <div class="r"><span>matched</span><b id="k-matched">0</b></div>
+    <div class="r"><span>junk</span><b><span id="k-junk" class="hot">0</span><small id="k-pct"></small></b></div>
+    <div class="r"><span>wrong guesses</span><b id="k-wrong" class="hot">0</b></div>
+  </div>
+  <div class="ledger e">
+    <div class="lh">what the enthusiast counts</div>
+    <div class="r"><span>fragments joined</span><b id="e-joined">0</b></div>
+    <div class="r"><span>links</span><b id="e-links">0</b></div>
+    <div class="r"><span>leaps that held</span><b id="e-leaps">0</b></div>
+    <div class="r"><span>stories found</span><b><span id="e-found">0</span><small>/ 5</small></b></div>
+  </div>
+</div>
+
+<div id="voice-s" class="hud voice"><div class="who">the LLM skeptic</div><div class="lines"></div></div>
+<div id="voice-e" class="hud voice"><div class="who">the LLM enthusiast</div><div class="lines"></div></div>
+
+<div id="lens" class="hud">
+  <div class="bar">
+    <span class="lab s">skeptic</span>
+    <input id="lensRange" type="range" min="0" max="1000" value="500" aria-label="lens between the skeptic and the enthusiast">
+    <span class="lab e">enthusiast</span>
+  </div>
+  <div class="hint" id="hint"><span class="hd">drag to orbit · scroll to zoom · click a fragment to ask about it · ← → shift the lens · space pause · r reseed · ? how it works</span><span class="hm">drag to orbit · pinch to zoom · tap a fragment to ask about it · slide the lens</span></div>
+</div>
+
+<div id="hover" class="hud"></div>
+<div id="caption" class="hud"><div class="big">same LLM. same search.</div><div class="small"><b class="s">the skeptic's numbers are right.</b> <b class="e">so are the enthusiast's.</b></div><div class="acts"><button id="copyBtn">copy the ledgers</button><button id="againBtn">run it again</button></div><div class="seed" id="seedLabel"></div></div>
+<div id="intro" class="hud"><div class="l1">an LLM is reading 2,600 fragments it has never seen.</div><div class="l2">five stories are hidden in them. a skeptic and an enthusiast are both watching it work.</div><div class="l3">are LLMs actually able to discover new things, or are they just searching through garbage very fast?</div></div>
+<div id="paused" class="hud">paused</div>
+<div id="about">
+  <div class="card">
+    <h2>how this works</h2>
+    <p><b>The haystack</b> is 2,600 fragments. Each one is two or three words of accounting vocabulary, 65 words in all, with the generic ones appearing far more often than the rare ones, the way real records do.</p>
+    <p><b>Five stories are planted in it.</b> Each is a chain of twelve fragments laid along a hidden curve through the field. Neighbours in a chain share exactly one word. Fragments two steps apart share nothing.</p>
+    <p><b>The LLM is a simulation, not a model.</b> A search is a wave that expands from one fragment and flags every fragment that shares a word with it. A flagged fragment counts as a link if it belongs to the same planted story and as junk if it doesn't. That check is made against the planted answer, which is exactly what a real model does not have. Treat the piece as a picture of the argument, not as evidence in it.</p>
+    <p><b>A leap</b> is an attempt to connect two fragments with no word in common. Leaps succeed 70% of the time, by design. A wrong leap is drawn in full and then withdrawn, and the skeptic's ledger keeps it.</p>
+    <p><b>Neither ledger is cooked.</b> Both count the same events. The skeptic's junk share is high because common words occur in hundreds of fragments. The enthusiast always ends with five stories because following a chain of shared words always gets there eventually. Which number matters is the question the page leaves to you.</p>
+    <p class="s">Seed <code id="aboutSeed"></code> reproduces this haystack and this run, as long as you don't click a fragment. One file, no libraries. The 3D is points projected onto a flat canvas by hand.</p>
+    <span class="close" id="aboutClose">close</span>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+// ───────────────────────── setup ─────────────────────────
+const canvas=document.getElementById('gl'), ctx=canvas.getContext('2d');
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const isMobile=Math.min(innerWidth,innerHeight)<700;
+let W,H,DPR,CX,CY,FOCAL;
+function resize(){DPR=Math.min(2,devicePixelRatio||1);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(DPR,0,0,DPR,0,0);CX=W/2;CY=H/2;FOCAL=Math.min(W,H)*1.08}
+addEventListener('resize',resize);resize();
+
+// seeded rng
+const params=new URLSearchParams(location.search);
+const OG=params.has('og');let shot=OG;
+let runSeed=parseInt(params.get('seed'),10)||0,seed=1;
+function newSeed(){return 100000+Math.floor(Math.random()*900000)}
+function applySeed(){seed=Math.imul(runSeed,2654435761)^0x9e3779b9;for(let i=0;i<8;i++)rnd();
+  try{const u=new URL(location.href);u.searchParams.set('seed',runSeed);u.searchParams.delete('og');history.replaceState(null,'',u)}catch(e){}
+  document.getElementById('seedLabel').textContent='seed '+runSeed;document.getElementById('aboutSeed').textContent=String(runSeed)}
+function rnd(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}
+const pick=a=>a[Math.floor(rnd()*a.length)];
+const vpick=a=>a[Math.floor(Math.random()*a.length)];
+function gauss(){let u=0,v=0;while(u===0)u=rnd();while(v===0)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(6.283185307*v)}
+function unit(){const x=gauss(),y=gauss(),z=gauss(),l=Math.hypot(x,y,z)||1;return[x/l,y/l,z/l]}
+const lerp=(a,b,t)=>a+(b-a)*t, clamp=(v,a,b)=>v<a?a:v>b?b:v;
+const mix=(a,b,t)=>[lerp(a[0],b[0],t),lerp(a[1],b[1],t),lerp(a[2],b[2],t)];
+const rgba=(c,a)=>`rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`;
+const dist3=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1],a[2]-b[2]);
+
+// ───────────────────────── vocabulary ─────────────────────────
+const VOCAB=["invoice","account","signature","address","number","date","fee","memo","transfer","bank","auditor","silence","deposit","ledger","spreadsheet","lease","payroll","employee","bonus","withdrawal","camera","property","deed","cousin","wedding","gift","shell","nominee","director","passport","courier","stamp","warehouse","insurance","survey","photograph","satellite","refund","freight","container","customs","dust","footnote","estimate","goodwill","writedown","quarter","lawyer","privilege","shred","backup","tape","minutes","board","resolution","template","subsidiary","guarantee","collateral","default","bailout","pension","escrow","notary","remittance"];
+const ZIPF=[];{let acc=0;for(let r=0;r<VOCAB.length;r++){acc+=1/Math.pow(r+2,.75);ZIPF.push(acc)}}
+function zipfWord(){const u=rnd()*ZIPF[ZIPF.length-1];let lo=0,hi=ZIPF.length-1;while(lo<hi){const m=(lo+hi)>>1;if(ZIPF[m]<u)lo=m+1;else hi=m}return VOCAB[lo]}
+
+// hidden stories: a chain of words; fragment i carries words i and i+1
+const STORIES=[
+ {name:"the shell in valletta",hue:[255,180,84],words:["invoice","shell","nominee","director","bank","transfer","fee","auditor","signature","passport","address","courier","stamp"]},
+ {name:"a warehouse that never was",hue:[111,214,255],words:["warehouse","lease","insurance","survey","photograph","satellite","address","invoice","refund","freight","container","customs","dust"]},
+ {name:"the auditor's footnote",hue:[126,232,166],words:["footnote","auditor","estimate","goodwill","writedown","quarter","memo","lawyer","privilege","shred","backup","tape","silence"]},
+ {name:"payroll for ghosts",hue:[255,122,158],words:["payroll","employee","number","bonus","account","withdrawal","camera","cousin","wedding","gift","deposit","property","deed"]},
+ {name:"everyone signed it",hue:[183,155,255],words:["minutes","board","resolution","signature","date","template","subsidiary","guarantee","collateral","default","bailout","pension","silence"]},
+];
+const STEEL=[159,179,200], AMBER=[255,180,84], JUNKRED=[224,118,104], PALE=[200,210,230];
+
+// ───────────────────────── voices ─────────────────────────
+const LINES={
+ query:{s:["It's doing a keyword search. That is all this is.","It picked a fragment and is looking up every other fragment with the same words.","Three words in, every match for those three words out. We had this in the nineties.","Same routine as before. A faster index, nothing more."],
+        e:["It's trying to work out what this fragment is part of.","It can read the whole archive at once. No person can do that.","It starts from one fragment and follows wherever the words lead.","It hasn't decided anything yet. It's still looking."]},
+ burst:{s:["{n} matches and every one of them noise. A filter would give you the same list.","Everything that contains '{w}' is not about {w}, and it can't tell the difference.","Thousands of hits and nothing useful. Fast, though.","It touched everything and kept nothing. You can't call that reading."],
+        e:["It went through {n} candidates and kept none of them. It could have kept the wrong ones.","Noise is what you get when you look at everything, and looking at everything is the point.","Nothing here connects, and it said so instead of forcing a link.","{n} candidates discarded. The searching was never the interesting part."]},
+ verified:{s:["They both contain the word '{w}'. A concordance could do that in 1750.","'{w}' appears in both. That is the entire basis for the line.","Sharing a word is not the same as sharing a meaning.","It found '{w}' twice and drew a line between them. Fine."],
+        e:["Two fragments that were filed nowhere near each other are now on the same line.","'{w}' was the handle. What it grabbed was the connection underneath.","One link. The haystack is a little less flat than it was.","Nobody had filed these together, and now they are."]},
+ leap:{s:["Those two share no words at all, so now it's guessing.","Here's where it starts making things up.","Watch this: a line with no evidence under it.","It ran out of matches and kept going anyway."],
+       e:["Nothing on the surface connects these two, and it's reaching for them anyway.","This is the step a search engine can't take.","It's going over the words instead of through them.","It's betting the story continues past the last match."]},
+ held:{s:["It held. One lucky reach. Keep counting the others.","Right this time. I want to see the failure rate.","A stopped clock is also right twice a day.","That one held. Wait for the next one."],
+       e:["It held. Two fragments nobody had put in the same sentence.","That line did not exist in the data until it drew it, and it turned out to be right.","It held. The haystack had a shape after all.","No word in common, and it was right anyway."]},
+ broke:{s:["There it is: a bright, confident line between two things with nothing in common.","Wrong, and just as sure of itself as when it was right.","Count that one. They never count those.","This is what it looks like when it makes something up."],
+        e:["A guess that didn't survive. It withdrew the line.","It was wrong, and it showed you it was wrong.","It reached, missed, and took the line back.","Some leaps land and some don't. The ones that land are why you let it try."]},
+ found:{s:["One story. Out of how much garbage?","Giving it a name doesn't make it a discovery.","It joined the dots that shared vocabulary. Don't call that insight.","Twelve fragments in a row, and {junk} junk matches to get there."],
+        e:["'{name}': {n} fragments, one story, and no one had ever written it down as a whole.","Nobody filed those together. The shape was spread across the whole archive.","That was always there, in pieces. Now you can see it.","'{name}'. Twelve documents, filed by different people in different years, read as one story."]},
+ garbage:{s:["It asked about nothing and found {n} things. All noise.","A garbage query returns garbage matches. Working as designed.","See? It can't tell a fragment from a story until it has already searched."],
+          e:["It checked. Nothing connects here, and it said so.","A dead end, reported as a dead end.","Not every fragment belongs to a story, and it didn't invent one."]},
+ done:{s:["{pct}% of what it touched was garbage. It's a very fast sieve.","Final count: {junk} junk matches and {wrong} confident errors. Remember those."],
+       e:["{k} stories, {m} fragments, {l} leaps that held. No person drew those.","The archive had {k} stories in it all along. Now they're visible."]},
+};
+const voiceEl={s:document.querySelector('#voice-s .lines'),e:document.querySelector('#voice-e .lines')};
+const lastSaid={s:-9,e:-9}, lastLine={s:'',e:''};
+function fmt(tpl,vars){return tpl.replace(/\{(\w+)\}/g,(_,k)=>vars&&k in vars?vars[k]:'')}
+function say(side,key,vars,force){
+  if(!force && T-lastSaid[side]<1.6) return;
+  const pool=LINES[key][side];let line=vpick(pool);if(pool.length>1&&line===lastLine[side])line=vpick(pool);
+  lastLine[side]=line;lastSaid[side]=T;
+  const p=document.createElement('p');p.textContent=fmt(line,vars);
+  const el=voiceEl[side];el.appendChild(p);while(el.children.length>4)el.removeChild(el.firstChild);
+}
+function both(key,vars,force){say('s',key,vars,force);say('e',key,vars,force)}
+
+// ───────────────────────── world ─────────────────────────
+const N=isMobile?1500:2600;
+let frags=[],stories=[],index=new Map(),edges=[],edgeKeys=new Set(),junk=[],leaps=[];
+let K,E; // ledgers
+let Q=null,complete=0,T=0;
+const caption=document.getElementById('caption');
+
+function catmull(P,t){const n=P.length-1;t=clamp(t,0,n-1e-6);const i=Math.floor(t),u=t-i;const p0=P[Math.max(0,i-1)],p1=P[i],p2=P[Math.min(n,i+1)],p3=P[Math.min(n,i+2)];const o=[0,0,0];for(let k=0;k<3;k++)o[k]=.5*(2*p1[k]+(-p0[k]+p2[k])*u+(2*p0[k]-5*p1[k]+4*p2[k]-p3[k])*u*u+(-p0[k]+3*p1[k]-3*p2[k]+p3[k])*u*u*u);return o}
+
+function build(first){
+  if(!first||!runSeed)runSeed=first&&runSeed?runSeed:newSeed();applySeed();
+  frags=[];stories=[];index=new Map();edges=[];edgeKeys=new Set();junk=[];leaps=[];Q=null;complete=0;
+  K={scanned:0,matched:0,junk:0,wrong:0};E={links:0,leaps:0,found:0};
+  voiceEl.s.innerHTML='';voiceEl.e.innerHTML='';lastSaid.s=lastSaid.e=-9;caption.classList.remove('on');
+  for(let i=0;i<N;i++){
+    const d=unit(),r=Math.pow(rnd(),.42);
+    const tok=new Set();const nt=rnd()<.6?2:3;while(tok.size<nt)tok.add(zipfWord());
+    frags.push({p:[d[0]*r,d[1]*r,d[2]*r],tok:[...tok],story:-1,idx:-1,lit:0,flash:-9,queried:0,b:.55+rnd()*.45});
+  }
+  STORIES.forEach((def,k)=>{
+    const a=unit().map(v=>v*(.82+rnd()*.12));
+    const e=a.map(v=>-v*(.75+rnd()*.25)+(rnd()-.5)*.35);
+    const P=[a];for(const f of[.25,.5,.75]){P.push([0,1,2].map(j=>lerp(a[j],e[j],f)+(rnd()-.5)*.7))}P.push(e);
+    const curve=[];for(let s=0;s<=80;s++)curve.push(catmull(P,s/80*4));
+    const members=[];
+    for(let i=0;i<12;i++){
+      const p=catmull(P,(i+.5)/12*4).map(v=>v+(rnd()-.5)*.06);
+      const tok=[def.words[i],def.words[i+1]];let extra=zipfWord();while(tok.includes(extra))extra=zipfWord();tok.push(extra);
+      members.push(frags.length);
+      frags.push({p,tok,story:k,idx:i,lit:0,flash:-9,queried:0,b:1});
+    }
+    stories.push({def,members,curve,foundAt:0});
+  });
+  frags.forEach((f,i)=>f.tok.forEach(w=>{if(!index.has(w))index.set(w,[]);index.get(w).push(i)}));
+  order=new Array(frags.length);for(let i=0;i<order.length;i++)order[i]=i;
+  PX=new Float32Array(frags.length);PY=new Float32Array(frags.length);PS=new Float32Array(frags.length);PZ=new Float32Array(frags.length);
+  startQuery(nextQuery(null));
+  if(OG){yaw=.9;pitch=.22;dist=2.6;let guard=0;while(E.found<4&&guard++<20000){T+=1/60;updateSearch()}for(let i=0;i<150;i++){T+=1/60;updateSearch()}}
+}
+let order,PX,PY,PS,PZ;
+
+// union-find over a story's members
+function storyComplete(st){
+  const par=st.members.map((_,i)=>i);const find=x=>par[x]===x?x:(par[x]=find(par[x]));
+  for(const e of edges){const a=frags[e.a],b=frags[e.b];if(a.story===st.def.idx&&b.story===a.story){const ra=find(a.idx),rb=find(b.idx);if(ra!==rb)par[ra]=rb}}
+  const r=find(0);return st.members.every((_,i)=>find(i)===r);
+}
+STORIES.forEach((d,i)=>d.idx=i);
+
+function addEdge(a,b,kind,word){
+  const key=a<b?a+':'+b:b+':'+a;if(edgeKeys.has(key))return false;edgeKeys.add(key);
+  const fa=frags[a],fb=frags[b];fa.lit=fb.lit=1;
+  const e={a,b,kind,word,t:T,story:fa.story};
+  if(kind==='leap'){const m=[0,1,2].map(j=>(fa.p[j]+fb.p[j])/2);const l=Math.hypot(...m)||1;const d=dist3(fa.p,fb.p);e.ctrl=m.map((v,j)=>v+v/l*(.25+d*.35))}
+  edges.push(e);E.links++;
+  const st=stories[fa.story];
+  if(!st.foundAt&&storyComplete(st)){st.foundAt=T;E.found++;
+    say('e','found',{name:st.def.name,n:12},true);say('s','found',{junk:K.junk.toLocaleString()},true);
+    if(E.found===stories.length){complete=T;setTimeout(()=>{if(complete){say('s','done',{pct:Math.floor(100*K.junk/Math.max(1,K.matched)),junk:K.junk.toLocaleString(),wrong:K.wrong},true);say('e','done',{k:stories.length,m:frags.filter(f=>f.lit).length,l:E.leaps},true);caption.classList.add('on')}},2600)}
+  }
+  return true;
+}
+
+// ───────────────────────── the search ─────────────────────────
+const WAVE_SPEED=.95;
+function startQuery(qi){
+  const q=frags[qi];q.queried=1;
+  const cand=new Map();
+  for(const w of q.tok)for(const i of index.get(w)){if(i===qi)continue;if(!cand.has(i))cand.set(i,{i,d:dist3(q.p,frags[i].p),w})}
+  const cands=[...cand.values()].sort((a,b)=>a.d-b.d);
+  const dists=new Float32Array(frags.length);for(let i=0;i<frags.length;i++)dists[i]=dist3(q.p,frags[i].p);dists.sort();
+  const maxR=clamp((cands.length?cands[cands.length-1].d:1)+.08,1,2.05);
+  Q={qi,q,cands,cp:0,dists,dp:0,maxR,t0:T,phase:'wave',verified:0,junk:0,firstWord:null,leap:null};
+  both('query');
+}
+function nextQuery(prev){
+  if(prev&&prev.story>=0){const st=stories[prev.story];
+    if(!st.foundAt&&rnd()<.8){const c=st.members.filter(i=>frags[i].lit&&!frags[i].queried);
+      if(c.length){c.sort((x,y)=>Math.abs(frags[x].idx-prev.idx)-Math.abs(frags[y].idx-prev.idx));return c[Math.min(c.length-1,rnd()<.7?0:1)]}}}
+  const open=stories.filter(s=>!s.foundAt);
+  if(open.length&&rnd()<(complete?0:.55)){const st=pick(open);const un=st.members.filter(i=>!frags[i].queried);if(un.length)return pick(un)}
+  let g;do{g=Math.floor(rnd()*N)}while(frags[g].story>=0);return g;
+}
+function updateSearch(){
+  if(!Q)return;const q=Q.q;
+  if(Q.phase==='wave'){
+    const R=(T-Q.t0)*WAVE_SPEED;Q.R=R;
+    while(Q.dp<Q.dists.length&&Q.dists[Q.dp]<=R){Q.dp++;K.scanned++}
+    while(Q.cp<Q.cands.length&&Q.cands[Q.cp].d<=R){
+      const c=Q.cands[Q.cp++],f=frags[c.i];K.matched++;f.flash=T;
+      if(q.story>=0&&f.story===q.story){const fresh=addEdge(Q.qi,c.i,'match',c.w);Q.verified++;if(fresh&&!Q.firstWord){Q.firstWord=c.w;both('verified',{w:c.w})}}
+      else{K.junk++;Q.junk++;junk.push({a:Q.qi,b:c.i,t:T,w:c.w})}
+    }
+    if(R>=Q.maxR){
+      if(!Q.verified&&Q.junk>=12){if(q.story<0)both('garbage',{n:Q.junk});else both('burst',{n:Q.junk,w:q.tok[0]})}
+      // maybe leap
+      const st=q.story>=0?stories[q.story]:null;
+      if(st&&!st.foundAt&&rnd()<.6){
+        const wrong=rnd()<.3;let target=-1;
+        if(!wrong){const far=st.members.filter(i=>Math.abs(frags[i].idx-q.idx)>=2&&!edgeKeys.has(Q.qi<i?Q.qi+':'+i:i+':'+Q.qi));
+          const unlit=far.filter(i=>!frags[i].lit);const poolT=unlit.length?unlit:far;if(poolT.length)target=pick(poolT)}
+        else{const nbr=edges.filter(e=>e.a===Q.qi||e.b===Q.qi).map(e=>e.a===Q.qi?e.b:e.a);
+          const pool=[];for(const n of nbr)for(const w of frags[n].tok)for(const i of index.get(w))if(frags[i].story<0&&dist3(frags[i].p,q.p)>.5)pool.push(i);
+          if(pool.length)target=pick(pool)}
+        if(target>=0){const fa=q.p,fb=frags[target].p;const m=[0,1,2].map(j=>(fa[j]+fb[j])/2);const l=Math.hypot(...m)||1;const d=dist3(fa,fb);
+          Q.leap={a:Q.qi,b:target,wrong,t0:T,ctrl:m.map((v,j)=>v+v/l*(.25+d*.35)),dead:0,resolved:0};leaps.push(Q.leap);Q.phase='leap';Q.t1=T;both('leap');return}
+      }
+      Q.phase='gap';Q.t1=T;
+    }
+  }else if(Q.phase==='leap'){
+    const L=Q.leap,age=T-L.t0;
+    if(age>1.35&&!L.resolved){L.resolved=1;
+      if(L.wrong){L.dead=T;K.wrong++;both('broke')}
+      else{leaps.splice(leaps.indexOf(L),1);addEdge(L.a,L.b,'leap',null);E.leaps++;both('held')}
+      Q.phase='gap';Q.t1=T}
+  }else if(Q.phase==='gap'){
+    if(T-Q.t1>(complete?2.4:.38)){startQuery(nextQuery(Q.q))}
+  }
+  // prune
+  while(junk.length&&T-junk[0].t>1.5)junk.shift();if(junk.length>1400)junk.splice(0,junk.length-1400);
+  for(let i=leaps.length-1;i>=0;i--)if(leaps[i].dead&&T-leaps[i].dead>1.4)leaps.splice(i,1);
+}
+
+// ───────────────────────── camera & input ─────────────────────────
+let yaw=.6,pitch=.28,dist=2.9,lens=.5,paused=false,dragging=false,px0=0,py0=0,moved=0,pinch0=0,dist0=0,hoverI=-1,mx=-1,my=-1;
+const pointers=new Map();
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);pointers.set(e.pointerId,[e.clientX,e.clientY]);if(pointers.size===1){dragging=true;moved=0;px0=e.clientX;py0=e.clientY;canvas.classList.add('drag')}else if(pointers.size===2){const p=[...pointers.values()];pinch0=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);dist0=dist}});
+canvas.addEventListener('pointermove',e=>{mx=e.clientX;my=e.clientY;
+  if(pointers.has(e.pointerId))pointers.set(e.pointerId,[e.clientX,e.clientY]);
+  if(pointers.size===2){const p=[...pointers.values()];const d=Math.hypot(p[0][0]-p[1][0],p[0][1]-p[1][1]);dist=clamp(dist0*pinch0/Math.max(1,d),1.4,6);return}
+  if(dragging){const dx=e.clientX-px0,dy=e.clientY-py0;moved+=Math.abs(dx)+Math.abs(dy);yaw+=dx*.006;pitch=clamp(pitch+dy*.006,-1.4,1.4);px0=e.clientX;py0=e.clientY}});
+function endPointer(e){pointers.delete(e.pointerId);if(pointers.size===0){if(dragging&&moved<5&&hoverI>=0&&!paused){startQuery(hoverI)}dragging=false;canvas.classList.remove('drag')}}
+canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);
+canvas.addEventListener('pointerleave',()=>{mx=my=-1});
+canvas.addEventListener('wheel',e=>{e.preventDefault();dist=clamp(dist*Math.exp(e.deltaY*.0012),1.4,6)},{passive:false});
+const range=document.getElementById('lensRange');range.addEventListener('input',()=>{lens=range.value/1000});
+function setLens(v){lens=clamp(v,0,1);range.value=Math.round(lens*1000)}
+addEventListener('keydown',e=>{if(e.metaKey||e.ctrlKey)return;const k=e.key.toLowerCase();
+  if(e.key==='?'){toggleAbout();return}if(e.key==='Escape'){toggleAbout(false);return}
+  if(k===' '){e.preventDefault();paused=!paused;document.body.classList.toggle('paused',paused)}
+  else if(k==='r'){build()}else if(k==='h'){document.body.classList.toggle('nohud')}
+  else if(k==='arrowleft'){e.preventDefault();setLens(lens-.05)}else if(k==='arrowright'){e.preventDefault();setLens(lens+.05)}
+  else if(k==='1'){setLens(0)}else if(k==='2'){setLens(.5)}else if(k==='3'){setLens(1)}});
+setTimeout(()=>document.getElementById('hint').classList.add('faded'),12000);
+const aboutEl=document.getElementById('about');
+function toggleAbout(v){aboutEl.classList.toggle('on',v===undefined?!aboutEl.classList.contains('on'):v)}
+document.getElementById('aboutLink').addEventListener('click',()=>toggleAbout(true));
+document.getElementById('aboutClose').addEventListener('click',()=>toggleAbout(false));
+aboutEl.addEventListener('click',e=>{if(e.target===aboutEl)toggleAbout(false)});
+document.getElementById('againBtn').addEventListener('click',()=>build());
+document.getElementById('copyBtn').addEventListener('click',async()=>{
+  const url='https://rruxandra.github.io/haystack.html?seed='+runSeed;
+  const txt=`Haystack · seed ${runSeed}\n${url}\n\nwhat the skeptic counts\n  scanned        ${K.scanned.toLocaleString()}\n  matched        ${K.matched.toLocaleString()}\n  junk           ${K.junk.toLocaleString()} (${Math.floor(100*K.junk/Math.max(1,K.matched))}%)\n  wrong guesses  ${K.wrong}\n\nwhat the enthusiast counts\n  fragments joined  ${frags.filter(f=>f.lit).length}\n  links             ${E.links}\n  leaps that held   ${E.leaps}\n  stories found     ${E.found} / ${stories.length}\n`;
+  const b=document.getElementById('copyBtn');
+  try{await navigator.clipboard.writeText(txt)}catch(e){const ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(_){}ta.remove()}
+  b.textContent='copied';setTimeout(()=>b.textContent='copy the ledgers',2000)});
+const introEl=document.getElementById('intro');setTimeout(()=>introEl.classList.add('off'),OG?0:9000);
+if(OG){setLens(.85);document.getElementById('lens').style.display='none';document.body.classList.add('og')}
+function wake(){if(!shot)return;shot=false;document.body.classList.remove('og');document.getElementById('lens').style.display='';introEl.classList.add('off')}
+addEventListener('pointerdown',wake,true);addEventListener('keydown',wake,true);addEventListener('wheel',wake,{capture:true,passive:true});
+canvas.addEventListener('pointerdown',()=>introEl.classList.add('off'),{once:true});
+
+// ───────────────────────── render ─────────────────────────
+const hoverEl=document.getElementById('hover');
+let hueCache=[],lastLens=-1;
+function storyColor(k,t){return hueCache[k]}
+function projectPoint(p,cy,sy,cp,sp){const x=p[0]*cy-p[2]*sy,z1=p[0]*sy+p[2]*cy;const y=p[1]*cp-z1*sp,z=p[1]*sp+z1*cp;const s=FOCAL/(dist+z);return[CX+x*s,CY+y*s,s,z]}
+function fog(z){return clamp(1.1-(z+1)*.36,.2,1)}
+function render(){
+  const t=lens;
+  if(t!==lastLens){lastLens=t;hueCache=STORIES.map(d=>mix(STEEL,d.hue,.2+.8*t))}
+  const cy=Math.cos(yaw),sy=Math.sin(yaw),cp=Math.cos(pitch),sp=Math.sin(pitch);
+  // background
+  const g=ctx.createRadialGradient(CX,CY*.9,0,CX,CY,Math.max(W,H)*.75);
+  const bgA=mix([15,17,22],[10,7,22],t),bgB=mix([6,7,10],[3,2,8],t);
+  g.addColorStop(0,rgba(bgA,1));g.addColorStop(1,rgba(bgB,1));ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+  // project
+  const n=frags.length;
+  for(let i=0;i<n;i++){const p=frags[i].p;const x=p[0]*cy-p[2]*sy,z1=p[0]*sy+p[2]*cy;const y=p[1]*cp-z1*sp,z=p[1]*sp+z1*cp;const s=FOCAL/(dist+z);PX[i]=CX+x*s;PY[i]=CY+y*s;PS[i]=s;PZ[i]=z}
+  const s0=FOCAL/dist;
+  ctx.lineCap='round';ctx.lineJoin='round';
+
+  // found stories: hidden curves revealed
+  for(let k=0;k<stories.length;k++){const st=stories[k];if(!st.foundAt)continue;
+    const frac=reduceMotion?1:clamp((T-st.foundAt)/1.8,0,1);const col=hueCache[k];const cnt=Math.max(2,Math.floor(st.curve.length*frac));
+    ctx.beginPath();let mid=null;for(let i=0;i<cnt;i++){const q=projectPoint(st.curve[i],cy,sy,cp,sp);if(i===0)ctx.moveTo(q[0],q[1]);else ctx.lineTo(q[0],q[1]);if(i===40)mid=q}
+    ctx.globalAlpha=lerp(.06,.18,t);ctx.strokeStyle=rgba(col,1);ctx.lineWidth=10;ctx.stroke();
+    ctx.globalAlpha=lerp(.3,.9,t);ctx.lineWidth=lerp(1,1.8,t);ctx.stroke();
+    if(mid&&frac>.6){const a=clamp((frac-.6)/.4,0,1)*lerp(.45,1,t);ctx.globalAlpha=a;ctx.fillStyle=rgba(col,1);ctx.font=`${isMobile?9:11}px "Space Mono",monospace`;ctx.textAlign='center';ctx.fillText(st.def.name,mid[0],mid[1]-12)}
+  }
+  // junk candidate lines
+  const junkCol=mix(JUNKRED,[110,120,160],t),junkA=lerp(.4,.04,t);
+  ctx.lineWidth=1;ctx.strokeStyle=rgba(junkCol,1);
+  for(const j of junk){const age=T-j.t;if(age>1.1)continue;const a=(1-age/1.1)*junkA*fog(PZ[j.b]);if(a<.01)continue;ctx.globalAlpha=a;ctx.beginPath();ctx.moveTo(PX[j.a],PY[j.a]);ctx.lineTo(PX[j.b],PY[j.b]);ctx.stroke()}
+  // verified edges
+  const showWords=t<.45;const wordA=showWords?(.45-t)/.45:0;
+  ctx.font=`${isMobile?8:9}px "Space Mono",monospace`;ctx.textAlign='center';
+  for(const e of edges){const col=hueCache[e.story];const age=T-e.t;const flash=age<.7?(1-age/.7):0;const fg=Math.min(fog(PZ[e.a]),fog(PZ[e.b]));
+    ctx.beginPath();
+    if(e.kind==='leap'){const seg=14;for(let i=0;i<=seg;i++){const u=i/seg,w0=(1-u)*(1-u),w1=2*u*(1-u),w2=u*u;const p=[0,1,2].map(j=>w0*frags[e.a].p[j]+w1*e.ctrl[j]+w2*frags[e.b].p[j]);const q=projectPoint(p,cy,sy,cp,sp);if(i===0)ctx.moveTo(q[0],q[1]);else ctx.lineTo(q[0],q[1])}ctx.setLineDash(t<.5?[5,5]:[])}
+    else{ctx.moveTo(PX[e.a],PY[e.a]);ctx.lineTo(PX[e.b],PY[e.b])}
+    if(t>.2){ctx.globalAlpha=(.10*t+flash*.2)*fg;ctx.strokeStyle=rgba(col,1);ctx.lineWidth=7*t+2;ctx.stroke()}
+    ctx.globalAlpha=(lerp(.5,.95,t)+flash*.5)*fg;ctx.lineWidth=lerp(.8,1.5,t)+flash;ctx.strokeStyle=rgba(mix(col,[255,255,255],flash*.6),1);ctx.stroke();ctx.setLineDash([]);
+    const wLife=clamp(1-(age-5)/3,0,1);if(wordA>0&&wLife>0&&PS[e.a]>s0*.7){const mxp=(PX[e.a]+PX[e.b])/2,myp=(PY[e.a]+PY[e.b])/2;ctx.globalAlpha=wordA*wLife*.85*fg;ctx.fillStyle=e.kind==='leap'?rgba(JUNKRED,1):rgba(STEEL,1);ctx.fillText(e.kind==='leap'?'no shared word':e.word,mxp,myp-4)}
+  }
+  // leaps in flight or broken
+  for(const L of leaps){const age=T-L.t0;const grow=reduceMotion?1:clamp(age/.8,0,1);const fa=frags[L.a].p,fb=frags[L.b].p;
+    const seg=18,cnt=Math.max(1,Math.round(seg*grow));ctx.beginPath();let head=null;
+    for(let i=0;i<=cnt;i++){const u=i/seg,w0=(1-u)*(1-u),w1=2*u*(1-u),w2=u*u;const p=[0,1,2].map(j=>w0*fa[j]+w1*L.ctrl[j]+w2*fb[j]);const q=projectPoint(p,cy,sy,cp,sp);if(i===0)ctx.moveTo(q[0],q[1]);else ctx.lineTo(q[0],q[1]);head=q}
+    let col,a;
+    if(L.dead){const d=(T-L.dead)/1.4;col=mix(JUNKRED,[120,110,120],t*.6);a=(1-d)*lerp(.9,.55,t);ctx.setLineDash([3,4+d*14])}
+    else{col=mix(JUNKRED,[255,236,200],t);a=lerp(.7,1,t)*(.75+.25*Math.sin(T*9));ctx.setLineDash(t<.5?[5,5]:[])}
+    ctx.globalAlpha=a*.18;ctx.strokeStyle=rgba(col,1);ctx.lineWidth=8;ctx.stroke();ctx.globalAlpha=a;ctx.lineWidth=1.4;ctx.stroke();ctx.setLineDash([]);
+    if(!L.dead&&head&&grow<1){ctx.globalAlpha=1;ctx.fillStyle=rgba(col,1);ctx.beginPath();ctx.arc(head[0],head[1],2.5,0,6.283);ctx.fill()}
+    if(L.dead&&t<.6){const mxp=(PX[L.a]+PX[L.b])/2,myp=(PY[L.a]+PY[L.b])/2-16;ctx.globalAlpha=a*(1-t/.6);ctx.fillStyle=rgba(JUNKRED,1);ctx.fillText('wrong',mxp,myp)}
+  }
+  // points
+  order.sort((a,b)=>PZ[b]-PZ[a]);
+  const gA=lerp(.85,.2,t),gSize=lerp(2.0,1.15,t),gCol=mix([200,208,222],[150,160,200],t);
+  const qp=Q?Q.q.p:null,R=Q&&Q.phase==='wave'?Q.R:-1,bandA=lerp(.6,.3,t);
+  const flashCol=mix(JUNKRED,PALE,t);
+  for(let oi=0;oi<n;oi++){const i=order[oi];const f=frags[i];const s=PS[i]/s0,fg=fog(PZ[i]);const x=PX[i],y=PY[i];
+    if(x<-10||x>W+10||y<-10||y>H+10)continue;
+    if(f.lit){const col=hueCache[f.story];const fl=T-f.flash<.6?1-(T-f.flash)/.6:0;
+      if(t>.2){ctx.globalAlpha=(.14*t+fl*.25)*fg;ctx.fillStyle=rgba(col,1);ctx.beginPath();ctx.arc(x,y,(6+fl*4)*s*t+2,0,6.283);ctx.fill()}
+      ctx.globalAlpha=(lerp(.8,1,t))*fg;ctx.fillStyle=rgba(mix(col,[255,255,255],fl*.7),1);ctx.beginPath();ctx.arc(x,y,(lerp(1.9,2.4,t)+fl)*s,0,6.283);ctx.fill();continue}
+    let a=gA*f.b*fg,sz=gSize*s;
+    if(R>=0){const d=dist3(qp,f.p)-R;const band=Math.exp(-d*d*900);if(band>.02){a+=band*bandA;sz+=band*1.2}}
+    const fl=T-f.flash;
+    if(fl<.7){const k=1-fl/.7;a+=k*lerp(.6,.4,t);sz+=k*1.6;ctx.fillStyle=rgba(mix(gCol,flashCol,k),1)}else ctx.fillStyle=rgba(gCol,1);
+    if(a<.01)continue;ctx.globalAlpha=Math.min(1,a);const h=sz/2;ctx.fillRect(x-h,y-h,sz,sz);
+  }
+  // wave ring + query marker
+  if(Q){const i=Q.qi;const s=PS[i];const col=mix(STEEL,AMBER,t);
+    if(Q.phase==='wave'){const rr=Q.R*s;const a=(1-Q.R/Q.maxR);ctx.globalAlpha=a*.55;ctx.strokeStyle=rgba(col,1);ctx.lineWidth=1;ctx.beginPath();ctx.arc(PX[i],PY[i],rr,0,6.283);ctx.stroke();ctx.globalAlpha=a*.2;ctx.beginPath();ctx.arc(PX[i],PY[i],Math.max(0,rr-.06*s),0,6.283);ctx.stroke()}
+    const pulse=.6+.4*Math.sin(T*5);ctx.globalAlpha=.9;ctx.strokeStyle=rgba(col,1);ctx.lineWidth=1.2;ctx.beginPath();ctx.arc(PX[i],PY[i],8+pulse*2,0,6.283);ctx.stroke();
+    ctx.globalAlpha=.5;ctx.beginPath();ctx.moveTo(PX[i]-16,PY[i]);ctx.lineTo(PX[i]-11,PY[i]);ctx.moveTo(PX[i]+11,PY[i]);ctx.lineTo(PX[i]+16,PY[i]);ctx.moveTo(PX[i],PY[i]-16);ctx.lineTo(PX[i],PY[i]-11);ctx.moveTo(PX[i],PY[i]+11);ctx.lineTo(PX[i],PY[i]+16);ctx.stroke();
+    ctx.textAlign='left';ctx.globalAlpha=.75;ctx.fillStyle=rgba(col,1);ctx.fillText(Q.phase==='wave'?'LLM · scanning':Q.phase==='leap'?'LLM · reaching':'LLM · deciding',PX[i]+20,PY[i]-9);
+    if(wordA>0){ctx.globalAlpha=wordA*.9;ctx.fillStyle=rgba(STEEL,1);ctx.fillText(Q.q.tok.join(' · '),PX[i]+20,PY[i]+5)}ctx.textAlign='center'
+  }
+  ctx.globalAlpha=1;
+  // hover
+  hoverI=-1;
+  if(mx>=0&&!dragging){let best=196,bi=-1;for(let i=0;i<n;i++){const dx=PX[i]-mx,dy=PY[i]-my;const d=dx*dx+dy*dy;if(d<best||(d<best+40&&bi>=0&&PZ[i]<PZ[bi]-.3)){best=d;bi=i}}hoverI=bi}
+  if(hoverI>=0){const f=frags[hoverI];hoverEl.style.display='block';const lx=mx+14,ly=my+14;hoverEl.style.left=Math.min(W-200,lx)+'px';hoverEl.style.top=Math.min(H-60,ly)+'px';
+    let html=f.tok.join(' · ');
+    if(f.lit){const c=hueCache[f.story];html+=`<span class="tn" style="color:${rgba(c,1)}">${stories[f.story].def.name}</span>`}else html+='<span class="tn g">fragment</span>';
+    hoverEl.innerHTML=html;canvas.classList.add('pick')}
+  else{hoverEl.style.display='none';canvas.classList.remove('pick')}
+  // hud weighting by lens
+  document.getElementById('voice-s').style.opacity=lerp(1,.4,t);document.getElementById('voice-e').style.opacity=lerp(.4,1,t);
+  document.querySelector('.ledger.s').style.opacity=lerp(1,.55,t);document.querySelector('.ledger.e').style.opacity=lerp(.55,1,t);
+  document.querySelector('h1 span').style.color=rgba(mix(STEEL,AMBER,t),1);
+}
+// ledger dom
+const $=id=>document.getElementById(id);let ledgerT=0;
+function ledgers(){
+  $('k-scanned').textContent=K.scanned.toLocaleString();$('k-matched').textContent=K.matched.toLocaleString();$('k-junk').textContent=K.junk.toLocaleString();
+  $('k-pct').textContent=K.matched?`(${Math.floor(100*K.junk/K.matched)}%)`:'';$('k-wrong').textContent=K.wrong;
+  let joined=0;for(const f of frags)if(f.lit)joined++;$('e-joined').textContent=joined;$('e-links').textContent=E.links;$('e-leaps').textContent=E.leaps;$('e-found').textContent=E.found;
+}
+
+// ───────────────────────── loop ─────────────────────────
+let last=performance.now();
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000);last=now;
+  if(!paused&&!shot){T+=dt;updateSearch();if(!dragging&&!reduceMotion&&pointers.size===0){yaw+=dt*.05;pitch+=Math.sin(T*.13)*dt*.006}
+    if(complete&&T-complete>45)build()}
+  render();
+  if(now-ledgerT>120){ledgerT=now;ledgers()}
+  requestAnimationFrame(frame);
+}
+build(true);requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

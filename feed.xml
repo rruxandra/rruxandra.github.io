@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Thu, 03 Sep 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Fri, 04 Sep 2026 12:00:00 +0200</lastBuildDate>
+
+    <item>
+      <title>Haystack</title>
+      <link>https://rruxandra.github.io/haystack.html</link>
+      <description>An LLM searches through 2,600 fragments of text it has never read, while a skeptic and an enthusiast argue about what it is doing. Are LLMs actually able to discover new things, or are they just searching through garbage very fast? The skeptic counts how much it scans, how many of its matches are junk, and how often it guesses wrong with total confidence. The enthusiast counts the links it makes, the leaps that hold without a single word in common, and the five stories it pieces together from fragments scattered across the whole archive. Slide the lens between the two views, click a fragment to see what the LLM makes of it, and decide whose numbers matter.</description>
+      <pubDate>Fri, 04 Sep 2026 12:00:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/haystack.html</guid>
+    </item>
 
     <item>
       <title>Vector</title>
