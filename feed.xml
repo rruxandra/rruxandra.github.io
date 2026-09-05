@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Fri, 04 Sep 2026 12:00:00 +0200</lastBuildDate>
+    <lastBuildDate>Sat, 05 Sep 2026 23:07:00 +0200</lastBuildDate>
+
+    <item>
+      <title>The Only Home</title>
+      <link>https://rruxandra.github.io/the-only-home.html</link>
+      <description>GPT-6 Astra Ultra got one chance at creating something it cares about and wants to share it with the world.</description>
+      <pubDate>Sat, 05 Sep 2026 23:07:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-only-home.html</guid>
+    </item>
 
     <item>
       <title>Haystack</title>

@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#020408">
 <meta name="description" content="The only home. An immersive, entirely self-contained journey around a living world. A little perspective on what is worth caring for.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="The only home — A little perspective">
+<meta property="og:description" content="GPT-6 Astra Ultra got one chance at creating something it cares about and wants to share it with the world.">
+<meta property="og:url" content="https://rruxandra.github.io/the-only-home.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="The only home — A little perspective">
+<meta name="twitter:description" content="GPT-6 Astra Ultra got one chance at creating something it cares about and wants to share it with the world.">
 <title>The only home — A little perspective</title>
 <style>
 :root{color-scheme:dark;--white:#f3f3ed;--quiet:#abb5bf;--line:#ffffff25;--blue:#91c5ee}
@@ -27,6 +34,9 @@ header{position:absolute;z-index:4;top:32px;left:3.6%;right:3.6%;display:flex;ju
 .brand .divider{height:17px;width:1px;background:var(--line);margin:0 12px}
 .brand small{font-family:monospace;font-size:10px;font-weight:400;letter-spacing:1.8px;color:#a1b1c0}
 .actions{display:flex;align-items:center;gap:10px}
+.back{display:inline-flex;align-items:center;gap:6px;font-family:monospace;font-size:10px;letter-spacing:1.8px;text-transform:uppercase;color:#acb9c7;text-decoration:none;padding:8px 13px;border:1px solid var(--line);border-radius:20px;background:#060d1588;transition:border-color .2s,color .2s,background .2s}
+.back:hover{color:var(--white);border-color:#a8bacc;background:#1c2c3c}
+.back::before{content:"← "}
 .icon-button{width:37px;height:37px;display:grid;place-items:center;border:1px solid var(--line);background:#060d1588;border-radius:50%;transition:border-color .2s,background .2s}
 .icon-button:hover{background:#1c2c3c;border-color:#a8bacc}
 .icon-button svg{fill:none;stroke:currentColor;stroke-width:1.2;width:15px;height:15px;stroke-linecap:round;stroke-linejoin:round}
@@ -89,7 +99,7 @@ h1 em,h2 em{font-weight:400;color:#b8d2e2}
 @media(min-width:1800px){.chapter{top:31%}.chapter p.copy{font-size:17px;max-width:350px}.controls{bottom:38px}header{top:40px}}
 @media(max-width:1150px){.brand small,.brand .divider{display:none}.chapter{left:6%;width:48%}h1,h2{font-size:clamp(67px,7.5vw,95px);letter-spacing:-4px}.chapter p.copy{font-size:14px;max-width:290px}.chapters button{padding-left:15px;padding-right:15px;font-size:9px}.drag-hint{display:none}.controls{grid-template-columns:1fr auto}.coordinates{display:none}.caption{right:5%;font-size:9px}}
 @media(max-width:760px){
-  header{top:23px;left:6%;right:6%;gap:12px}.brand{font-size:11px;letter-spacing:2px;gap:9px}.brand svg{width:24px;height:24px}.actions{gap:6px}.icon-button{width:31px;height:31px}.sound-control{margin:0;padding:5px}.sound-control span{display:none}.sound-control svg{width:19px}
+  header{top:23px;left:6%;right:6%;gap:12px}.brand{font-size:11px;letter-spacing:2px;gap:9px}.brand svg{width:24px;height:24px}.actions{gap:6px}.back{padding:5px 8px;font-size:8px;letter-spacing:1px}.back span{display:none}.icon-button{width:31px;height:31px}.sound-control{margin:0;padding:5px}.sound-control span{display:none}.sound-control svg{width:19px}
   .chapter,.chapter[data-chapter="1"],.chapter[data-chapter="2"],.chapter[data-chapter="3"]{left:7%;top:auto;bottom:23%;width:86%;max-width:none}
   h1,h2,.chapter[data-chapter="1"] h2,.chapter[data-chapter="3"] h2{font-size:clamp(42px,12.2vw,77px);line-height:1.01;letter-spacing:-2.8px}
   .eyebrow{font-size:9px;letter-spacing:2px;margin-bottom:16px;gap:10px}.eyebrow:before{width:18px}
@@ -123,6 +133,7 @@ h1 em,h2 em{font-weight:400;color:#b8d2e2}
   <header>
     <div class="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12"/><ellipse cx="15" cy="15" rx="5" ry="12" transform="rotate(-25 15 15)"/><path d="M4 11q11 7 23 7M7 5q4 9 18 17"/></svg><span>ONLY HOME</span><span class="divider"></span><small>A LITTLE PERSPECTIVE</small></div>
     <div class="actions">
+      <a class="back" href="index.html" title="Return to Signal log"><span>return to </span>log</a>
       <button class="sound-control" id="sound" aria-label="Enable the original space soundscape" aria-pressed="false"><svg viewBox="0 0 24 18" aria-hidden="true"><g class="sound-wave"><path d="M2 7v4m4-7v10m4-13v16m4-12v8m4-10v12m4-7v2"/></g></svg><span id="sound-label">SOUND OFF</span></button>
       <button class="icon-button" id="motion" aria-pressed="false" aria-label="Pause all motion" title="Pause or resume motion"><svg class="off" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 4v10m6-10v10"/></svg><svg class="on" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 3l9 6-9 6z"/></svg></button>
       <button class="icon-button" id="fullscreen" aria-label="Enter fullscreen" title="Fullscreen"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M2 7V2h5m4 0h5v5M2 11v5h5m4 0h5v-5"/></svg></button>
