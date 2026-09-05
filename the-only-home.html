@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#020408">
+<meta name="description" content="The only home. An immersive, entirely self-contained journey around a living world. A little perspective on what is worth caring for.">
+<title>The only home — A little perspective</title>
+<style>
+:root{color-scheme:dark;--white:#f3f3ed;--quiet:#abb5bf;--line:#ffffff25;--blue:#91c5ee}
+*{box-sizing:border-box}
+html{background:#020408;scrollbar-width:none}
+html::-webkit-scrollbar{display:none}
+body{margin:0;color:var(--white);font-family:Arial,Helvetica,sans-serif;background:#020408;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button:focus-visible{outline:2px solid #b6dcff;outline-offset:5px}
+::selection{background:#91c5ee;color:#07111b}
+.scroll-space{height:500svh;pointer-events:none}
+.experience{position:fixed;inset:0;overflow:hidden;isolation:isolate;background:#020408}
+#universe{width:100%;height:100%;display:block;position:absolute;inset:0;cursor:grab;touch-action:pan-y pinch-zoom}
+#universe:active{cursor:grabbing}
+#universe:focus-visible{outline:1px solid #a7cfee;outline-offset:-9px}
+.shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(0,3,8,.22),transparent 52%),linear-gradient(0deg,#020408aa,transparent 19%,transparent 88%,#02040855)}
+header{position:absolute;z-index:4;top:32px;left:3.6%;right:3.6%;display:flex;justify-content:space-between;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:13px;font-size:13px;letter-spacing:3px;font-weight:500}
+.brand svg{width:28px;height:28px;stroke:#dbe9f1;fill:none;stroke-width:.8}
+.brand .divider{height:17px;width:1px;background:var(--line);margin:0 12px}
+.brand small{font-family:monospace;font-size:10px;font-weight:400;letter-spacing:1.8px;color:#a1b1c0}
+.actions{display:flex;align-items:center;gap:10px}
+.icon-button{width:37px;height:37px;display:grid;place-items:center;border:1px solid var(--line);background:#060d1588;border-radius:50%;transition:border-color .2s,background .2s}
+.icon-button:hover{background:#1c2c3c;border-color:#a8bacc}
+.icon-button svg{fill:none;stroke:currentColor;stroke-width:1.2;width:15px;height:15px;stroke-linecap:round;stroke-linejoin:round}
+.icon-button .on{display:none}.icon-button[aria-pressed="true"] .on{display:block}.icon-button[aria-pressed="true"] .off{display:none}
+.sound-control{display:flex;align-items:center;gap:10px;background:transparent;border:0;padding:9px 6px;margin-right:10px;font-size:10px;letter-spacing:1.5px;color:#acb9c7}
+.sound-control svg{width:22px;height:16px;fill:none;stroke:currentColor;stroke-width:1;stroke-linecap:round}
+.sound-control[aria-pressed="true"]{color:#dbe9f1}
+.sound-control[aria-pressed="true"] .sound-wave{animation:sound 2s ease-in-out infinite;transform-origin:center}
+@keyframes sound{50%{transform:scaleY(.45)}}
+.chapter{position:absolute;z-index:3;left:7.2%;top:29%;max-width:610px;width:43%;pointer-events:none;opacity:0;transform:translateY(22px);transition:opacity .65s,transform .9s}
+.chapter.active{opacity:1;transform:translateY(0)}
+.eyebrow{display:flex;align-items:center;gap:14px;color:#abc9dd;font-family:monospace;font-size:10px;line-height:1.6;letter-spacing:2.7px;text-transform:uppercase;margin:0 0 26px}
+.eyebrow:before{content:"";width:27px;height:1px;background:#91b6cb}
+h1,h2{font-family:Georgia,'Times New Roman',serif;font-weight:400;font-size:clamp(65px,7.3vw,120px);line-height:1.015;letter-spacing:-5.5px;margin:0;text-shadow:0 3px 35px #00000019}
+h1 em,h2 em{font-weight:400;color:#b8d2e2}
+.chapter p.copy{max-width:315px;font-size:15px;line-height:1.85;color:#b8c1c8;margin:28px 0 0;letter-spacing:.1px;text-wrap:pretty}
+.chapter[data-chapter="1"]{top:21%;width:55%;max-width:670px}
+.chapter[data-chapter="1"] h2{font-size:clamp(58px,6.4vw,100px)}
+.chapter[data-chapter="2"]{top:29%}
+.chapter[data-chapter="3"] h2{font-size:clamp(62px,6.9vw,110px)}
+.chapter[data-chapter="3"] .copy{max-width:320px}
+.coordinates{position:absolute;z-index:3;right:3.8%;top:47%;display:flex;flex-direction:column;align-items:flex-end;gap:12px;font-family:monospace;font-size:10px;letter-spacing:1.5px;color:#8fabc0;pointer-events:none;opacity:.7}
+.coordinates .line{height:45px;width:1px;background:linear-gradient(#9bcbef00,#9bcbef88,#9bcbef00);margin-right:3px}
+.coordinates span:last-child{writing-mode:vertical-rl;font-size:9px;letter-spacing:3px}
+.controls{position:absolute;z-index:5;left:3.6%;right:3.6%;bottom:28px;display:grid;grid-template-columns:1fr auto 1fr;align-items:end;gap:25px}
+.play-journey{justify-self:start;display:flex;align-items:center;gap:13px;border:0;background:transparent;padding:10px 0;font-size:12px;letter-spacing:.5px;color:#ccd6df}
+.play-journey .round{height:35px;width:35px;border:1px solid #bad9ed50;border-radius:50%;display:grid;place-items:center;transition:background .25s,border-color .25s}
+.play-journey:hover .round{background:#aac5dc30;border-color:#beddf8}
+.play-journey svg{width:12px;height:12px;fill:currentColor;stroke:currentColor;stroke-width:.5}
+.navigation{display:flex;flex-direction:column;align-items:center;gap:25px}
+.scroll-hint{display:flex;align-items:center;gap:12px;font-family:monospace;color:#98acbd;font-size:9px;text-transform:uppercase;letter-spacing:2px;transition:opacity .5s}
+.scroll-hint .stroke{height:27px;width:1px;position:relative;background:#afc9df33;overflow:hidden}
+.scroll-hint .stroke:after{content:"";width:1px;height:12px;background:#d6e6f5;position:absolute;top:-12px;animation:fall 2.6s ease-in-out infinite}
+@keyframes fall{80%,100%{transform:translateY(39px)}}
+.chapters{display:flex;gap:0;position:relative;border-top:1px solid #ffffff25}
+.chapters:after{content:"";position:absolute;left:0;top:-1px;height:1px;background:#beddf6;width:var(--progress,0%);pointer-events:none;box-shadow:0 0 9px #97d0ffaa}
+.chapters button{border:0;background:transparent;padding:17px 22px 6px;text-align:left;color:#8493a1;font-size:10px;letter-spacing:1.5px;transition:color .3s;position:relative;white-space:nowrap}
+.chapters button:first-child{padding-left:0}.chapters button:last-child{padding-right:0}
+.chapters button .number{font-family:monospace;font-size:9px;color:#647789;margin-right:8px}
+.chapters button[aria-current="step"],.chapters button:hover{color:#eef6fa}
+.chapters button[aria-current="step"] .number{color:#c1dcec}
+.drag-hint{justify-self:end;align-self:end;font-family:monospace;font-size:9px;letter-spacing:1.4px;color:#768a9c;padding-bottom:7px;display:flex;align-items:center;gap:12px}
+.drag-hint svg{height:12px;width:23px;fill:none;stroke:currentColor;stroke-width:.8}
+.progress-track{position:absolute;z-index:6;left:0;top:0;height:2px;width:100%;background:transparent;pointer-events:none}
+.progress-track div{height:100%;width:0;background:#a5cce6;opacity:.45;transition:width .15s linear}
+.caption{position:absolute;z-index:3;right:7%;bottom:20%;color:#9ab0c4;font-family:monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;pointer-events:none;opacity:.65}
+.caption:before{content:"+";margin-right:11px;color:#bdd2df;font-size:14px}
+.loader{position:absolute;inset:0;z-index:20;background:#020408;display:flex;justify-content:center;align-items:center;flex-direction:column;transition:opacity 1.2s;pointer-events:none}
+.loader.ready{opacity:0}
+.loader .planet-mark{width:46px;height:46px;border-radius:50%;border:1px solid #7ba4c555;box-shadow:inset -8px -4px 14px #91c8f033,0 0 35px #568bd420;margin-bottom:27px}
+.loader p{font-family:Georgia,'Times New Roman',serif;font-size:22px;letter-spacing:-.3px;margin:0;color:#cedce7}
+.loader small{font-family:monospace;font-size:9px;color:#697d93;letter-spacing:2px;margin-top:17px;text-transform:uppercase}
+.loader .track{width:140px;height:1px;background:#ffffff15;margin-top:24px}.loader .track span{display:block;width:0;height:100%;background:#bbd9f4;transition:width .2s}
+.fallback{display:none;position:absolute;z-index:21;inset:0;background:radial-gradient(ellipse at 75% 45%,#183c6044,transparent 50%),#020408;padding:18vh 9vw;align-items:flex-start;justify-content:center;flex-direction:column}
+.fallback h2{font-size:clamp(45px,7vw,100px)}
+.fallback p{font-size:16px;line-height:1.8;color:#b6c6d5;max-width:500px}
+.fallback.show{display:flex}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.motion-paused .sound-wave,.motion-paused .stroke:after{animation-play-state:paused!important}
+@media(min-width:1800px){.chapter{top:31%}.chapter p.copy{font-size:17px;max-width:350px}.controls{bottom:38px}header{top:40px}}
+@media(max-width:1150px){.brand small,.brand .divider{display:none}.chapter{left:6%;width:48%}h1,h2{font-size:clamp(67px,7.5vw,95px);letter-spacing:-4px}.chapter p.copy{font-size:14px;max-width:290px}.chapters button{padding-left:15px;padding-right:15px;font-size:9px}.drag-hint{display:none}.controls{grid-template-columns:1fr auto}.coordinates{display:none}.caption{right:5%;font-size:9px}}
+@media(max-width:760px){
+  header{top:23px;left:6%;right:6%;gap:12px}.brand{font-size:11px;letter-spacing:2px;gap:9px}.brand svg{width:24px;height:24px}.actions{gap:6px}.icon-button{width:31px;height:31px}.sound-control{margin:0;padding:5px}.sound-control span{display:none}.sound-control svg{width:19px}
+  .chapter,.chapter[data-chapter="1"],.chapter[data-chapter="2"],.chapter[data-chapter="3"]{left:7%;top:auto;bottom:23%;width:86%;max-width:none}
+  h1,h2,.chapter[data-chapter="1"] h2,.chapter[data-chapter="3"] h2{font-size:clamp(42px,12.2vw,77px);line-height:1.01;letter-spacing:-2.8px}
+  .eyebrow{font-size:9px;letter-spacing:2px;margin-bottom:16px;gap:10px}.eyebrow:before{width:18px}
+  .chapter p.copy,.chapter[data-chapter="3"] .copy{font-size:13px;line-height:1.7;max-width:285px;margin-top:18px}
+  .chapter[data-chapter="1"]{top:15%;bottom:auto}
+  .chapter[data-chapter="1"] .copy{max-width:250px}
+  .controls{left:7%;right:7%;bottom:23px;grid-template-columns:1fr;gap:15px;justify-items:center}
+  .play-journey{grid-row:1;justify-self:center;font-size:11px;padding:0;gap:9px}.play-journey .round{width:28px;height:28px}.play-journey svg{width:10px;height:10px}
+  .navigation{width:100%;gap:15px}.chapters{width:100%;justify-content:space-between}.chapters button{font-size:8px;letter-spacing:1px;padding:13px 9px 4px}.chapters button .number{font-size:8px;margin-right:5px}
+  .scroll-hint{position:absolute;bottom:102px;font-size:8px;letter-spacing:1.5px}.scroll-hint .stroke{height:18px}
+  .caption{display:none}.shade{background:linear-gradient(0deg,#020408a0 0%,transparent 58%,#02040800 88%,#02040855)}
+}
+@media(max-height:690px) and (min-width:761px){header{top:20px}.chapter{top:25%}h1,h2,.chapter[data-chapter="3"] h2{font-size:74px}.chapter[data-chapter="1"] h2{font-size:66px}.chapter p.copy{margin-top:20px;font-size:13px;max-width:290px}.eyebrow{margin-bottom:18px}.controls{bottom:20px}.navigation{gap:14px}}
+@media(max-width:760px) and (max-height:720px){.chapter{bottom:25%}h1,h2,.chapter[data-chapter="1"] h2,.chapter[data-chapter="3"] h2{font-size:clamp(42px,11.5vw,49px)}.chapter p.copy{font-size:12px;max-width:270px;margin-top:13px}.eyebrow{margin-bottom:13px}.controls{bottom:16px}}
+@media(max-height:500px){
+  .chapter,.chapter[data-chapter="1"],.chapter[data-chapter="2"],.chapter[data-chapter="3"]{left:6%;top:25%;bottom:auto;width:49%}
+  h1,h2,.chapter[data-chapter="1"] h2,.chapter[data-chapter="3"] h2{font-size:clamp(32px,6vw,58px);letter-spacing:-2px}
+  .chapter p.copy,.chapter[data-chapter="3"] .copy{font-size:12px;line-height:1.55;max-width:280px;margin-top:13px}
+  .eyebrow{font-size:8px;margin-bottom:10px;letter-spacing:1.6px}.scroll-hint,.caption{display:none}
+  .controls{grid-template-columns:1fr auto;gap:20px;bottom:15px}.play-journey{justify-self:start;grid-row:auto}.navigation{gap:0}.chapters button{padding-top:12px}.brand small{display:none}
+}
+@media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="scroll-space" aria-hidden="true"></div>
+<main class="experience" aria-label="The only home, a journey in perspective">
+  <canvas id="universe" tabindex="0" role="img" aria-label="An illuminated blue Earth surrounded by deep space. Scroll to travel around the planet; drag horizontally to turn it. Arrow keys select chapters." aria-describedby="instructions"></canvas>
+  <div class="shade"></div>
+  <div class="progress-track" aria-hidden="true"><div id="page-progress"></div></div>
+  <header>
+    <div class="brand"><svg viewBox="0 0 30 30" aria-hidden="true"><circle cx="15" cy="15" r="12"/><ellipse cx="15" cy="15" rx="5" ry="12" transform="rotate(-25 15 15)"/><path d="M4 11q11 7 23 7M7 5q4 9 18 17"/></svg><span>ONLY HOME</span><span class="divider"></span><small>A LITTLE PERSPECTIVE</small></div>
+    <div class="actions">
+      <button class="sound-control" id="sound" aria-label="Enable the original space soundscape" aria-pressed="false"><svg viewBox="0 0 24 18" aria-hidden="true"><g class="sound-wave"><path d="M2 7v4m4-7v10m4-13v16m4-12v8m4-10v12m4-7v2"/></g></svg><span id="sound-label">SOUND OFF</span></button>
+      <button class="icon-button" id="motion" aria-pressed="false" aria-label="Pause all motion" title="Pause or resume motion"><svg class="off" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 4v10m6-10v10"/></svg><svg class="on" viewBox="0 0 18 18" aria-hidden="true"><path d="M6 3l9 6-9 6z"/></svg></button>
+      <button class="icon-button" id="fullscreen" aria-label="Enter fullscreen" title="Fullscreen"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M2 7V2h5m4 0h5v5M2 11v5h5m4 0h5v-5"/></svg></button>
+    </div>
+  </header>
+  <section class="chapter active" data-chapter="0" aria-labelledby="title-0">
+    <p class="eyebrow">01 &nbsp; / &nbsp; The only home</p>
+    <h1 id="title-0">All of us.<br><em>On this.</em></h1>
+    <p class="copy">Every ordinary morning. Every person you love. One small world, carrying it all.</p>
+  </section>
+  <section class="chapter" data-chapter="1" aria-hidden="true" inert aria-labelledby="title-1">
+    <p class="eyebrow">02 &nbsp; / &nbsp; A thin blue line</p>
+    <h2 id="title-1">A breath<br>from <em>infinity.</em></h2>
+    <p class="copy">Look at the blue line.<br>That is where we get to live.</p>
+  </section>
+  <section class="chapter" data-chapter="2" aria-hidden="true" inert aria-labelledby="title-2">
+    <p class="eyebrow">03 &nbsp; / &nbsp; The light we leave</p>
+    <h2 id="title-2">Those lights<br>are <em>lives.</em></h2>
+    <p class="copy">Someone making dinner. Someone waiting up. From here, our differences look very small.</p>
+  </section>
+  <section class="chapter" data-chapter="3" aria-hidden="true" inert aria-labelledby="title-3">
+    <p class="eyebrow">04 &nbsp; / &nbsp; What we do next</p>
+    <h2 id="title-3">This is<br>worth <em>saving.</em></h2>
+    <p class="copy">Care for the living world. Care for each other.<br>There is nowhere else to do it.</p>
+  </section>
+  <div class="coordinates" aria-hidden="true"><span>● SOL III</span><span class="line"></span><span>YOU ARE HERE</span></div>
+  <div class="caption" id="caption" aria-hidden="true">No place like this</div>
+  <div class="controls">
+    <button class="play-journey" id="play"><span class="round"><svg viewBox="0 0 14 14" aria-hidden="true" id="play-icon"><path d="M4 2l8 5-8 5z"/></svg></span><span id="play-label">Play the journey</span></button>
+    <div class="navigation">
+      <div class="scroll-hint" id="scroll-hint" aria-hidden="true"><span class="stroke"></span><span>Scroll to travel</span></div>
+      <nav class="chapters" id="chapters" aria-label="Journey chapters">
+        <button data-go="0" aria-current="step"><span class="number">01</span>HOME</button>
+        <button data-go="1"><span class="number">02</span>BREATH</button>
+        <button data-go="2"><span class="number">03</span>US</button>
+        <button data-go="3"><span class="number">04</span>TOMORROW</button>
+      </nav>
+    </div>
+    <span class="drag-hint" id="instructions"><svg viewBox="0 0 24 12" aria-hidden="true"><path d="M5 2L1 6l4 4m14-8l4 4-4 4M1 6h22"/></svg>DRAG TO TURN<span class="sr-only">. Scroll to travel. Arrow keys select chapters. Space pauses motion. Home returns to the beginning.</span></span>
+  </div>
+  <div class="loader" id="loader"><div class="planet-mark"></div><p>One moment. A whole world.</p><small id="loading-label">Gathering the clouds</small><div class="track"><span id="loading-progress"></span></div></div>
+  <div class="fallback" id="fallback"><h2>One home.<br><em>All of us.</em></h2><p>Every person you love lives on the same small world. That alone is a good reason to take care of it.</p><p style="font-size:13px">This browser could not start the 3D experience. Try opening this file in a browser with WebGL enabled.</p></div>
+  <p class="sr-only" id="status" role="status" aria-live="polite"></p>
+  <noscript><style>.fallback{display:flex}.loader{display:none}</style></noscript>
+</main>
+<script>
+/* THE ONLY HOME
+   Original real-time artwork. All maps, clouds, lighting, stars and sound
+   are generated in this file. No imports, network requests or libraries.
+   Coastlines and city clusters are artistic approximations, not map data. */
+(() => {
+'use strict';
+const $=id=>document.getElementById(id);
+const canvas=$('universe'),reduce=matchMedia('(prefers-reduced-motion: reduce)');
+let gl,stopped=false,ready=false,paused=reduce.matches,chosenPause=false;
+let width=innerWidth,height=innerHeight,mobile=width<=760,scale=1,maxScale=1;
+let time=0,last=0,frame=0,progress=0,targetProgress=0,currentChapter=0;
+let userTurn=0,targetTurn=0,travel=null,autoplay=false,pointer=null,lastX=0;
+let audio=null,soundOn=false,perfTime=0,perfFrames=0,lastUi=-1;
+let renderedProgress=-1,renderedTurn=0,renderedWidth=0,renderedHeight=0;
+const TAU=Math.PI*2,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t;
+const smooth=x=>x*x*(3-2*x),ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
+const fail=message=>{console.warn(message);stopped=true;$('fallback').classList.add('show');$('loader').style.display='none';canvas.tabIndex=-1;document.querySelector('.scroll-space').style.height='100svh';document.querySelectorAll('header,.chapter,.controls,.caption,.coordinates').forEach(el=>el.style.display='none');};
+try{gl=canvas.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,powerPreference:'high-performance'});}catch(e){}
+if(!gl){fail('WebGL is unavailable.');return;}
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();cancelAnimationFrame(frame);fail('The graphics context was lost. Reload to resume.');});
+
+// A full-screen ray tracer: the surface, clouds and atmosphere are spheres
+// in world space. The camera actually travels around and toward the world.
+const vertex=`attribute vec2 position; varying vec2 vUv; void main(){vUv=position*.5+.5;gl_Position=vec4(position,0.0,1.0);}`;
+const fragment=`
+precision highp float;
+uniform vec2 uResolution;
+uniform float uTime,uRotation,uFov,uRoll;
+uniform vec3 uCamera,uTarget;
+uniform sampler2D uEarth,uClouds;
+varying vec2 vUv;
+const float PI=3.14159265359;
+const vec3 SUN=vec3(-.577350269,.192450090,.793492048);
+float hash(vec3 p){p=fract(p*.3183099+.1);p*=17.0;return fract(p.x*p.y*p.z*(p.x+p.y+p.z));}
+float hash2(vec2 p){vec3 p3=fract(vec3(p.xyx)*.1031);p3+=dot(p3,p3.yzx+33.33);return fract((p3.x+p3.y)*p3.z);}
+float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
+float fbm(vec3 p){float f=0.0,a=.5;for(int i=0;i<4;i++){f+=a*noise(p);p=p*2.03+vec3(11.3,7.7,5.9);a*=.5;}return f;}
+vec3 rotate(vec3 p,float a){float c=cos(a),s=sin(a);return vec3(c*p.x-s*p.z,p.y,s*p.x+c*p.z);}
+vec2 sphereUV(vec3 p){return vec2(atan(p.x,p.z)/(2.0*PI)+.5,.5-asin(clamp(p.y,-1.0,1.0))/PI);}
+vec2 intersectSphere(vec3 ro,vec3 rd,float r){float b=dot(ro,rd),c=dot(ro,ro)-r*r,h=b*b-c;if(h<0.0)return vec2(-1.0);h=sqrt(h);return vec2(-b-h,-b+h);}
+float cloudAt(vec3 p){
+  vec2 uv=sphereUV(rotate(normalize(p),uRotation+uTime*.0008));
+  vec2 warp=vec2(sin(uv.y*23.0+uTime*.014),cos(uv.x*19.0-uTime*.009))*.0018;
+  vec3 c=texture2D(uClouds,uv+warp).rgb;
+  float detail=texture2D(uClouds,uv*vec2(3.0,1.0)+vec2(uTime*.00015,0.0)).g;
+  return smoothstep(.49,.75,c.r+detail*.075)*.82;
+}
+vec3 stars(vec3 rd){
+  vec2 uv=vec2(atan(rd.z,rd.x),asin(rd.y));
+  vec3 color=vec3(.0004,.0008,.0018);
+  for(int i=0;i<3;i++){
+    float level=float(i),density=190.0+level*170.0;
+    vec2 p=uv*density,cell=floor(p),f=fract(p)-.5;
+    float h=hash2(cell+level*41.7),threshold=.992-level*.001;
+    if(h>threshold){
+      vec2 offset=vec2(hash2(cell+9.2),hash2(cell+3.8))-.5;
+      float d=length(f-offset*.65);
+      float intensity=pow((h-threshold)/(1.0-threshold),3.0);
+      float star=exp(-d*d*(170.0+level*100.0))*intensity;
+      star+=exp(-d*d*15.0)*intensity*.045;
+      vec3 tint=mix(vec3(.57,.73,1.0),vec3(1.0,.78,.48),hash2(cell+13.4));
+      color+=tint*star*(.75-level*.19)*(.92+.08*sin(uTime*.32+h*200.0));
+    }
+  }
+  float galactic=pow(max(0.0,1.0-abs(dot(rd,normalize(vec3(.2,.63,.75))))),14.0);
+  float gas=fbm(rd*13.0+18.0);
+  color+=vec3(.009,.013,.023)*galactic*gas*gas;
+  float sun=max(0.0,dot(rd,SUN));
+  color+=vec3(1.0,.83,.61)*pow(sun,600.0)*.13;
+  color+=vec3(1.0,.94,.82)*pow(sun,15000.0)*12.0;
+  return color;
+}
+vec3 surface(vec3 p,vec3 rd){
+  vec3 n=normalize(p),local=rotate(n,uRotation);
+  vec2 uv=sphereUV(local);
+  vec4 tex=texture2D(uEarth,uv);
+  float fine=fbm(local*120.0),shore=tex.r+(fine-.47)*.020;
+  float land=smoothstep(.497,.506,shore),latitude=abs(local.y);
+  float sun=dot(n,SUN),day=max(0.0,sun);
+  float terrain=tex.g;
+  float desert=smoothstep(.15,.30,latitude)*(1.0-smoothstep(.43,.58,latitude));
+  desert*=smoothstep(.40,.67,fbm(local*4.0+2.0));
+  // The Sahara and Australian interior are warm; forests cool the tropics.
+  float longitude=(uv.x-.5)*360.0,lat=(.5-uv.y)*180.0;
+  float sahara=exp(-pow(abs((longitude-18.0)/34.0),4.0)-pow(abs((lat-24.0)/14.0),4.0));
+  float australia=exp(-pow(abs((longitude-134.0)/17.0),4.0)-pow(abs((lat+25.0)/13.0),4.0));
+  desert=max(desert*.6,max(sahara,australia)*.85);
+  vec3 vegetation=mix(vec3(.029,.091,.042),vec3(.11,.15,.072),terrain*.8+fine*.25);
+  vec3 sand=mix(vec3(.24,.17,.082),vec3(.46,.33,.17),terrain*.8+fine*.2);
+  vec3 ground=mix(vegetation,sand,desert);
+  float mountains=smoothstep(.64,.86,terrain);
+  ground=mix(ground,vec3(.22,.21,.17)*(fine*.5+.65),mountains*.8);
+  float ice=smoothstep(.90,.975,latitude+fine*.035);
+  float mountainSnow=smoothstep(.81,.94,terrain)*smoothstep(.2,.65,latitude);
+  ground=mix(ground,vec3(.75,.83,.84),max(ice,mountainSnow));
+  float shallow=exp(-max(0.0,.5-shore)*70.0);
+  vec3 ocean=mix(vec3(.003,.024,.057),vec3(.012,.15,.20),shallow*.7);
+  ocean*=.85+fine*.4;
+  vec3 albedo=mix(ocean,ground,land);
+  float bump=noise(local*230.0)-.5;
+  vec3 normal=normalize(n+vec3(bump*.013,noise(local*233.0)-.5,bump*.012)*vec3(1.0,.017,1.0)*land);
+  float diffuse=max(0.0,dot(normal,SUN));
+  vec3 illumination=vec3(.008,.014,.023)+vec3(1.18,1.13,1.02)*diffuse;
+  float clouds=cloudAt(n+SUN*.016);
+  illumination*=1.0-clouds*.62*smoothstep(-.05,.25,sun);
+  vec3 color=albedo*illumination;
+  vec3 h=normalize(SUN-rd);
+  float specular=pow(max(0.0,dot(n,h)),190.0)*.8+pow(max(0.0,dot(n,h)),22.0)*.055;
+  color+=vec3(1.0,.83,.59)*specular*(1.0-land)*(1.0-clouds*.88)*smoothstep(-.01,.15,sun);
+  float night=1.0-smoothstep(-.23,.06,sun);
+  float cities=tex.b;
+  // A tiny neighboring-sample halo makes settlements read as warm light.
+  vec2 pixel=vec2(1.0/2048.0,1.0/1024.0);
+  float halo=texture2D(uEarth,uv+pixel).b+texture2D(uEarth,uv-pixel).b;
+  color+=vec3(1.0,.49,.15)*(cities*1.75+halo*.21)*night*land*(1.0-clouds*.72);
+  color+=vec3(.05,.10,.18)*pow(1.0-max(0.0,dot(n,-rd)),4.0)*max(0.0,sun+.16)*.26;
+  return color;
+}
+// Find the continuous interval hidden behind the planet. Coordinates start
+// at atmosphere entry to keep the intersection stable during close passes.
+vec2 planetShadow(vec3 entry,vec3 rd,vec3 sunDir,float span){
+  float along=dot(entry,sunDir),mu=dot(rd,sunDir);
+  vec3 q=entry-sunDir*along,v=rd-sunDir*mu;
+  float a=dot(v,v),b=dot(q,v),c=dot(q,q)-1.0;
+  vec2 shadow=vec2(0.0,span);
+  if(a>.000001){
+    float discriminant=b*b-a*c;
+    if(discriminant<=0.0)return vec2(0.0);
+    float root=sqrt(discriminant);
+    shadow.x=max(shadow.x,(-b-root)/a);
+    shadow.y=min(shadow.y,(-b+root)/a);
+  }else if(abs(b)>.000001){
+    float crossing=-c/(2.0*b);
+    if(b>0.0)shadow.y=min(shadow.y,crossing);
+    else shadow.x=max(shadow.x,crossing);
+  }else if(c>=0.0){return vec2(0.0);}
+  // Only the cylinder behind Earth blocks sunlight.
+  if(mu>.000001)shadow.y=min(shadow.y,-along/mu);
+  else if(mu<-.000001)shadow.x=max(shadow.x,-along/mu);
+  else if(along>=0.0)return vec2(0.0);
+  return shadow.y>shadow.x?shadow:vec2(0.0);
+}
+vec3 atmosphere(vec3 ro,vec3 rd,float stop,vec3 color){
+  const float outer=1.065;
+  vec2 hit=intersectSphere(ro,rd,outer);
+  if(hit.y<0.0)return color;
+  float start=max(0.0,hit.x),end=min(hit.y,stop);
+  if(end-start<=.000001)return color;
+  float span=end-start,stepSize=span/12.0;
+  vec3 entry=ro+rd*start,sunDir=normalize(SUN);
+  vec2 shadow=planetShadow(entry,rd,sunDir,span);
+  float mu=dot(rd,sunDir),rayleigh=.75*(1.0+mu*mu);
+  float g=.76,mie=(1.0-g*g)/pow(max(.025,1.0+g*g-2.0*g*mu),1.5);
+  vec3 beta=vec3(.16,.38,.92),light=vec3(0),transmittance=vec3(1);
+  for(int i=0;i<12;i++){
+    float cellStart=float(i)*stepSize,cellEnd=cellStart+stepSize;
+    vec3 p=entry+rd*(cellStart+.5*stepSize);
+    float altitude=max(0.0,length(p)-1.0);
+    float density=exp(-altitude*64.0);
+    // Integrate visibility over the cell instead of switching a whole
+    // sample on or off. This removes the stepped sunset bands.
+    float occluded=max(0.0,min(cellEnd,shadow.y)-max(cellStart,shadow.x));
+    float lit=1.0-clamp(occluded/stepSize,0.0,1.0);
+    float sunB=dot(p,sunDir);
+    float sunExit=-sunB+sqrt(max(0.0,sunB*sunB+outer*outer-dot(p,p)));
+    float sunDepth=sunExit*density*5.0;
+    vec3 solar=exp(-beta*sunDepth*3.8);
+    float amount=density*stepSize*8.5;
+    vec3 scatter=(beta*rayleigh+vec3(.022)*mie)*amount;
+    light+=transmittance*scatter*solar*lit*1.8;
+    transmittance*=exp(-beta*amount*1.35);
+  }
+  return color*transmittance+light;
+}
+vec3 tonemap(vec3 x){return clamp((x*(2.51*x+.03))/(x*(2.43*x+.59)+.14),0.0,1.0);}
+void main(){
+  vec2 xy=(gl_FragCoord.xy*2.0-uResolution)/uResolution.y;
+  float c=cos(uRoll),s=sin(uRoll);xy=mat2(c,-s,s,c)*xy;
+  vec3 forward=normalize(uTarget-uCamera),right=normalize(cross(forward,vec3(0,1,0))),up=cross(right,forward);
+  vec3 rd=normalize(forward+tan(uFov*.5)*(xy.x*right+xy.y*up));
+  vec2 ground=intersectSphere(uCamera,rd,1.0);
+  float stop=100.0;
+  vec3 color;
+  if(ground.x>0.0){stop=ground.x;color=surface(uCamera+rd*stop,rd);}else{color=stars(rd);}
+  vec2 cloudHit=intersectSphere(uCamera,rd,1.012);
+  if(cloudHit.x>0.0){
+    vec3 p=uCamera+rd*cloudHit.x,n=normalize(p);
+    float cloud=cloudAt(n),sun=dot(n,SUN);
+    float thick=cloudAt(normalize(n+SUN*.009));
+    float lighting=max(0.0,sun);
+    vec3 cloudColor=vec3(.82,.91,1.0)*(.012+lighting*1.05);
+    cloudColor*=1.0-thick*.27;
+    cloudColor+=vec3(1.0,.42,.12)*exp(-abs(sun)*17.0)*.075;
+    float grazing=1.0-abs(dot(n,-rd));
+    cloud=clamp(cloud*(.77+grazing*.55),0.0,.98);
+    color=mix(color,cloudColor,cloud);
+  }
+  // A quiet auroral curtain, visible only on the dark polar hemisphere.
+  vec2 auroraHit=intersectSphere(uCamera,rd,1.025);
+  if(auroraHit.x>0.0){
+    vec3 p=normalize(uCamera+rd*auroraHit.x),local=rotate(p,uRotation);
+    float polar=exp(-pow(abs(abs(local.y)-.945)*60.0,2.0));
+    float night=1.0-smoothstep(-.3,.0,dot(p,SUN));
+    float ribbons=pow(.5+.5*sin(atan(local.x,local.z)*48.0+noise(local*34.0)*5.0+uTime*.09),3.0);
+    color+=vec3(.065,.48,.27)*polar*night*ribbons*.22;
+  }
+  color=atmosphere(uCamera,rd,stop,color);
+  color=tonemap(color*1.25);
+  color=pow(color,vec3(1.0/2.2));
+  float vignette=1.0-.15*pow(length(vUv-.5),1.4);
+  color*=vignette;
+  color+=(hash2(gl_FragCoord.xy+fract(uTime)*71.0)-.5)/255.0;
+  gl_FragColor=vec4(color,1.0);
+}`;
+function compile(type,source){const s=gl.createShader(type);gl.shaderSource(s,source);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw Error(gl.getShaderInfoLog(s));return s;}
+let shader;
+try{shader=gl.createProgram();gl.attachShader(shader,compile(gl.VERTEX_SHADER,vertex));gl.attachShader(shader,compile(gl.FRAGMENT_SHADER,fragment));gl.linkProgram(shader);if(!gl.getProgramParameter(shader,gl.LINK_STATUS))throw Error(gl.getProgramInfoLog(shader));}catch(e){fail(e.message);return;}
+gl.useProgram(shader);
+const quad=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,quad);gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+const position=gl.getAttribLocation(shader,'position');gl.enableVertexAttribArray(position);gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
+const U={};['uResolution','uTime','uRotation','uFov','uRoll','uCamera','uTarget','uEarth','uClouds'].forEach(k=>U[k]=gl.getUniformLocation(shader,k));
+function texture(data,w,h,unit){const t=gl.createTexture();gl.activeTexture(gl.TEXTURE0+unit);gl.bindTexture(gl.TEXTURE_2D,t);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,data);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.REPEAT);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);return t;}
+
+// Hand-shaped continents, then a distance field, climate, relief and lights.
+// The map is born in memory and never loaded from a URL.
+const continents=[
+  [[-168,72],[-153,71],[-141,69],[-133,70],[-125,72],[-116,70],[-109,72],[-96,73],[-89,70],[-82,69],[-78,64],[-67,61],[-60,55],[-56,52],[-61,47],[-66,44],[-70,43],[-74,40],[-76,35],[-80,31],[-80,26],[-82,25],[-84,30],[-89,30],[-94,29],[-97,26],[-97,22],[-90,21],[-87,22],[-87,18],[-84,16],[-83,11],[-78,9],[-77,8],[-82,8],[-86,12],[-90,14],[-94,16],[-97,16],[-104,20],[-106,23],[-110,24],[-113,29],[-115,32],[-111,30],[-110,25],[-114,23],[-117,28],[-119,34],[-123,39],[-124,43],[-125,49],[-130,54],[-136,58],[-140,60],[-145,60],[-152,57],[-162,55],[-166,58],[-163,62],[-168,65]],
+  [[-81,12],[-75,11],[-71,12],[-67,10],[-61,10],[-59,7],[-52,4],[-49,0],[-44,-2],[-35,-5],[-35,-10],[-38,-15],[-40,-20],[-44,-23],[-48,-28],[-52,-33],[-55,-35],[-59,-38],[-62,-42],[-65,-47],[-68,-51],[-68,-55],[-73,-54],[-76,-48],[-75,-42],[-73,-37],[-71,-30],[-70,-23],[-72,-18],[-76,-14],[-80,-7],[-81,-2],[-78,2],[-77,7]],
+  [[-17,36],[-6,36],[-1,36],[9,37],[13,33],[20,32],[25,32],[32,31],[34,27],[36,22],[40,16],[44,12],[51,12],[49,8],[44,2],[42,-4],[40,-10],[36,-18],[35,-24],[32,-28],[28,-33],[20,-35],[17,-31],[15,-25],[12,-18],[12,-7],[9,1],[5,5],[-1,5],[-6,5],[-10,7],[-15,11],[-17,16],[-17,21],[-15,26],[-13,29]],
+  [[-10,36],[-9,43],[-2,44],[-5,48],[-1,49],[5,52],[8,54],[8,58],[5,59],[5,62],[11,66],[20,70],[28,71],[32,68],[37,67],[43,68],[48,67],[53,69],[60,70],[68,73],[80,73],[88,77],[103,78],[114,75],[121,73],[132,71],[145,72],[159,70],[170,66],[178,65],[179,61],[173,59],[164,60],[159,55],[157,51],[153,52],[155,58],[148,60],[140,58],[141,53],[141,47],[136,45],[132,43],[130,39],[127,40],[129,35],[126,34],[122,39],[120,37],[122,30],[121,25],[117,23],[112,21],[109,18],[107,20],[106,16],[109,12],[108,9],[104,10],[103,14],[101,13],[100,7],[104,2],[103,1],[100,4],[98,9],[98,16],[95,18],[92,22],[89,22],[87,21],[84,17],[80,14],[78,8],[76,8],[73,17],[72,21],[68,23],[66,25],[61,25],[57,25],[55,22],[50,17],[44,13],[42,17],[39,22],[36,28],[35,31],[32,36],[28,36],[26,39],[23,39],[24,35],[21,37],[19,40],[18,42],[16,40],[16,38],[13,38],[15,41],[12,44],[8,44],[4,43],[3,40],[0,39],[-1,37]],
+  [[112,-22],[114,-26],[115,-33],[119,-35],[126,-34],[131,-32],[136,-35],[139,-37],[146,-39],[150,-36],[153,-29],[153,-25],[150,-22],[147,-19],[145,-15],[143,-11],[141,-12],[140,-17],[137,-17],[136,-13],[131,-12],[129,-15],[123,-17],[120,-19],[116,-20]],
+  [[-54,60],[-47,61],[-42,65],[-38,67],[-24,72],[-19,77],[-25,81],[-38,84],[-51,82],[-60,78],[-67,76],[-62,70],[-57,66]],
+  [[-8,50],[-6,54],[-7,58],[-4,59],[-2,57],[-3,54],[1,53],[0,51]],
+  [[-10,51],[-10,55],[-7,55],[-6,53],[-7,51]],
+  [[-24,64],[-21,67],[-16,66],[-13,65],[-17,63]],
+  [[46,-13],[50,-15],[50,-19],[47,-25],[44,-26],[44,-20]],
+  [[130,32],[132,34],[134,34],[136,35],[137,38],[140,41],[142,45],[145,44],[145,42],[141,40],[141,37],[138,35],[136,33],[132,31]],
+  [[95,5],[101,1],[106,-6],[104,-6],[100,-3],[97,1]],
+  [[108,7],[117,7],[119,3],[117,-3],[111,-4],[109,0]],
+  [[105,-6],[112,-7],[115,-8],[114,-9],[108,-8]],
+  [[119,-1],[121,1],[124,2],[125,0],[122,-2],[123,-5],[121,-5],[120,-2]],
+  [[131,-2],[138,-2],[141,-3],[147,-6],[151,-6],[150,-10],[144,-9],[139,-7],[136,-5],[132,-4]],
+  [[172,-34],[176,-37],[178,-39],[175,-42],[173,-40]],
+  [[172,-41],[174,-42],[171,-45],[167,-47],[166,-46],[169,-43]],
+  [[120,18],[122,18],[123,13],[126,9],[124,6],[122,9],[120,12]],
+  [[120,25],[122,25],[122,22],[120,22]],
+  [[-84,23],[-79,23],[-74,20],[-78,20]],
+  [[-74,20],[-68,19],[-69,18],[-73,18]],
+  [[79,10],[82,8],[81,6],[80,6]],
+  [[-180,-72],[-158,-76],[-145,-75],[-128,-73],[-110,-74],[-97,-74],[-83,-75],[-72,-70],[-66,-65],[-60,-63],[-60,-67],[-65,-72],[-51,-77],[-35,-78],[-19,-72],[3,-70],[21,-70],[34,-69],[50,-67],[68,-68],[82,-67],[99,-66],[116,-67],[132,-66],[145,-69],[160,-71],[179,-73],[180,-90],[-180,-90]]
+];
+const cities=[[-74,41],[-71,42],[-77,39],[-87,42],[-84,34],[-80,26],[-81,29],[-96,33],[-95,30],[-118,34],[-122,38],[-122,48],[-112,33],[-104,40],[-83,42],[-90,39],[-79,44],[-74,46],[-123,49],[-99,19],[-103,21],[-100,26],[-82,23],[-74,5],[-77,-12],[-70,-33],[-58,-35],[-46,-24],[-43,-23],[-49,-16],[-38,-13],[-34,-8],[-60,-3],[-66,11],[-0.1,52],[2,49],[5,52],[4,51],[7,51],[13,53],[10,54],[9,48],[11,48],[16,48],[14,50],[12,42],[9,46],[-4,40],[2,41],[-9,39],[23,38],[29,41],[30,50],[21,52],[18,60],[11,60],[25,60],[38,56],[30,60],[31,30],[3,37],[10,37],[-7,34],[-17,15],[-4,5],[3,7],[7,10],[32,16],[39,9],[37,-1],[32,0],[15,-4],[28,-26],[18,-34],[31,-30],[32,31],[35,32],[46,25],[39,22],[44,33],[51,36],[55,25],[67,25],[74,32],[73,19],[77,29],[78,17],[77,13],[80,13],[88,23],[91,24],[85,26],[73,23],[75,27],[80,27],[90,23],[96,17],[101,14],[107,11],[106,21],[104,1],[101,3],[107,-6],[113,-7],[121,15],[114,23],[117,23],[121,31],[119,32],[114,31],[104,31],[107,30],[109,35],[117,40],[123,42],[127,46],[127,38],[129,35],[130,33],[136,35],[140,36],[141,43],[121,25],[151,-34],[145,-38],[153,-27],[116,-32],[174,-37],[-157,21],[-150,61]];
+let seed=92508;
+const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296;};
+function hash3(x,y,z){let n=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(z,2147483647);n=Math.imul(n^(n>>>13),1274126177);return((n^(n>>>16))>>>0)/4294967295;}
+function noise3(x,y,z){const X=Math.floor(x),Y=Math.floor(y),Z=Math.floor(z);let a=x-X,b=y-Y,c=z-Z;a=smooth(a);b=smooth(b);c=smooth(c);return lerp(lerp(lerp(hash3(X,Y,Z),hash3(X+1,Y,Z),a),lerp(hash3(X,Y+1,Z),hash3(X+1,Y+1,Z),a),b),lerp(lerp(hash3(X,Y,Z+1),hash3(X+1,Y,Z+1),a),lerp(hash3(X,Y+1,Z+1),hash3(X+1,Y+1,Z+1),a),b),c);}
+function fbm3(x,y,z,octaves=5){let value=0,amplitude=.5;for(let i=0;i<octaves;i++){value+=amplitude*noise3(x,y,z);x=x*2.03+11.3;y=y*2.03+7.7;z=z*2.03+5.9;amplitude*=.5;}return value;}
+const yieldFrame=()=>new Promise(resolve=>requestAnimationFrame(resolve));
+async function createWorld(){
+  const W=2048,H=1024,map=document.createElement('canvas');map.width=W;map.height=H;
+  const ctx=map.getContext('2d',{willReadFrequently:true});
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.fillStyle='#fff';
+  function coastline(a,b,depth){
+    const dx=b[0]-a[0],dy=b[1]-a[1],length=Math.hypot(dx,dy);
+    if(depth===0||length<.45||a[1]<-88||b[1]<-88){ctx.lineTo((b[0]+180)/360*W,(90-b[1])/180*H);return;}
+    const roughness=(random()-.5)*Math.min(length*.22,1.1),mid=[(a[0]+b[0])*.5-dy/length*roughness,(a[1]+b[1])*.5+dx/length*roughness];
+    coastline(a,mid,depth-1);coastline(mid,b,depth-1);
+  }
+  for(const polygon of continents){ctx.beginPath();ctx.moveTo((polygon[0][0]+180)/360*W,(90-polygon[0][1])/180*H);for(let i=0;i<polygon.length;i++)coastline(polygon[i],polygon[(i+1)%polygon.length],4);ctx.closePath();ctx.fill();}
+  const mask=ctx.getImageData(0,0,W,H).data,distance=new Float32Array(W*H);
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const i=y*W+x,inside=mask[i*4]>127;distance[i]=((x>0&&(mask[(i-1)*4]>127)!==inside)||(y>0&&(mask[(i-W)*4]>127)!==inside))?0:10000;}
+  for(let y=1;y<H;y++)for(let x=1;x<W-1;x++){const i=y*W+x;distance[i]=Math.min(distance[i],distance[i-1]+1,distance[i-W]+1,distance[i-W-1]+1.414,distance[i-W+1]+1.414);}
+  for(let y=H-2;y>=0;y--)for(let x=W-2;x>0;x--){const i=y*W+x;distance[i]=Math.min(distance[i],distance[i+1]+1,distance[i+W]+1,distance[i+W+1]+1.414,distance[i+W-1]+1.414);}
+  $('loading-progress').style.width='15%';await yieldFrame();
+  // Settlements: point clusters, fine networks, then a land-only mask.
+  ctx.fillStyle='#000';ctx.fillRect(0,0,W,H);ctx.lineWidth=.32;
+  for(const [lon,lat] of cities){
+    const cx=(lon+180)/360*W,cy=(90-lat)/180*H;
+    const strength=.55+random()*.45;
+    for(let j=0;j<115;j++){
+      const a=random()*TAU,r=Math.pow(random(),1.8)*18,x=cx+Math.cos(a)*r,y=cy+Math.sin(a)*r*.65;
+      const index=(clamp(Math.floor(y),0,H-1)*W+clamp(Math.floor(x),0,W-1))*4;
+      if(mask[index]<128)continue;
+      const alpha=(1-r/22)*strength*(.18+random()*.75);
+      ctx.fillStyle=`rgba(255,255,255,${alpha})`;ctx.fillRect(x,y,.35+random()*.8,.35+random()*.8);
+      if(j%7===0){ctx.strokeStyle=`rgba(255,255,255,${alpha*.3})`;ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(x,y);ctx.stroke();}
+    }
+  }
+  const lights=ctx.getImageData(0,0,W,H).data,data=new Uint8Array(W*H*4);
+  for(let y=0;y<H;y++){
+    const lat=Math.PI/2-y/H*Math.PI,cos=Math.cos(lat),sy=Math.sin(lat);
+    for(let x=0;x<W;x++){
+      const lon=x/W*TAU-Math.PI,px=Math.sin(lon)*cos,pz=Math.cos(lon)*cos,i=y*W+x,inside=mask[i*4]>127;
+      const relief=fbm3(px*14,sy*14,pz*14,4);
+      const longitude=lon*180/Math.PI,latitude=lat*180/Math.PI;
+      const andes=Math.exp(-Math.pow((longitude+71)/5,2)-Math.pow((latitude+26)/28,2));
+      const himalaya=Math.exp(-Math.pow((longitude-83)/18,2)-Math.pow((latitude-31)/5,2));
+      const rockies=Math.exp(-Math.pow((longitude+112)/9,2)-Math.pow((latitude-43)/16,2));
+      const terrain=clamp(relief*.95+Math.max(andes,himalaya,rockies)*.36,0,1);
+      data[i*4]=Math.round(clamp(.5+(inside?1:-1)*distance[i]/70,0,1)*255);
+      data[i*4+1]=Math.round(terrain*255);
+      data[i*4+2]=inside?lights[i*4]:0;data[i*4+3]=255;
+    }
+    if(y%64===0){$('loading-progress').style.width=(15+y/H*40)+'%';await yieldFrame();}
+  }
+  texture(data,W,H,0);gl.uniform1i(U.uEarth,0);
+  $('loading-label').textContent='Making a little atmosphere';
+  const CW=1024,CH=512,clouds=new Uint8Array(CW*CH*4);
+  const storms=[[-48,30,22,4.1],[75,-25,24,-3.5],[-133,39,28,3.3],[156,22,21,3.8]];
+  for(let y=0;y<CH;y++){
+    const lat=90-y/CH*180;
+    for(let x=0;x<CW;x++){
+      let lon=x/CW*360-180,la=lat;
+      for(const [cx,cy,radius,swirl] of storms){
+        const dx=lon-cx,dy=la-cy,dist=Math.hypot(dx,dy),a=Math.atan2(dy,dx)+Math.exp(-dist*dist/(radius*radius))*swirl;
+        if(dist<radius*2.7){lon=cx+Math.cos(a)*dist;la=cy+Math.sin(a)*dist;}
+      }
+      const phi=la*Math.PI/180,theta=lon*Math.PI/180+Math.sin(phi*6)*.19;
+      const px=Math.sin(theta)*Math.cos(phi),py=Math.sin(phi),pz=Math.cos(theta)*Math.cos(phi);
+      const warp=noise3(px*3+40,py*3,pz*3)*.8;
+      const f=fbm3(px*5+warp,py*5+warp*.5,pz*5-warp,6);
+      const streak=fbm3(px*29,py*45,pz*29,3),i=(y*CW+x)*4;
+      clouds[i]=Math.round(clamp(f*1.13+.013,0,1)*255);clouds[i+1]=Math.round(streak*255);clouds[i+2]=0;clouds[i+3]=255;
+    }
+    if(y%32===0){$('loading-progress').style.width=(55+y/CH*44)+'%';await yieldFrame();}
+  }
+  texture(clouds,CW,CH,1);gl.uniform1i(U.uClouds,1);
+  $('loading-progress').style.width='100%';
+}
+
+// Smooth spherical camera keyframes. An atmosphere pass changes scale,
+// altitude, viewing direction and roll rather than merely enlarging an image.
+const shots=[
+  {yaw:.14,pitch:.12,d:3.35,x:-.63,y:.01,roll:-.035,fov:42,turn:.52},
+  {yaw:1.08,pitch:.20,d:1.63,x:.03,y:1.12,roll:-.34,fov:48,turn:.80},
+  {yaw:2.22,pitch:.12,d:3.12,x:-.56,y:.00,roll:.015,fov:43,turn:1.83},
+  {yaw:6.42,pitch:.09,d:3.75,x:-.58,y:.03,roll:-.03,fov:42,turn:6.65}
+];
+function cameraAt(p){
+  const v=clamp(p,0,1)*3,index=Math.min(2,Math.floor(v)),f=smooth(v-index),a=shots[index],b=shots[index+1],s={};
+  for(const key of Object.keys(a))s[key]=lerp(a[key],b[key],f);
+  if(mobile){
+    const horizon=Math.max(0,1-Math.abs(p-1/3)*6);
+    s.x=lerp(0,s.x,horizon*.25);
+    s.y=lerp(-.83,.90,horizon);
+    s.d*=lerp(Math.max(1.09,height/width*.82),1.08,horizon);
+    s.fov=lerp(44,58,horizon);s.roll*=.65;
+  }else if(width/height<1.3){s.d*=1.3/(width/height);}
+  const yaw=s.yaw,pitch=s.pitch,cp=Math.cos(pitch);
+  const camera=[Math.sin(yaw)*cp*s.d,Math.sin(pitch)*s.d,Math.cos(yaw)*cp*s.d];
+  const right=[Math.cos(yaw),0,-Math.sin(yaw)],up=[-Math.sin(yaw)*Math.sin(pitch),cp,-Math.cos(yaw)*Math.sin(pitch)];
+  const target=right.map((r,i)=>r*s.x+up[i]*s.y);
+  return{camera,target,fov:s.fov*Math.PI/180,roll:s.roll,turn:s.turn};
+}
+function resize(){
+  width=innerWidth;height=innerHeight;mobile=width<=760&&height>width*.8;
+  maxScale=Math.min(devicePixelRatio||1,1.5,Math.sqrt(1350000/(width*height)));scale=maxScale;
+  canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);
+  gl.viewport(0,0,canvas.width,canvas.height);gl.uniform2f(U.uResolution,canvas.width,canvas.height);
+  targetProgress=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height),0,1);
+}
+addEventListener('resize',resize,{passive:true});
+addEventListener('scroll',()=>{targetProgress=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight),0,1);},{passive:true});
+function updateMotion(){
+  $('motion').setAttribute('aria-pressed',String(paused));$('motion').setAttribute('aria-label',paused?'Resume motion':'Pause all motion');
+  document.body.classList.toggle('motion-paused',paused);
+}
+function updatePlay(){
+  $('play-label').textContent=autoplay?'Pause the journey':progress>.98?'Travel again':'Play the journey';
+  $('play-icon').innerHTML=autoplay?'<path d="M4 2v10M10 2v10" fill="none" stroke-width="2"/>':'<path d="M4 2l8 5-8 5z"/>';
+  $('play').setAttribute('aria-pressed',String(autoplay));
+}
+function stopTravel(){travel=null;autoplay=false;updatePlay();}
+function travelTo(p,duration,auto=false){
+  const total=document.documentElement.scrollHeight-innerHeight;
+  travel={from:scrollY,to:p*total,start:performance.now(),duration,auto};autoplay=auto;updatePlay();
+}
+function go(index){stopTravel();const p=index/3;if(paused||reduce.matches){scrollTo(0,p*(document.documentElement.scrollHeight-innerHeight));targetProgress=p;progress=p;}else{travelTo(p,3000);} }
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.go))));
+$('play').addEventListener('click',()=>{
+  if(autoplay){stopTravel();return;}
+  if(paused){paused=false;chosenPause=true;updateMotion();}
+  if(progress>.98){scrollTo(0,0);progress=0;targetProgress=0;}
+  travelTo(1,Math.max(7000,(1-progress)*72000),true);
+});
+$('motion').addEventListener('click',()=>{paused=!paused;chosenPause=true;stopTravel();updateMotion();});
+reduce.addEventListener('change',e=>{if(!chosenPause){paused=e.matches;stopTravel();updateMotion();}});
+addEventListener('wheel',stopTravel,{passive:true});addEventListener('touchstart',e=>{if(!e.target.closest('button')&&(autoplay||travel))stopTravel();},{passive:true});
+canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;pointer=e.pointerId;lastX=e.clientX;canvas.setPointerCapture(pointer);stopTravel();});
+canvas.addEventListener('pointermove',e=>{if(e.pointerId!==pointer)return;targetTurn+=(e.clientX-lastX)*.004;lastX=e.clientX;if(paused||reduce.matches)userTurn=targetTurn;});
+const endPointer=()=>{pointer=null;};canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',endPointer);
+addEventListener('keydown',e=>{
+  if(e.target.closest('button')&&[' ','Enter'].includes(e.key))return;
+  if(['ArrowDown','ArrowRight','PageDown'].includes(e.key)){e.preventDefault();go(Math.min(3,currentChapter+1));}
+  else if(['ArrowUp','ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(Math.max(0,currentChapter-1));}
+  else if(e.key==='Home'){e.preventDefault();go(0);}
+  else if(e.key==='End'){e.preventDefault();go(3);}
+  else if(e.key===' '){e.preventDefault();$('motion').click();}
+});
+$('fullscreen').addEventListener('click',async()=>{
+  try{if(document.fullscreenElement)await document.exitFullscreen();else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else $('status').textContent='Fullscreen is unavailable in this browser.';}catch(e){$('status').textContent='Your browser did not enter fullscreen.';}
+});
+document.addEventListener('fullscreenchange',()=>{$('fullscreen').setAttribute('aria-label',document.fullscreenElement?'Exit fullscreen':'Enter fullscreen');});
+
+// An original generative score. Breath-like filtered noise, a slowly moving
+// chord, and occasional overtones; silent until explicitly enabled.
+function createAudio(){
+  const AudioContext=window.AudioContext||window.webkitAudioContext;if(!AudioContext)return null;
+  const ctx=new AudioContext(),master=ctx.createGain(),filter=ctx.createBiquadFilter();
+  master.gain.value=0;filter.type='lowpass';filter.frequency.value=1800;filter.connect(master);master.connect(ctx.destination);
+  const reverb=ctx.createConvolver(),length=ctx.sampleRate*5,impulse=ctx.createBuffer(2,length,ctx.sampleRate);
+  for(let c=0;c<2;c++){const d=impulse.getChannelData(c);for(let i=0;i<length;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/length,3)*.30;}
+  reverb.buffer=impulse;const wet=ctx.createGain();wet.gain.value=.45;reverb.connect(wet);wet.connect(master);
+  const frequencies=[55,82.4069,110,164.814,220,277.183];
+  frequencies.forEach((f,i)=>{
+    const osc=ctx.createOscillator(),gain=ctx.createGain();osc.type='sine';osc.frequency.value=f;gain.gain.value=[.20,.055,.05,.025,.012,.006][i];
+    osc.connect(gain);gain.connect(filter);gain.connect(reverb);osc.start();
+    const lfo=ctx.createOscillator(),depth=ctx.createGain();lfo.frequency.value=.017+i*.008;depth.gain.value=.018/(1+i);lfo.connect(depth);depth.connect(gain.gain);lfo.start();
+  });
+  const noiseBuffer=ctx.createBuffer(1,ctx.sampleRate*6,ctx.sampleRate),samples=noiseBuffer.getChannelData(0);let brown=0;
+  for(let i=0;i<samples.length;i++){brown=(brown+(Math.random()*2-1)*.015)/1.015;samples[i]=brown;}
+  const wind=ctx.createBufferSource(),windFilter=ctx.createBiquadFilter(),windGain=ctx.createGain();wind.buffer=noiseBuffer;wind.loop=true;windFilter.type='bandpass';windFilter.frequency.value=360;windFilter.Q.value=.35;windGain.gain.value=.28;
+  wind.connect(windFilter);windFilter.connect(windGain);windGain.connect(master);wind.start();
+  return{ctx,master,filter,reverb,lastNote:0};
+}
+$('sound').addEventListener('click',async()=>{
+  try{if(!audio)audio=createAudio();if(!audio){$('status').textContent='Audio is unavailable in this browser.';return;}await audio.ctx.resume();soundOn=!soundOn;audio.master.gain.setTargetAtTime(soundOn?.40:0,audio.ctx.currentTime,1.2);$('sound').setAttribute('aria-pressed',String(soundOn));$('sound').setAttribute('aria-label',soundOn?'Mute the soundscape':'Enable the original space soundscape');$('sound-label').textContent=soundOn?'SOUND ON':'SOUND OFF';}catch(e){$('status').textContent='Audio could not start.';}
+});
+function note(){
+  if(!audio||!soundOn||paused||audio.ctx.currentTime-audio.lastNote<6)return;
+  audio.lastNote=audio.ctx.currentTime;
+  const frequencies=[220,277.183,329.628,440,554.365],osc=audio.ctx.createOscillator(),gain=audio.ctx.createGain(),now=audio.ctx.currentTime;
+  osc.frequency.value=frequencies[Math.floor(random()*frequencies.length)];osc.type='sine';gain.gain.setValueAtTime(0,now);gain.gain.linearRampToValueAtTime(.016,now+.8);gain.gain.exponentialRampToValueAtTime(.0001,now+7);
+  osc.connect(gain);gain.connect(audio.master);gain.connect(audio.reverb);osc.start();osc.stop(now+7.1);
+}
+document.addEventListener('visibilitychange',()=>{last=performance.now();if(document.hidden){if(travel)stopTravel();if(audio)audio.ctx.suspend();}else if(audio&&soundOn)audio.ctx.resume().catch(()=>{});});
+
+const captions=['No place like this','Everything between us and the void','A constellation of ordinary lives','Let there be a tomorrow'];
+function updateChapter(){
+  const next=clamp(Math.round(progress*3),0,3);
+  if(next===currentChapter&&lastUi>=0)return;
+  currentChapter=next;lastUi=next;
+  document.querySelectorAll('[data-chapter]').forEach(el=>{const active=Number(el.dataset.chapter)===next;el.classList.toggle('active',active);el.setAttribute('aria-hidden',String(!active));el.inert=!active;});
+  document.querySelectorAll('[data-go]').forEach(el=>{if(Number(el.dataset.go)===next)el.setAttribute('aria-current','step');else el.removeAttribute('aria-current');});
+  $('caption').textContent=captions[next];$('status').textContent=['The only home. All of us. On this.','A thin blue line. A breath from infinity.','The light we leave. Those lights are lives.','What we do next. This is worth saving.'][next];
+  canvas.setAttribute('aria-label',['A sunlit blue Earth with oceans and clouds, floating in deep space.','A close view along the glowing atmospheric horizon of Earth.','The night side of Earth, covered in warm city lights beneath clouds.','The camera returns to our small, sunlit home in space.'][next]);
+  updatePlay();
+}
+function render(now){
+  if(stopped)return;frame=requestAnimationFrame(render);if(document.hidden)return;
+  const dt=Math.min((now-(last||now))/1000,.07);last=now;
+  if(!paused)time+=dt;
+  if(travel&&!paused){
+    const t=clamp((now-travel.start)/travel.duration,0,1),f=travel.auto?t:ease(t);
+    scrollTo(0,lerp(travel.from,travel.to,f));
+    targetProgress=clamp(lerp(travel.from,travel.to,f)/(document.documentElement.scrollHeight-innerHeight),0,1);
+    if(t>=1)stopTravel();
+  }
+  const damping=paused||reduce.matches?1:1-Math.exp(-dt*4.0);
+  progress+=(targetProgress-progress)*damping;userTurn+=(targetTurn-userTurn)*damping;
+  if(paused&&Math.abs(progress-renderedProgress)<.000001&&Math.abs(userTurn-renderedTurn)<.000001&&canvas.width===renderedWidth&&canvas.height===renderedHeight)return;
+  const camera=cameraAt(progress);
+  gl.uniform3fv(U.uCamera,camera.camera);gl.uniform3fv(U.uTarget,camera.target);gl.uniform1f(U.uFov,camera.fov);gl.uniform1f(U.uRoll,camera.roll);
+  gl.uniform1f(U.uTime,time);gl.uniform1f(U.uRotation,camera.turn+userTurn+time*.0015);
+  gl.drawArrays(gl.TRIANGLES,0,3);
+  renderedProgress=progress;renderedTurn=userTurn;renderedWidth=canvas.width;renderedHeight=canvas.height;
+  updateChapter();
+  $('page-progress').style.width=(progress*100)+'%';$('chapters').style.setProperty('--progress',(progress*100)+'%');
+  $('scroll-hint').style.opacity=progress<.045&&!autoplay?'1':'0';
+  if(progress>.985&&!autoplay)$('play-label').textContent='Travel again';
+  if(audio&&soundOn){audio.filter.frequency.setTargetAtTime(lerp(1200,2500,Math.sin(progress*Math.PI)),audio.ctx.currentTime,1);note();}
+  perfFrames++;perfTime+=dt;
+  if(perfTime>3){
+    const fps=perfFrames/perfTime;
+    if(fps<28&&scale>.55){scale=Math.max(.55,scale*.85);canvas.width=Math.round(width*scale);canvas.height=Math.round(height*scale);gl.viewport(0,0,canvas.width,canvas.height);gl.uniform2f(U.uResolution,canvas.width,canvas.height);}
+    perfFrames=0;perfTime=0;
+  }
+}
+updateMotion();resize();
+createWorld().then(()=>{ready=true;$('loader').classList.add('ready');setTimeout(()=>$('loader').remove(),1400);frame=requestAnimationFrame(render);}).catch(e=>fail(e.message));
+})();
+</script>
+</body>
+</html>
