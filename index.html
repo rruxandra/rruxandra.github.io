@@ -82,6 +82,25 @@
     color: var(--acid);
     animation: blink 1.4s steps(2) infinite;
   }
+
+  /* the other channel: a standing page, not an entry */
+  .status .chan {
+    color: var(--bone-dim);
+    text-decoration: none;
+    transition: color 0.3s ease;
+  }
+  .status .chan:hover { color: var(--acid); }
+  .status .chan .arrow {
+    display: inline-block;
+    margin-left: 0.3rem;
+    transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
+  }
+  .status .chan:hover .arrow { transform: translate(3px, -3px); }
+
+  @media (max-width: 620px) {
+    .status { flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+    .status .rx { display: none; }
+  }
   @keyframes blink { 50% { opacity: 0; } }
 
   /* ── masthead ─────────────────────────────── */
@@ -302,6 +321,8 @@
     margin-top: 4rem;
     display: flex;
     justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
     font-size: 0.7rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -330,7 +351,8 @@
 
   <div class="status">
     <span><span class="blink">●</span> &nbsp;CH.01 / OPEN FREQUENCY</span>
-    <span>RX 2026.09 / LOG_018</span>
+    <a class="chan" href="open-tabs.html">CH.02 / OPEN TABS<span class="arrow">↗</span></a>
+    <span class="rx">RX 2026.09 / LOG_018</span>
   </div>
 
   <header>
@@ -972,6 +994,7 @@
 
   <footer>
     <span class="end">END OF TRANSMISSION</span>
+    <a class="feed" href="open-tabs.html">OPEN TABS<span class="arrow">↗</span></a>
     <a class="feed" href="feed.xml">SUBSCRIBE / FEED<span class="arrow">↗</span></a>
     <span>18 logged</span>
   </footer>
