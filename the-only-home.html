@@ -194,6 +194,7 @@ let time=0,last=0,frame=0,progress=0,targetProgress=0,currentChapter=0;
 let userTurn=0,targetTurn=0,travel=null,autoplay=false,pointer=null,lastX=0;
 let audio=null,soundOn=false,perfTime=0,perfFrames=0,lastUi=-1;
 let renderedProgress=-1,renderedTurn=0,renderedWidth=0,renderedHeight=0;
+let userScrolled=false,lastProgrammaticY=-1;
 const TAU=Math.PI*2,clamp=(x,a,b)=>Math.max(a,Math.min(b,x)),lerp=(a,b,t)=>a+(b-a)*t;
 const smooth=x=>x*x*(3-2*x),ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2;
 const fail=message=>{console.warn(message);stopped=true;$('fallback').classList.add('show');$('loader').style.display='none';canvas.tabIndex=-1;document.querySelector('.scroll-space').style.height='100svh';document.querySelectorAll('header,.chapter,.controls,.caption,.coordinates').forEach(el=>el.style.display='none');};
@@ -542,7 +543,18 @@ function resize(){
   targetProgress=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-height),0,1);
 }
 addEventListener('resize',resize,{passive:true});
-addEventListener('scroll',()=>{targetProgress=clamp(scrollY/Math.max(1,document.documentElement.scrollHeight-innerHeight),0,1);},{passive:true});
+addEventListener('scroll',()=>{
+  const maxScroll=Math.max(1,document.documentElement.scrollHeight-innerHeight);
+  targetProgress=clamp(scrollY/maxScroll,0,1);
+  if(travel){
+    if(Math.abs(scrollY-lastProgrammaticY)>4){
+      userScrolled=true;
+      stopTravel();
+    }
+  }else if(scrollY>2){
+    userScrolled=true;
+  }
+},{passive:true});
 function updateMotion(){
   $('motion').setAttribute('aria-pressed',String(paused));$('motion').setAttribute('aria-label',paused?'Resume motion':'Pause all motion');
   document.body.classList.toggle('motion-paused',paused);
@@ -555,9 +567,9 @@ function updatePlay(){
 function stopTravel(){travel=null;autoplay=false;updatePlay();}
 function travelTo(p,duration,auto=false){
   const total=document.documentElement.scrollHeight-innerHeight;
-  travel={from:scrollY,to:p*total,start:performance.now(),duration,auto};autoplay=auto;updatePlay();
+  travel={from:scrollY,targetP:p,to:p*total,start:performance.now(),duration,auto};autoplay=auto;updatePlay();
 }
-function go(index){stopTravel();const p=index/3;if(paused||reduce.matches){scrollTo(0,p*(document.documentElement.scrollHeight-innerHeight));targetProgress=p;progress=p;}else{travelTo(p,3000);} }
+function go(index){userScrolled=true;stopTravel();const p=index/3;if(paused||reduce.matches){scrollTo(0,p*(document.documentElement.scrollHeight-innerHeight));targetProgress=p;progress=p;}else{travelTo(p,3000);} }
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(Number(b.dataset.go))));
 $('play').addEventListener('click',()=>{
   if(autoplay){stopTravel();return;}
@@ -567,16 +579,18 @@ $('play').addEventListener('click',()=>{
 });
 $('motion').addEventListener('click',()=>{paused=!paused;chosenPause=true;stopTravel();updateMotion();});
 reduce.addEventListener('change',e=>{if(!chosenPause){paused=e.matches;stopTravel();updateMotion();}});
-addEventListener('wheel',stopTravel,{passive:true});addEventListener('touchstart',e=>{if(!e.target.closest('button')&&(autoplay||travel))stopTravel();},{passive:true});
-canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;pointer=e.pointerId;lastX=e.clientX;canvas.setPointerCapture(pointer);stopTravel();});
+addEventListener('wheel',()=>{userScrolled=true;stopTravel();},{passive:true});
+addEventListener('touchstart',e=>{if(!e.target.closest('button')){userScrolled=true;if(autoplay||travel)stopTravel();}},{passive:true});
+addEventListener('touchmove',()=>{userScrolled=true;if(autoplay||travel)stopTravel();},{passive:true});
+canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;pointer=e.pointerId;lastX=e.clientX;canvas.setPointerCapture(pointer);userScrolled=true;stopTravel();});
 canvas.addEventListener('pointermove',e=>{if(e.pointerId!==pointer)return;targetTurn+=(e.clientX-lastX)*.004;lastX=e.clientX;if(paused||reduce.matches)userTurn=targetTurn;});
 const endPointer=()=>{pointer=null;};canvas.addEventListener('pointerup',endPointer);canvas.addEventListener('pointercancel',endPointer);canvas.addEventListener('lostpointercapture',endPointer);
 addEventListener('keydown',e=>{
   if(e.target.closest('button')&&[' ','Enter'].includes(e.key))return;
-  if(['ArrowDown','ArrowRight','PageDown'].includes(e.key)){e.preventDefault();go(Math.min(3,currentChapter+1));}
-  else if(['ArrowUp','ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();go(Math.max(0,currentChapter-1));}
-  else if(e.key==='Home'){e.preventDefault();go(0);}
-  else if(e.key==='End'){e.preventDefault();go(3);}
+  if(['ArrowDown','ArrowRight','PageDown'].includes(e.key)){e.preventDefault();userScrolled=true;go(Math.min(3,currentChapter+1));}
+  else if(['ArrowUp','ArrowLeft','PageUp'].includes(e.key)){e.preventDefault();userScrolled=true;go(Math.max(0,currentChapter-1));}
+  else if(e.key==='Home'){e.preventDefault();userScrolled=true;go(0);}
+  else if(e.key==='End'){e.preventDefault();userScrolled=true;go(3);}
   else if(e.key===' '){e.preventDefault();$('motion').click();}
 });
 $('fullscreen').addEventListener('click',async()=>{
@@ -634,8 +648,12 @@ function render(now){
   if(!paused)time+=dt;
   if(travel&&!paused){
     const t=clamp((now-travel.start)/travel.duration,0,1),f=travel.auto?t:ease(t);
-    scrollTo(0,lerp(travel.from,travel.to,f));
-    targetProgress=clamp(lerp(travel.from,travel.to,f)/(document.documentElement.scrollHeight-innerHeight),0,1);
+    const total=Math.max(1,document.documentElement.scrollHeight-innerHeight);
+    const targetY=travel.targetP!==undefined?travel.targetP*total:travel.to;
+    const nextY=lerp(travel.from,targetY,f);
+    lastProgrammaticY=nextY;
+    scrollTo(0,nextY);
+    targetProgress=clamp(nextY/total,0,1);
     if(t>=1)stopTravel();
   }
   const damping=paused||reduce.matches?1:1-Math.exp(-dt*4.0);
@@ -658,8 +676,18 @@ function render(now){
     perfFrames=0;perfTime=0;
   }
 }
+if('scrollRestoration' in history)history.scrollRestoration='manual';
+window.scrollTo(0,0);
 updateMotion();resize();
-createWorld().then(()=>{ready=true;$('loader').classList.add('ready');setTimeout(()=>$('loader').remove(),1400);frame=requestAnimationFrame(render);}).catch(e=>fail(e.message));
+createWorld().then(()=>{
+  ready=true;
+  $('loader').classList.add('ready');
+  setTimeout(()=>$('loader').remove(),1400);
+  frame=requestAnimationFrame(render);
+  if(!userScrolled&&!paused&&!reduce.matches){
+    travelTo(1,72000,true);
+  }
+}).catch(e=>fail(e.message));
 })();
 </script>
 </body>
