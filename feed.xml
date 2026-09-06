@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Sat, 05 Sep 2026 23:07:00 +0200</lastBuildDate>
+    <lastBuildDate>Sun, 06 Sep 2026 12:45:00 +0200</lastBuildDate>
+
+    <item>
+      <title>Follow the Work</title>
+      <link>https://rruxandra.github.io/company-work.html</link>
+      <description>Same customers. Same work capacity. Three organizations. Watch customer requests move through approvals, queues, shared cores, context switches, and assembly to compare delivery speed and duplicated effort.</description>
+      <pubDate>Sun, 06 Sep 2026 12:45:00 +0200</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/company-work.html</guid>
+    </item>
 
     <item>
       <title>The Only Home</title>

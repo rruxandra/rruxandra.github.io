@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Watch customer requests move through three company structures: approvals, splitting, work, shared cores, queues, context switches, assembly and delivery.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Follow the work — three ways to organize delivery">
+<meta property="og:description" content="Watch customer requests move through three company structures: approvals, splitting, work, shared cores, queues, context switches, assembly and delivery.">
+<meta property="og:url" content="https://rruxandra.github.io/company-work.html">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Follow the work — three ways to organize delivery">
+<meta name="twitter:description" content="Watch customer requests move through three company structures: approvals, splitting, work, shared cores, queues, context switches, assembly and delivery.">
+<title>Follow the work — three ways to organize delivery</title>
+<style>
+:root{color-scheme:dark;--bg:#101a22;--panel:#15232d;--surface:#1b2c38;--edge:#304551;--ink:#ebf3f7;--muted:#a8bbc7;--quiet:#74909e;--blue:#68adff;--purple:#bf99ff;--orange:#f3bb73;--green:#65ddba;--accent:#a1edc9;--warning:#f3bb73}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.back:focus-visible{outline:3px solid var(--blue);outline-offset:4px}button,input,select{touch-action:manipulation}h1,h2,p{margin:0}button{border:1px solid var(--edge);background:var(--surface);color:var(--ink);border-radius:7px;min-height:35px;padding:7px 12px}button:hover{border-color:var(--quiet)}button[aria-pressed=true]{color:var(--bg);background:var(--accent);border-color:var(--accent)}.page{max-width:1540px;margin:auto;padding:23px 30px 20px}.top{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:20px}.title{display:flex;align-items:center;gap:13px}.top-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.back{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);text-decoration:none;border:1px solid var(--edge);background:var(--surface);border-radius:7px;min-height:33px;padding:6px 12px;transition:border-color .2s,color .2s}.back:hover{border-color:var(--quiet);color:var(--ink)}.logo{display:grid;grid-template-columns:repeat(2,7px);gap:3px;transform:rotate(-7deg)}.logo i{height:7px;width:7px;background:var(--accent);border-radius:1px}.logo i:nth-child(2){background:var(--blue)}.logo i:nth-child(3){background:var(--purple)}.logo i:nth-child(4){background:var(--orange)}h1{font-weight:650;font-size:29px;letter-spacing:-.04em;line-height:1.12}.subtitle{font-size:13px;color:var(--muted);margin-top:6px}.scenarios{display:flex;gap:6px;align-items:center;flex-wrap:wrap}.scenarios>span{color:var(--muted);font-size:12px;margin-right:4px}.scenarios button{font-size:12px;min-height:33px}.controls{display:grid;grid-template-columns:repeat(4,minmax(0,1fr)) auto;gap:22px;align-items:center;padding:15px 18px;background:var(--panel);border:1px solid var(--edge);border-radius:11px}.field{min-width:0}.field label{display:flex;justify-content:space-between;gap:10px;font-size:12px;color:var(--muted)}output{color:var(--ink);font-weight:650;font-variant-numeric:tabular-nums}input[type=range]{display:block;accent-color:var(--accent);width:100%;height:19px;margin:6px 0 0;cursor:pointer}.slow-field{display:flex;align-items:center;gap:7px;white-space:nowrap;font-size:12px;color:var(--muted);padding-left:16px;border-left:1px solid var(--edge)}input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px}.playback{display:flex;align-items:center;gap:12px;padding:15px 0 13px}.playback button{font-size:13px;min-width:87px}.playback .primary{background:var(--accent);color:var(--bg);border-color:var(--accent);font-weight:650}.scrub{flex:1;min-width:45px}.scrub input{margin:0;height:26px}.clock{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;min-width:85px;text-align:right}.speed{background:var(--surface);color:var(--ink);border:1px solid var(--edge);padding:6px;border-radius:6px;font-size:12px}.legend{display:flex;align-items:center;gap:10px 21px;color:var(--muted);font-size:12px;padding-bottom:15px;flex-wrap:wrap}.legend span{display:inline-flex;align-items:center;gap:6px}.key{width:10px;height:10px;border-radius:2px;background:var(--c);display:inline-block}.texture{background:#a4b6c2;width:15px;height:12px;border-radius:2px}.striped{background-image:repeating-linear-gradient(135deg,transparent 0,transparent 3px,rgba(16,26,34,.6) 3px,rgba(16,26,34,.6) 5px)}.legend .meaning{margin-left:auto;gap:15px}.models{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}.model{min-width:0;border:1px solid var(--edge);background:var(--panel);border-radius:14px;overflow:hidden}.model-header{padding:19px 20px 13px;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.model-header h2{font-size:23px;font-weight:600;letter-spacing:-.03em;line-height:1.2}.model-header p{font-size:12px;color:var(--muted);margin-top:4px}.model-index{color:var(--quiet);font-size:12px}.live-line{display:flex;align-items:center;gap:8px;min-height:40px;font-size:12px;color:var(--muted);padding:10px 20px;border-top:1px solid #263a47;border-bottom:1px solid #263a47;background:#182a35}.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);flex-shrink:0}.diagram{display:block;width:100%;overflow:visible;background-image:radial-gradient(#344954 .7px,transparent .7px);background-size:17px 17px}.diagram text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;fill:var(--muted);font-size:11px}.diagram .stage-label{font-size:10px;letter-spacing:.12em;fill:#8fa7b5;font-weight:600}.diagram .node-label{fill:var(--ink);font-size:12px;font-weight:600}.diagram .minor{font-size:10px;fill:var(--muted)}.diagram .tiny{font-size:9px}.diagram .wire{stroke:#496472;stroke-width:1;fill:none;opacity:.45}.diagram .network{stroke:#547487;stroke-width:1;fill:none;opacity:.25}.diagram .lane{fill:none;stroke:#5a7786;stroke-width:1;opacity:.32;stroke-dasharray:3 5}.diagram .packet{filter:drop-shadow(0 2px 3px #07131a80)}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 20px 15px;border-top:1px solid #2c404e;background:#162731}.metric b{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.025em}.metric small{color:var(--quiet);font-weight:400;font-size:12px}.metric span{display:block;font-size:11px;color:var(--muted);margin-top:1px}.tradeoffs{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;padding:12px 20px;color:var(--muted);font-size:12px;border-top:1px solid #2c404e}.tradeoffs .good{color:var(--accent)}.tradeoffs .cost{color:var(--orange)}.endnote{display:flex;justify-content:space-between;gap:14px;margin:14px 1px 0;font-size:11px;color:var(--muted)}details{font-size:11px;color:var(--muted);max-width:900px;margin-top:13px}summary{cursor:pointer;width:fit-content;color:var(--muted)}details p{margin-top:8px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.endnote b{font-weight:500;color:var(--ink)}
+@media(max-width:1150px){.controls{gap:16px;grid-template-columns:repeat(4,1fr)}.slow-field{grid-column:1/-1;border:0;padding-left:0}.top{align-items:flex-start}.scenarios>span{display:none}.scenarios{justify-content:flex-end;max-width:320px}.page{padding:22px}.model-header{padding:16px}.metrics{padding:12px 16px}.tradeoffs{padding:12px 16px}.live-line{padding:10px 16px}}
+@media(max-width:850px){.models{grid-template-columns:1fr}.top{flex-direction:column;gap:15px}.top-actions{justify-content:flex-start;width:100%}.scenarios{max-width:none;justify-content:flex-start}.controls{gap:14px}.page{padding:19px}.legend .meaning{margin-left:0}.diagram text{font-size:12px}.diagram .tiny{font-size:10px}.diagram .stage-label{font-size:11px}}
+@media(max-width:540px){.page{padding:17px 12px}.controls{grid-template-columns:repeat(2,1fr);padding:13px 14px;gap:14px 22px}.playback{gap:8px;flex-wrap:wrap}.playback button{min-width:80px}.scrub{flex-basis:calc(100% - 110px);order:4}.clock{order:5;text-align:right;min-width:98px}.speed{margin-left:auto}.legend{gap:10px 14px}.legend .meaning{width:100%;gap:12px;flex-wrap:wrap}.model-header h2{font-size:22px}.live-line{font-size:11px;padding:9px 13px;min-height:46px}.model-header{padding:16px 13px 12px}.metrics{padding:12px 13px;gap:6px}.metric b{font-size:19px}.metric span{font-size:10px}.tradeoffs{padding:11px 13px;font-size:11px}.endnote{flex-direction:column;gap:5px}h1{font-size:28px}.diagram .stage-label{font-size:10px}.diagram .minor{font-size:10px}.diagram .tiny{font-size:9px}}
+@media(pointer:coarse){button,.scenarios button,.back{min-height:42px}input[type=range]{height:27px}.slow-field{min-height:35px}.speed{min-height:40px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+@media print{body{background:#101a22;print-color-adjust:exact;-webkit-print-color-adjust:exact}.playback,.controls,.scenarios,.back{display:none}.models{grid-template-columns:1fr 1fr}.page{padding:0}.model{break-inside:avoid}}
+.page{max-width:1800px}.models{grid-template-columns:repeat(3,minmax(0,1fr))}.live-line{min-height:51px}.model.hybrid{border-color:#5b8b7b}.hybrid .model-index{color:var(--accent)}.playback{position:sticky;top:0;z-index:5;background:var(--bg)}details a{color:var(--accent)}
+@media(max-width:1050px){.models{grid-template-columns:1fr}.model-header{padding:18px 20px}.live-line{min-height:42px}}
+@media print{.models{grid-template-columns:repeat(3,minmax(0,1fr))}.playback{display:none}}
+.model.hybrid{border-color:var(--edge)}.hybrid .model-index{color:var(--quiet)}.model[data-best="true"]{border-color:var(--accent)}.model[data-best="true"] .model-index{color:var(--accent)}
+.scorecard{padding:0 20px 17px}.score-head{display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;margin-bottom:13px;min-height:25px}.score-rank{display:inline-block;padding:4px 8px;border-radius:5px;background:#263b48;color:var(--muted);font-size:11px;font-weight:600}.score-rank[data-best="true"]{background:var(--accent);color:var(--bg)}.score-gap{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}.score-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:17px}.score-stat{min-width:0}.score-label{display:block;color:var(--muted);font-size:12px}.score-value{display:flex;align-items:baseline;gap:5px;margin-top:2px;font-variant-numeric:tabular-nums;white-space:nowrap}.score-value strong{font-size:30px;letter-spacing:-.045em;line-height:1.25;font-weight:650}.score-value small{color:var(--muted);font-size:11px}.score-stat[data-lowest="true"] .score-value strong{color:var(--accent)}.score-track{height:5px;background:#293e4a;border-radius:3px;overflow:hidden;margin-top:7px}.score-fill{display:block;height:100%;background:#7c99a9;border-radius:3px;transition:width .2s}.score-stat[data-lowest="true"] .score-fill{background:var(--accent)}.score-note{display:block;margin-top:6px;font-size:11px;color:var(--muted);min-height:16px}.score-foot{margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.025em}
+@media(max-width:1150px){.scorecard{padding:0 16px 15px}.score-grid{gap:12px}.score-value strong{font-size:28px}}
+@media(max-width:540px){.scorecard{padding:0 13px 14px}.score-head{margin-bottom:11px}.score-value strong{font-size:28px}.score-label{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.score-fill{transition:none}}
+</style>
+</head>
+<body>
+<main class="page" id="flow-app">
+<header class="top"><div class="title"><span class="logo" aria-hidden="true"><i></i><i></i><i></i><i></i></span><div><h1>Follow the work.</h1><p class="subtitle">Same customers. Same work capacity. Three organizations.</p></div></div><div class="top-actions"><a class="back" href="index.html" title="Return to Signal log">← return to log</a><div class="scenarios" role="group" aria-label="Try a scenario"><span>Try</span><button type="button" data-preset="shared" aria-pressed="true">Shared needs</button><button type="button" data-preset="custom" aria-pressed="false">Mostly custom</button><button type="button" data-preset="slow" aria-pressed="false">One slow team</button></div></div></header>
+<div class="controls" role="group" aria-label="Simulation settings">
+<div class="field"><label for="customers">Customers <output id="customers-value">4</output></label><input type="range" id="customers" min="3" max="6" step="1" value="4"></div>
+<div class="field"><label for="custom">Customization <output id="custom-value">25%</output></label><input type="range" id="custom" min="0" max="100" step="5" value="25"></div>
+<div class="field"><label for="layers">Management layers <output id="layers-value">2</output></label><input type="range" id="layers" min="0" max="4" step="1" value="2"></div>
+<div class="field"><label for="memory">Context slots / team <output id="memory-value">3</output></label><input type="range" id="memory" min="2" max="7" step="1" value="3"></div>
+<label class="slow-field"><input type="checkbox" id="slow">Slow team · 4 customers</label></div>
+<div class="playback" aria-label="Animation playback"><button class="primary" id="play" type="button">Ⅱ Pause</button><button id="replay" type="button">↺ Replay</button><div class="scrub"><label for="timeline" class="sr-only">Scrub through the delivery animation</label><input type="range" min="0" max="100" step="0.02" value="0" id="timeline"></div><span class="clock" id="clock">0.0 / 0.0</span><label class="sr-only" for="speed">Playback speed</label><select id="speed" class="speed"><option value="0.5">0.5× speed</option><option value="1" selected>1× speed</option><option value="2">2× speed</option></select></div>
+<div class="legend" aria-label="Work and packet legend"><span><i class="key" style="--c:var(--blue)"></i>D · Data</span><span><i class="key" style="--c:var(--purple)"></i>W · Workflow</span><span><i class="key" style="--c:var(--orange)"></i>R · Reporting</span><span><i class="key" style="--c:var(--green)"></i>Q · Quality</span><span class="meaning"><span><i class="texture"></i>Shared part</span><span><i class="texture striped"></i>Custom part</span><span>A–F = customers</span></span></div>
+<div class="models">
+<section class="model" id="dedicated-model" aria-labelledby="dedicated-title"><header class="model-header"><div><h2 id="dedicated-title">Customer teams</h2><p>One customer → one team → one delivery</p></div><span class="model-index">01</span></header>
+<div class="scorecard" role="group" aria-label="Full-scenario results for this approach">
+  <div class="score-head"><span class="score-rank" id="dedicated-rank">Calculating</span><span class="score-gap" id="dedicated-gap"></span></div>
+  <div class="score-grid">
+    <div class="score-stat" id="dedicated-time-stat"><span class="score-label">Delivery time ↓</span><div class="score-value"><strong id="dedicated-score-time">—</strong><small>t</small></div><div class="score-track" aria-hidden="true"><span class="score-fill" id="dedicated-time-bar"></span></div><span class="score-note">All customers delivered</span></div>
+    <div class="score-stat" id="dedicated-work-stat"><span class="score-label">Build work ↓</span><div class="score-value"><strong id="dedicated-score-work">—</strong><small>units</small></div><div class="score-track" aria-hidden="true"><span class="score-fill" id="dedicated-work-bar"></span></div><span class="score-note" id="dedicated-work-note"></span></div>
+  </div><p class="score-foot">Full-scenario totals · lower is better</p>
+</div><p class="live-line"><i class="live-dot" aria-hidden="true"></i><span id="dedicated-status">Customers send their requests.</span></p><svg class="diagram" id="dedicated-svg" role="img" aria-label="Animated customer teams: customer requests pass through management, split into work inside each team, assemble locally, and return through approvals to customers."></svg><div class="metrics"><div class="metric"><b id="dedicated-delivered">0</b><small id="dedicated-total"> / 4</small><span>Delivered</span></div><div class="metric"><b id="dedicated-cores">0</b><span>Core builds</span></div><div class="metric"><b id="dedicated-loads">0</b><span>Context reloads</span></div><div class="metric"><b id="dedicated-finish">—</b><span>Last delivery · t</span></div></div><div class="tradeoffs"><span class="good">✓ Customer ownership stays local</span><span class="cost">↺ Common work gets rebuilt</span></div></section>
+<section class="model" id="specialist-model" aria-labelledby="specialist-title"><header class="model-header"><div><h2 id="specialist-title">Specialist teams</h2><p>Each request → several teams → one delivery</p></div><span class="model-index">02</span></header>
+<div class="scorecard" role="group" aria-label="Full-scenario results for this approach">
+  <div class="score-head"><span class="score-rank" id="specialist-rank">Calculating</span><span class="score-gap" id="specialist-gap"></span></div>
+  <div class="score-grid">
+    <div class="score-stat" id="specialist-time-stat"><span class="score-label">Delivery time ↓</span><div class="score-value"><strong id="specialist-score-time">—</strong><small>t</small></div><div class="score-track" aria-hidden="true"><span class="score-fill" id="specialist-time-bar"></span></div><span class="score-note">All customers delivered</span></div>
+    <div class="score-stat" id="specialist-work-stat"><span class="score-label">Build work ↓</span><div class="score-value"><strong id="specialist-score-work">—</strong><small>units</small></div><div class="score-track" aria-hidden="true"><span class="score-fill" id="specialist-work-bar"></span></div><span class="score-note" id="specialist-work-note"></span></div>
+  </div><p class="score-foot">Full-scenario totals · lower is better</p>
+</div><p class="live-line"><i class="live-dot" aria-hidden="true"></i><span id="specialist-status">Customers send their requests.</span></p><svg class="diagram" id="specialist-svg" role="img" aria-label="Animated specialist teams: customer requests pass through management, split across specialist queues, reuse a shared core, customize per customer, merge, and return through approvals."></svg><div class="metrics"><div class="metric"><b id="specialist-delivered">0</b><small id="specialist-total"> / 4</small><span>Delivered</span></div><div class="metric"><b id="specialist-cores">0</b><span>Core builds</span></div><div class="metric"><b id="specialist-loads">0</b><span>Context reloads</span></div><div class="metric"><b id="specialist-finish">—</b><span>Last delivery · t</span></div></div><div class="tradeoffs"><span class="good">✓ Shared work is built once</span><span class="cost">⌛ Queues &amp; assembly waits</span></div></section>
+<section class="model hybrid" id="hybrid-model" aria-labelledby="hybrid-title"><header class="model-header"><div><h2 id="hybrid-title">Platform + pods</h2><p>Shared components → customer-owned delivery</p></div><span class="model-index">03</span></header>
+<div class="scorecard" role="group" aria-label="Full-scenario results for this approach">
+  <div class="score-head"><span class="score-rank" id="hybrid-rank">Calculating</span><span class="score-gap" id="hybrid-gap"></span></div>
+  <div class="score-grid">
+    <div class="score-stat" id="hybrid-time-stat"><span class="score-label">Delivery time ↓</span><div class="score-value"><strong id="hybrid-score-time">—</strong><small>t</small></div><div class="score-track" aria-hidden="true"><span class="score-fill" id="hybrid-time-bar"></span></div><span class="score-note">All customers delivered</span></div>
+    <div class="score-stat" id="hybrid-work-stat"><span class="score-label">Build work ↓</span><div class="score-value"><strong id="hybrid-score-work">—</strong><small>units</small></div><div class="score-track" aria-hidden="true"><span class="score-fill" id="hybrid-work-bar"></span></div><span class="score-note" id="hybrid-work-note"></span></div>
+  </div><p class="score-foot">Full-scenario totals · lower is better</p>
+</div><p class="live-line"><i class="live-dot" aria-hidden="true"></i><span id="hybrid-status">Reuse the core. Keep delivery close to the customer.</span></p><svg class="diagram" id="hybrid-svg" role="img" aria-label="Animated hybrid: a platform builds shared components once, customer pods pull those components, customize and assemble locally, then deliver through the same approvals."></svg><div class="metrics"><div class="metric"><b id="hybrid-delivered">0</b><small id="hybrid-total"> / 4</small><span>Delivered</span></div><div class="metric"><b id="hybrid-cores">0</b><span>Core builds</span></div><div class="metric"><b id="hybrid-loads">0</b><span>Context reloads</span></div><div class="metric"><b id="hybrid-finish">—</b><span>Last delivery · t</span></div></div><div class="tradeoffs"><span class="good">✓ Reuse + local ownership</span><span class="cost">⌛ Platform setup &amp; dependency</span></div></section>
+</div>
+<div class="endnote"><span><b>Watch:</b> shared cores, assembly waits, memory slots, and approval gates.</span><span>Illustrative time · four work slots per model · one batch</span></div>
+<details><summary>Simulation assumptions &amp; third approach</summary><p>Fictional insurance customers need four work types. Solid pieces are reusable; hatched pieces are customer-specific. Each organization has four equivalent work slots. Customer teams divide those slots equally; specialist teams use one per discipline. The hybrid first uses its four slots to build shared cores, then moves that same capacity to customer pods. Setup and component transfer are included; no extra platform staff is hidden. Context caches start equally warm and misses add a fixed delay. All three have the same approval gates. The slow-team example uses four customers and slows one quarter of work capacity: customer B, Workflow, or the hybrid’s Workflow core builder (then customer pod B).</p><p>The hybrid is fastest in the default shared-needs scenario, not in every setting. It trades platform investment and a shared dependency for reuse with local delivery ownership. Long-term maintenance, staffing changes, and real approval queues are not modeled. The organizational pattern is informed by <a href="https://teamtopologies.com/key-concepts" target="_blank" rel="noopener noreferrer">Team Topologies: stream-aligned and platform teams</a>; all timings are invented for this illustration.</p><p>The top scorecards show the completed scenario, independent of animation progress. “Best here” means the shortest time to deliver to every customer, compared at the displayed precision of 0.01 time units; ties share the badge. Build work counts common and custom implementation effort, including repeated cores. It excludes context, setup, approvals, and assembly; their delays are reflected in delivery time. The bars use the same scale across all three approaches for each metric.</p></details>
+<p class="sr-only" id="announcement" aria-live="polite"></p><noscript>This animation needs JavaScript. All code is included in this file; no internet connection is required.</noscript>
+</main>
+<script>
+(() => {
+'use strict';
+const $=id=>document.getElementById(id), NS='http://www.w3.org/2000/svg';
+const C=['#68adff','#bf99ff','#f3bb73','#65ddba'], TYPE=['D','W','R','Q'], NAMES=['Data','Workflow','Reporting','Quality'], KINDS=['dedicated','specialist','hybrid'];
+const MUTED='#a8bbc7',letter=i=>String.fromCharCode(65+i),clamp=(n,a=0,b=1)=>Math.max(a,Math.min(b,n)),lerp=(a,b,p)=>a+(b-a)*p,ease=p=>p*p*(3-2*p);
+let settings,simulations,views={},time=0,duration=1,playing=!window.matchMedia('(prefers-reduced-motion: reduce)').matches,previous=null,lastPaint=-1,selectedPreset='shared',lastAnnouncement='';
+function node(tag,attrs={},parent){const n=document.createElementNS(NS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);if(parent)parent.appendChild(n);return n;}
+function txt(parent,x,y,value,cls='',extra={}){const n=node('text',{x,y,'text-anchor':'middle',class:cls,...extra},parent);n.textContent=value;return n;}
+function rect(parent,x,y,w,h,fill,stroke='none',rx=5,extra={}){return node('rect',{x,y,width:Math.max(0,w),height:Math.max(0,h),rx,fill,stroke,...extra},parent);}
+function path(parent,d,cls='wire',extra={}){return node('path',{d,class:cls,...extra},parent);}
+function line(parent,x1,y1,x2,y2,cls='wire'){return path(parent,`M${x1},${y1} L${x2},${y2}`,cls);}
+function curve(parent,a,b,cls='wire'){const dy=(b.y-a.y)*.5;return path(parent,`M${a.x},${a.y} C${a.x},${a.y+dy} ${b.x},${b.y-dy} ${b.x},${b.y}`,cls);}
+function curvePoint(a,b,p){return{x:lerp(a.x,b.x,ease(clamp(p))),y:lerp(a.y,b.y,clamp(p))};}
+function label(parent,x,y,s){return txt(parent,x,y,s,'stage-label',{'text-anchor':'start'});}
+function stateNow(){return{n:+$('customers').value,c:+$('custom').value/100,layers:+$('layers').value,memory:+$('memory').value,slow:$('slow').checked};}
+
+function simulate(s,kind){
+ if(kind==='hybrid')return simulateHybrid(s);
+ const specialist=kind==='specialist',input=s.layers*1.18+2.2,arrivals=Array.from({length:s.n},(_,i)=>input+i*.18),teams=[],completions=Array.from({length:s.n},()=>Array(4).fill(0));
+ const common=4*(1-s.c),custom=4*s.c,numTeams=specialist?4:s.n;
+ for(let j=0;j<numTeams;j++){
+  const fixed=specialist?'t'+j:'c'+j,contexts=specialist?Array.from({length:s.n},(_,i)=>'c'+i):TYPE.map((_,i)=>'t'+i),initial=[fixed,...contexts.slice(0,s.memory-1)];
+  let cache=[...initial],clock=specialist?Math.max(...arrivals)+.45:arrivals[j];
+  const rate=(specialist?1:4/s.n)*(s.slow&&j===1?.4:1),team={index:j,fixed,initial,events:[],jobs:[],coreEvents:[],reloads:[],rate,start:clock};
+  function load(context,customer,type){if(cache.includes(context))return;const before=[...cache];if(cache.length>=s.memory)cache.splice(1,1);cache.push(context);const e={kind:'load',start:clock,end:clock+.85,context,customer,type,before,after:[...cache]};team.events.push(e);team.reloads.push(e);clock=e.end;}
+  function work(phase,effort,customer,type){if(effort<=0)return;const e={kind:phase,effort,start:clock,end:clock+effort/rate,customer,type,cache:[...cache]};team.events.push(e);if(phase==='core')team.coreEvents.push(e);clock=e.end;}
+  if(specialist){work('core',common,-1,j);team.coreFinish=clock;for(let i=0;i<s.n;i++){if(custom>0)load('c'+i,i,j);const start=clock;work('custom',custom,i,j);team.jobs.push({customer:i,type:j,start,end:clock});completions[i][j]=clock;}}
+  else{for(let t=0;t<4;t++){load('t'+t,j,t);const start=clock;work('core',common,j,t);work('custom',custom,j,t);team.jobs.push({customer:j,type:t,start,end:clock});completions[j][t]=clock;}}
+  team.finish=clock;teams.push(team);
+ }
+ const mergeStart=completions.map(row=>Math.max(...row)+1.15),mergeEnd=mergeStart.map(t=>t+(specialist?1.2:.4)),deliveries=mergeEnd.map(t=>t+s.layers*1.18+1.4);
+ return{kind,specialist,teams,arrivals,completions,mergeStart,mergeEnd,deliveries,finish:Math.max(...deliveries),input};
+}
+
+function simulateHybrid(s){
+ const kind='hybrid',input=s.layers*1.18+2.2,arrivals=Array.from({length:s.n},(_,i)=>input+i*.18),common=4*(1-s.c),custom=4*s.c;
+ const setupStart=Math.max(...arrivals),coreStart=setupStart+.6;
+ const platformEvents=common>0?TYPE.map((_,type)=>({kind:'core',effort:common,type,customer:-1,start:coreStart,end:coreStart+common/(s.slow&&type===1?.4:1)})):[];
+ const coreFinish=platformEvents.length?Math.max(...platformEvents.map(e=>e.end)):coreStart,podStart=coreFinish+.35,teams=[],completions=Array.from({length:s.n},()=>Array(4).fill(podStart));
+ for(let j=0;j<s.n;j++){
+  const fixed='c'+j,initial=[fixed,...TYPE.map((_,i)=>'t'+i).slice(0,s.memory-1)],rate=(4/s.n)*(s.slow&&j===1?.4:1);
+  let cache=[...initial],clock=podStart;
+  const team={index:j,fixed,initial,events:[],jobs:[],coreEvents:[],reloads:[],rate,start:podStart};
+  for(let type=0;type<4;type++){
+   const context='t'+type;
+   if(custom>0&&!cache.includes(context)){const before=[...cache];if(cache.length>=s.memory)cache.splice(1,1);cache.push(context);const e={kind:'load',start:clock,end:clock+.85,context,customer:j,type,before,after:[...cache]};team.events.push(e);team.reloads.push(e);clock=e.end;}
+   const start=clock;
+   if(custom>0){const e={kind:'custom',effort:custom,start:clock,end:clock+custom/rate,customer:j,type,cache:[...cache]};team.events.push(e);clock=e.end;}
+   team.jobs.push({customer:j,type,start,end:clock});completions[j][type]=clock;
+  }
+  team.finish=clock;teams.push(team);
+ }
+ const mergeStart=completions.map(row=>Math.max(...row)+1.15),mergeEnd=mergeStart.map(t=>t+.4),deliveries=mergeEnd.map(t=>t+s.layers*1.18+1.4);
+ return{kind,hybrid:true,specialist:false,input,arrivals,teams,completions,mergeStart,mergeEnd,deliveries,finish:Math.max(...deliveries),setupStart,coreStart,coreFinish,podStart,platformEvents};
+}
+
+function layout(svg,s){
+ const w=Math.max(280,svg.getBoundingClientRect().width),margin=w<420?22:35,centers=n=>Array.from({length:n},(_,i)=>margin+(w-2*margin)*(i+.5)/n);
+ const customerX=centers(s.n),specialX=centers(4),top=51,gateY=Array.from({length:s.layers},(_,i)=>113+i*34),splitY=s.layers?gateY.at(-1)+54:111,platformY=splitY+61,teamTop=splitY+145;
+ const narrowTeam=(w-2*margin)/Math.max(4,s.n)-23,memCols=Math.max(2,Math.floor((narrowTeam+3)/15)),memRows=Math.ceil(s.memory/memCols),teamH=Math.max(176,145+memRows*19+8),teamBottom=teamTop+teamH,mergeY=teamBottom+79;
+ const outGateY=Array.from({length:s.layers},(_,i)=>mergeY+72+i*34),deliveryY=(s.layers?outGateY.at(-1):mergeY+22)+66,h=deliveryY+43;
+ return{w,h,margin,customerX,specialX,top,gateY,splitY,platformY,teamTop,teamH,teamBottom,mergeY,outGateY,deliveryY,compact:w<450};
+}
+function setupView(kind,s){
+ const svg=$(kind+'-svg');svg.replaceChildren();const g=layout(svg,s);svg.setAttribute('viewBox',`0 0 ${g.w} ${g.h}`);svg.style.height=g.h+'px';
+ const title=node('title',{},svg);title.textContent=kind==='dedicated'?'Customer teams: isolated work lanes':kind==='hybrid'?'Hybrid: reusable platform and customer delivery pods':'Specialist teams: shared queues and assembly';
+ const defs=node('defs',{},svg),pattern=node('pattern',{id:kind+'-hatch',width:6,height:6,patternUnits:'userSpaceOnUse',patternTransform:'rotate(35)'},defs);rect(pattern,0,0,2,6,'#13212b','none',0,{opacity:.62});
+ const back=node('g',{},svg),base=node('g',{},svg),dynamic=node('g',{},svg),sim=simulations[kind],xs=sim.specialist?g.specialX:g.customerX;
+ label(base,15,20,'CUSTOMERS');label(base,15,g.splitY-18,'SPLIT');label(base,15,g.teamTop-15,sim.specialist?'SPECIALIST TEAMS':sim.hybrid?'CUSTOMER DELIVERY PODS':'CUSTOMER TEAMS');label(base,15,g.mergeY-34,sim.specialist?'MERGE ACROSS TEAMS':'MERGE INSIDE THE TEAM');label(base,15,g.deliveryY-25,'DELIVERED TO CUSTOMER');
+ if(sim.hybrid)label(base,15,g.platformY-24,'SHARED COMPONENT LIBRARY');
+ if(s.layers){label(base,15,87,'MANAGEMENT');label(base,15,g.outGateY[0]-26,'RELEASE APPROVALS');}
+ const teamW=(g.w-2*g.margin)/(sim.specialist?4:s.n)-9;g.teamW=teamW;g.teamX=xs;
+ for(let i=0;i<s.n;i++){
+  const x=g.customerX[i];line(back,x,g.top+16,x,g.splitY);line(back,x,g.mergeY+16,x,g.deliveryY-13);rect(base,x-19,g.top-15,38,30,'#263c49','#506876',8);txt(base,x,g.top+4,letter(i),'node-label');
+  node('path',{d:`M${x},${g.splitY-6} l6,6 -6,6 -6,-6 z`,fill:'#2f4755',stroke:'#648290'},base);
+  if(sim.specialist){for(let t=0;t<4;t++){curve(back,{x,y:g.splitY+6},{x:xs[t],y:g.teamTop},'network');curve(back,{x:xs[t],y:g.teamBottom},{x,y:g.mergeY-9},'network');}}
+  else{line(back,x,g.splitY+6,x,g.teamTop);line(back,x,g.teamBottom,x,g.mergeY-9);path(back,`M${x-teamW/2-4},${g.teamTop-5} V${g.mergeY+22} H${x+teamW/2+4} V${g.teamTop-5}`,'lane');}
+ }
+ for(let j=0;j<xs.length;j++){const x=xs[j];rect(base,x-teamW/2,g.teamTop,teamW,g.teamH,'#172630','#405562',8);txt(base,x,g.teamTop+18,sim.specialist?(g.compact?TYPE[j]:NAMES[j]):letter(j)+(teamW<50?'':sim.hybrid?' pod':' team'),'node-label',sim.specialist?{style:`fill:${C[j]}`}:{ });if(s.slow&&j===1)txt(base,x,g.teamTop+32,teamW<50?'40%':'40% speed','tiny',{style:'fill:#f3bb73'});}
+ const gates=node('g',{},dynamic),platform=node('g',{},dynamic),stations=node('g',{},dynamic),merges=node('g',{},dynamic),packets=node('g',{},dynamic);
+ return{svg,g,back,base,dynamic,gates,platform,stations,merges,packets};
+}
+
+function renderPlatform(view,sim,t){
+ const{g,platform}=view;platform.replaceChildren();if(!sim.hybrid)return;
+ const shelfW=g.w-2*g.margin,cellW=shelfW/4-8;
+ rect(platform,g.margin-5,g.platformY-15,shelfW+10,48,'#1d363a','#588375',8);
+ for(let type=0;type<4;type++){
+  const x=g.specialX[type],event=sim.platformEvents.find(e=>e.type===type),progress=event?clamp((t-event.start)/(event.end-event.start)):0,done=event&&t>=event.end;
+  rect(platform,x-cellW/2,g.platformY-8,cellW,16,'#24414a','#54737c',4);
+  if(progress>0)rect(platform,x-cellW/2,g.platformY-8,cellW*progress,16,C[type],'none',4);
+  txt(platform,x,g.platformY+4,TYPE[type]+(done?' ✓':''),'tiny',{style:`fill:${progress>.5?'#162833':C[type]};font-weight:650`});
+  if(settings.slow&&type===1)txt(platform,x,g.platformY+24,'40% speed','tiny',{style:'fill:#f3bb73'});
+ }
+ const moving=t>=sim.coreFinish&&t<sim.podStart,p=moving?(t-sim.coreFinish)/.35:t>=sim.podStart?1:0;
+ const y=lerp(g.platformY+23,g.teamTop-28,p);
+ for(let k=0;k<4;k++)node('circle',{cx:g.w/2+(k-1.5)*9,cy:y,r:2.7,fill:'#d5e4e6'},platform);
+ const caption=t<sim.setupStart?'4 slots · platform':t<sim.coreStart?'Platform setup':t<sim.coreFinish?'Build once':t<sim.podStart?'Publish → pull':settings.c===1?'No core to reuse':'Components ready';
+ txt(platform,g.w/2,g.platformY+47,caption,'tiny',{style:'fill:#a1edc9'});
+}
+
+function packet(parent,x,y,type,customer,kind,opts={}){
+ const size=opts.size||17,g=node('g',{transform:`translate(${x},${y})`,class:'packet',opacity:opts.opacity??1},parent);
+ if(type===null){rect(g,-13,-12,26,24,'#182c38','#b4c6ce',5);for(let t=0;t<4;t++)rect(g,-9+(t%2)*10,-8+Math.floor(t/2)*9,8,7,C[t],'none',1);if(opts.tag!==false){rect(g,5,6,13,13,'#eff6f9','none',4);txt(g,11.5,16,letter(customer),'tiny',{style:'fill:#182831;font-weight:700'});}}
+ else{rect(g,-size/2,-size/2,size,size,C[type],'none',4);const c=opts.fraction??settings.c;if(c>0)rect(g,size/2-size*c,-size/2,size*c,size,`url(#${kind}-hatch)`,'none',2);if(customer>=0)txt(g,0,4,letter(customer),'tiny',{style:'fill:#0d1a23;font-weight:750',stroke:C[type],'stroke-width':.2});}
+ return g;
+}
+function transit(parent,a,b,t,start,end,type,customer,kind,opts={}){if(t<start||t>=end)return;const p=curvePoint(a,b,(t-start)/(end-start));packet(parent,p.x,p.y,type,customer,kind,opts);}
+function approvalRoute(parent,g,sim,i,t,outgoing){
+ const x=g.customerX[i],gates=outgoing?g.outGateY:g.gateY,offset=outgoing?sim.mergeEnd[i]:i*.18,start={x,y:outgoing?g.mergeY:g.top},end={x,y:outgoing?g.deliveryY:g.splitY};let point=start,clock=offset;
+ if(!gates.length){transit(parent,point,end,t,clock,clock+(outgoing?1.4:1.25),null,i,sim.kind);return;}
+ for(let l=0;l<gates.length;l++){const target={x,y:gates[l]};transit(parent,point,target,t,clock,clock+.43,null,i,sim.kind);if(t>=clock+.43&&t<clock+1.18)packet(parent,x,gates[l],null,i,sim.kind);point=target;clock+=1.18;}
+ transit(parent,point,end,t,clock,clock+(outgoing?1.4:1.25),null,i,sim.kind);
+}
+function renderGates(view,sim,t){
+ const{g,gates}=view;gates.replaceChildren();
+ for(const outgoing of[false,true]){const rows=outgoing?g.outGateY:g.gateY;rows.forEach((y,l)=>{rect(gates,12,y-13,g.w-24,26,'#1b2e39','#334c59',7,{opacity:.82});txt(gates,16,y+3,'L'+(outgoing?l+1:settings.layers-l),'tiny',{'text-anchor':'start'});g.customerX.forEach((x,i)=>{const start=(outgoing?sim.mergeEnd[i]:i*.18)+l*1.18+.43,active=t>=start&&t<start+.75,group=node('g',{},gates);rect(group,x-15,y-9,30,18,active?'#506976':'#213744',active?'#bdcdd5':'#415967',5);if(active)rect(group,x-12,y+5,24*(t-start)/.75,2,'#c9d8df','none',1);else txt(group,x,y+3,t>=start+.75?'✓':'·','tiny',{style:'fill:#95afbd'});});});}
+}
+function currentEvent(team,t){return team.events.find(e=>t>=e.start&&t<e.end);}
+function cacheAt(team,t){let cache=team.initial;for(const e of team.reloads)if(t>=e.end)cache=e.after;return cache;}
+function contextTokens(parent,x,y,width,team,t,active){
+ const cache=cacheAt(team,t),slots=settings.memory,gap=3,cols=Math.min(slots,Math.max(2,Math.floor((width+3)/15))),tw=Math.min(17,(width-(cols-1)*gap)/cols);
+ for(let i=0;i<slots;i++){const item=cache[i],isType=item&&item[0]==='t',index=item?+item.slice(1):0,row=Math.floor(i/cols),inRow=Math.min(cols,slots-row*cols),full=inRow*tw+(inRow-1)*gap,sx=x-full/2+(i%cols)*(tw+gap),sy=y+row*19;
+  rect(parent,sx,sy,tw,16,item?(isType?C[index]:'#c4d2da'):'#1b2d38',item?'none':'#415763',3,{opacity:item?.85:1});if(item)txt(parent,sx+tw/2,sy+11,isType?TYPE[index]:letter(index),'tiny',{style:'fill:#14232d;font-weight:650'});
+ }
+ if(active?.kind==='load'){const p=(t-active.start)/(active.end-active.start);rect(parent,x-width/2,y-3,width,2,'#3d3832','none',1);rect(parent,x-width/2,y-3,width*p,2,'#f3bb73','none',1);}
+}
+function renderStations(view,sim,t){
+ const{g,stations}=view;stations.replaceChildren();const w=g.teamW;
+ for(const team of sim.teams){
+  const x=g.teamX[team.index],top=g.teamTop,event=currentEvent(team,t),active=!!event,loading=event?.kind==='load',box=rect(stations,x-w/2,top,w,g.teamH,'none',loading?'#f3bb73':active?'#7e9daa':'#405562',8);if(loading)box.setAttribute('stroke-dasharray','4 3');
+  if(sim.specialist){
+   const p=settings.c===1?0:t>=team.coreFinish?1:event?.kind==='core'?clamp((t-event.start)/(event.end-event.start)):0;
+   rect(stations,x-w/2+8,top+40,w-16,7,'#2d424f','none',3);if(settings.c<1)rect(stations,x-w/2+8,top+40,(w-16)*p,7,C[team.index],'none',3);txt(stations,x,top+59,settings.c===1?'No core':p>=1?'CORE ✓':w<75?'CORE':'SHARED CORE','tiny',{style:`fill:${p>=1?C[team.index]:MUTED}`});
+   const pending=team.jobs.filter(job=>t<job.end&&t>=sim.arrivals[job.customer]),count=pending.length,cols=Math.min(count,Math.max(2,Math.floor((w-13)/15))),chipW=Math.min(15,(w-16-Math.max(0,cols-1)*3)/Math.max(1,cols));
+   pending.forEach((job,k)=>{const row=Math.floor(k/cols),inRow=Math.min(cols,count-row*cols),qx=x-(inRow*chipW+(inRow-1)*3)/2+(k%cols)*(chipW+3),qy=top+65+row*15,processing=t>=job.start&&t<job.end;rect(stations,qx,qy,chipW,12,processing?C[team.index]:'#263d4b',processing?'none':'#4d6472',3);txt(stations,qx+chipW/2,qy+9,letter(job.customer),'tiny',{style:`fill:${processing?'#13242f':MUTED}`});});
+  }else{
+   const gap=3,cols=w<60?2:4,chipW=Math.min(20,(w-8-(cols-1)*gap)/cols),full=cols*chipW+(cols-1)*gap,ch=cols===2?14:23;
+   team.jobs.forEach((job,k)=>{const qx=x-full/2+(k%cols)*(chipW+gap),qy=top+42+Math.floor(k/cols)*18,done=t>=job.end,processing=t>=job.start&&t<job.end;rect(stations,qx,qy,chipW,ch,done?C[k]:'#213643',processing?C[k]:'#405663',3);txt(stations,qx+chipW/2,qy+(cols===2?10:15),TYPE[k],'tiny',{style:`fill:${done?'#172631':C[k]}`});if(processing)rect(stations,qx,qy+ch-2,chipW*clamp((t-job.start)/(job.end-job.start)),2,C[k],'none',1);});
+   txt(stations,x,top+81,sim.hybrid?(t>=sim.podStart?(settings.c===1?'Custom':w<80?'Core ✓':'Pulled core ✓'):settings.c===1?'Setup':w<80?'Wait':'Wait for core'):settings.c===1?'Custom':t<team.start?(w<80?'4 types':'4 work types'):(w<80?'Core × ':'Same core × ')+settings.n,'tiny');
+  }
+  let caption='Waiting',color=MUTED;
+  if(event){color=loading?'#f3bb73':C[event.type];if(loading){caption='Load '+(event.context[0]==='t'?TYPE[+event.context.slice(1)]:letter(+event.context.slice(1)));const p=(t-event.start)/(event.end-event.start);node('circle',{cx:x,cy:top+105,r:10,fill:'none',stroke:'#514737','stroke-width':3},stations);node('circle',{cx:x,cy:top+105,r:10,fill:'none',stroke:'#f3bb73','stroke-width':3,'stroke-dasharray':`${p*63} 63`,transform:`rotate(-90 ${x} ${top+105})`},stations);}
+   else{const p=clamp((t-event.start)/(event.end-event.start)),size=Math.min(25,w-14);packet(stations,x,top+105,event.type,event.customer,sim.kind,{size,fraction:event.kind==='core'?0:1});rect(stations,x-w/2+8,top+122,w-16,3,'#304652','none',1);rect(stations,x-w/2+8,top+122,(w-16)*p,3,color,'none',1);caption=event.kind==='core'?(w<60?'Core':sim.specialist?'Build once':'Build again'):(w<60?'For ':'Custom ')+letter(event.customer);}
+  }else if(t>=team.finish){caption='Done';color='#65ddba';txt(stations,x,top+109,'✓','node-label',{style:'fill:#65ddba'});}
+  txt(stations,x,top+138,caption,'tiny',{style:`fill:${color}`});contextTokens(stations,x,top+145,w-14,team,t,event);
+ }
+}
+function renderMerges(view,sim,t){
+ const{g,merges}=view;merges.replaceChildren();
+ for(let i=0;i<settings.n;i++){const x=g.customerX[i],slotWidth=Math.min(58,(g.w-2*g.margin)/settings.n-5),size=Math.min(10,(slotWidth-14)/4),gap=2,full=size*4+gap*3,done=sim.completions[i].map(end=>t>=end+1.15),count=done.filter(Boolean).length,merged=t>=sim.mergeEnd[i],delivered=t>=sim.deliveries[i];
+  rect(merges,x-slotWidth/2,g.mergeY-13,slotWidth,29,merged?'#1e3c3a':'#213541',merged?'#65ddba':'#52717f',7);for(let type=0;type<4;type++)rect(merges,x-full/2+type*(size+gap),g.mergeY-4,size,11,done[type]?C[type]:'#1a2b35',done[type]?'none':'#496573',2);txt(merges,x,g.mergeY+30,merged?(slotWidth<45?'✓':'Merged'):count>0?count+(slotWidth<50?'/4':'/4 pieces'):letter(i),'minor',{style:`fill:${merged?'#65ddba':MUTED}`});
+  if(t>=sim.mergeStart[i]&&t<sim.mergeEnd[i])rect(merges,x-slotWidth/2+4,g.mergeY+12,(slotWidth-8)*(t-sim.mergeStart[i])/(sim.mergeEnd[i]-sim.mergeStart[i]),2,'#a1edc9','none',1);
+  rect(merges,x-20,g.deliveryY-13,40,29,delivered?'#22423d':'#1b2d37',delivered?'#65ddba':'#3f5967',7);txt(merges,x,g.deliveryY+6,letter(i)+(delivered?' ✓':''),'node-label',{style:`fill:${delivered?'#a1edc9':MUTED}`});if(delivered)txt(merges,x,g.deliveryY+30,'t '+sim.deliveries[i].toFixed(1),'tiny');
+ }
+}
+function renderPackets(view,sim,t){
+ const{g,packets}=view;packets.replaceChildren();
+ for(let i=0;i<settings.n;i++){approvalRoute(packets,g,sim,i,t,false);approvalRoute(packets,g,sim,i,t,true);const splitStart=i*.18+settings.layers*1.18+1.25;
+  for(let type=0;type<4;type++){
+   const target=sim.specialist?type:i,laneOffset=sim.specialist?(i-(settings.n-1)/2)*4:(type-1.5)*5;
+   if(sim.hybrid){
+    if(settings.c<1){transit(packets,{x:g.customerX[i],y:g.splitY},{x:g.specialX[type],y:g.platformY},t,splitStart,sim.arrivals[i],type,i,sim.kind,{size:11,fraction:0});transit(packets,{x:g.specialX[type],y:g.platformY},{x:g.teamX[i]+laneOffset,y:g.teamTop+43},t,sim.coreFinish,sim.podStart,type,i,sim.kind,{size:12,fraction:0});}
+    if(settings.c>0)transit(packets,{x:g.customerX[i],y:g.splitY},{x:g.teamX[i]+laneOffset,y:g.teamTop+2},t,splitStart,sim.arrivals[i],type,i,sim.kind,{size:12,fraction:1});
+   }else transit(packets,{x:g.customerX[i],y:g.splitY},{x:g.teamX[target]+laneOffset,y:g.teamTop+2},t,splitStart,sim.arrivals[i],type,i,sim.kind,{size:13});
+   const start=sim.completions[i][type];transit(packets,{x:g.teamX[target]+laneOffset,y:g.teamBottom},{x:g.customerX[i]+(type-1.5)*6,y:g.mergeY},t,start,start+1.15,type,i,sim.kind,{size:15});
+  }
+ }
+ if(sim.specialist&&settings.c<1)for(const team of sim.teams){if(t>=team.coreFinish&&t<team.coreFinish+.7){const p=(t-team.coreFinish)/.7;for(let i=0;i<settings.n;i++){const spread=(i-(settings.n-1)/2)*Math.min(13,(g.teamW-15)/settings.n);packet(packets,g.teamX[team.index]+spread*p,g.teamTop+43+p*28,team.index,i,sim.kind,{size:11,opacity:1-p*.4,fraction:0});}}}
+}
+function status(sim,t){
+ const delivered=sim.deliveries.filter(end=>t>=end).length;
+ if(sim.hybrid){
+  if(delivered===settings.n)return settings.c===1?'All delivered. Platform setup brought no reuse saving.':'All delivered. Shared cores + local ownership.';
+  if(t<sim.input)return settings.layers?'Requests pass through the same management gates.':'Requests stay with their customer pods.';
+  if(t<sim.coreStart)return settings.c===1?'Platform setup adds delay; all requested work is custom.':'Common needs converge in one shared component library.';
+  if(t<sim.coreFinish)return settings.slow?'A slow shared core holds up every customer pod.':'Four work slots build the shared components once.';
+  if(t<sim.podStart+.5)return 'Components fan out; the same four work slots move to pods.';
+  if(sim.teams.some(team=>currentEvent(team,t)?.kind==='load'))return 'Customer context stays local; reload the next work type.';
+  if(delivered>0)return `${delivered} delivered. ${settings.n-delivered} customer pods still finishing locally.`;
+  if(t>=Math.min(...sim.mergeEnd))return 'Pods merge locally, then pass the same release gates.';
+  return 'Each pod customizes shared components for its customer.';
+ }
+ if(delivered===settings.n)return sim.specialist?(settings.c===1?'All delivered. Fully custom work offers no shared-core saving.':'All delivered. One common core per work type.'):'All delivered. Every customer stayed with its own team.';
+ if(t<.65)return 'A, B, C… customers send the same four types of work.';
+ if(settings.layers&&t<settings.layers*1.18+.65)return 'Requests pause at each management layer.';
+ if(t<sim.input+.5)return sim.specialist?'Each request splits across four specialist queues.':'Each request splits inside its customer team.';
+ if(sim.teams.some(team=>currentEvent(team,t)?.kind==='load'))return 'Context full → unload an old context, load the next one.';
+ if(sim.specialist&&sim.teams.some(team=>currentEvent(team,t)?.kind==='core'))return 'Matching work is built once, then reused for every customer.';
+ if(!sim.specialist&&sim.teams.some(team=>currentEvent(team,t)?.kind==='core'))return 'Same-colored cores are being built again in separate teams.';
+ const waiting=sim.completions.filter((row,i)=>t<sim.mergeEnd[i]&&row.some(end=>t>=end+1.15));
+ if(waiting.length&&sim.specialist)return settings.slow?'Workflow queue holds up otherwise-ready customer bundles.':'Pieces arrive separately. Each bundle waits for all four.';
+ if(delivered>0)return `${delivered} delivered. ${settings.n-delivered} customer${settings.n-delivered===1?'':'s'} still waiting${settings.slow&&!sim.specialist?' on the slow customer team':''}.`;
+ if(t>=Math.min(...sim.mergeEnd))return 'Merged bundles pause for release approval, then return to customers.';
+ return sim.specialist?'Each specialist works through customer-specific variations.':'Each team works through its customer’s four work types.';
+}
+function render(t){
+ for(const kind of KINDS){const sim=simulations[kind],view=views[kind];renderGates(view,sim,t);renderPlatform(view,sim,t);renderStations(view,sim,t);renderMerges(view,sim,t);renderPackets(view,sim,t);const delivered=sim.deliveries.filter(end=>t>=end).length;$(kind+'-delivered').textContent=delivered;$(kind+'-total').textContent=' / '+settings.n;$(kind+'-cores').textContent=sim.teams.reduce((sum,team)=>sum+team.coreEvents.filter(e=>t>=e.end).length,0)+(sim.platformEvents||[]).filter(e=>t>=e.end).length;$(kind+'-loads').textContent=sim.teams.reduce((sum,team)=>sum+team.reloads.filter(e=>t>=e.start).length,0);$(kind+'-finish').textContent=delivered===settings.n?sim.finish.toFixed(1):'—';$(kind+'-status').textContent=status(sim,t);}
+ $('timeline').value=t;$('timeline').setAttribute('aria-valuetext','Illustrative time '+t.toFixed(1)+' of '+duration.toFixed(1));$('clock').textContent=t.toFixed(1)+' / '+duration.toFixed(1)+' t';
+}
+function setPlaying(value){playing=value;previous=null;$('play').textContent=playing?'Ⅱ Pause':time>=duration?'▶ Replay':'▶ Play';$('play').setAttribute('aria-label',playing?'Pause animation':time>=duration?'Replay animation':'Play animation');}
+function announce(message){if(message!==lastAnnouncement){$('announcement').textContent=message;lastAnnouncement=message;}}
+function scenarioScores(models){
+ return KINDS.map(kind=>{
+  const sim=models[kind],work=sim.teams.reduce((sum,team)=>sum+team.events.reduce((total,e)=>total+(e.effort||0),0),0)+(sim.platformEvents||[]).reduce((sum,e)=>sum+e.effort,0);
+  return{kind,finish:sim.finish,displayTime:Math.round(sim.finish*100),work:Math.round(work*10)/10};
+ });
+}
+function renderScorecards(){
+ const scores=scenarioScores(simulations),bestTime=Math.min(...scores.map(s=>s.displayTime)),bestWork=Math.min(...scores.map(s=>s.work)),maxTime=Math.max(...scores.map(s=>s.finish)),maxWork=Math.max(...scores.map(s=>s.work)),baseline=scores.find(s=>s.kind==='dedicated').work;
+ const leaders=scores.filter(s=>s.displayTime===bestTime);
+ for(const score of scores){
+  const k=score.kind,best=score.displayTime===bestTime,rank=1+scores.filter(s=>s.displayTime<score.displayTime).length;
+  $(k+'-model').setAttribute('data-best',best);
+  $(k+'-rank').setAttribute('data-best',best);
+  $(k+'-rank').textContent=best?(leaders.length>1?'★ Joint best here':'★ Best here'):'#'+rank+' on delivery';
+  $(k+'-gap').textContent=best?(leaders.length>1?'Tied on delivery time':'Fastest full delivery'):((score.displayTime-bestTime)/100).toFixed(2)+' t behind';
+  $(k+'-score-time').textContent=(score.displayTime/100).toFixed(2);
+  $(k+'-score-work').textContent=score.work.toLocaleString('en-US',{maximumFractionDigits:1});
+  $(k+'-time-stat').setAttribute('data-lowest',best);
+  $(k+'-work-stat').setAttribute('data-lowest',score.work===bestWork);
+  $(k+'-time-bar').style.width=(score.finish/maxTime*100)+'%';
+  $(k+'-work-bar').style.width=(score.work/maxWork*100)+'%';
+  const saved=Math.round((1-score.work/baseline)*100);
+  $(k+'-work-note').textContent=k==='dedicated'?'Customer-team baseline':saved>0?saved+'% less than baseline':'Same as baseline';
+ }
+}
+function rebuild(reset=true){
+ settings=stateNow();for(const id of['customers','custom','layers','memory']){$(id+'-value').textContent=$(id).value+(id==='custom'?'%':'');$(id).setAttribute('aria-valuetext',$(id).value+(id==='custom'?' percent customization':id==='memory'?' context slots':id==='layers'?' management layers':' customers'));}
+ simulations=Object.fromEntries(KINDS.map(kind=>[kind,simulate(settings,kind)]));renderScorecards();duration=Math.max(...KINDS.map(kind=>simulations[kind].finish))+.7;$('timeline').max=duration;if(reset)time=0;else time=Math.min(time,duration);views=Object.fromEntries(KINDS.map(kind=>[kind,setupView(kind,settings)]));render(time);lastPaint=time;
+ document.querySelectorAll('[data-preset]').forEach(button=>button.setAttribute('aria-pressed',button.dataset.preset===selectedPreset));announce(`Scenario: ${settings.n} customers, ${Math.round(settings.c*100)} percent customization, ${settings.layers} management layers, ${settings.memory} context slots. ${playing?'Animation running.':'Animation paused; use the time slider to inspect the flow.'}`);
+}
+function preset(name){selectedPreset=name;$('customers').value=4;$('layers').value=2;$('memory').value=3;$('custom').value=name==='custom'?95:25;$('slow').checked=name==='slow';rebuild();setPlaying(!window.matchMedia('(prefers-reduced-motion: reduce)').matches);}
+for(const id of['customers','custom','layers','memory','slow'])$(id).addEventListener('input',()=>{selectedPreset='';if(id==='slow'&&$('slow').checked)$('customers').value=4;if(id==='customers'&&+$('customers').value!==4)$('slow').checked=false;rebuild();setPlaying(!window.matchMedia('(prefers-reduced-motion: reduce)').matches);});
+document.querySelectorAll('[data-preset]').forEach(button=>button.addEventListener('click',()=>preset(button.dataset.preset)));
+$('play').addEventListener('click',()=>{if(time>=duration){time=0;render(time);}setPlaying(!playing);});$('replay').addEventListener('click',()=>{time=0;render(time);setPlaying(true);});
+$('timeline').addEventListener('input',()=>{setPlaying(false);time=+$('timeline').value;render(time);announce('Paused at illustrative time '+time.toFixed(1)+'. '+KINDS.map(kind=>$(kind+'-status').textContent).join(' '));});
+let resizeTimer;new ResizeObserver(()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(()=>{if(!settings)return;const current=views.dedicated?.g.w,next=$('dedicated-svg').getBoundingClientRect().width;if(!current||Math.abs(current-next)>1)rebuild(false);},100);}).observe($('dedicated-svg'));
+document.addEventListener('visibilitychange',()=>{previous=null;});
+function tick(now){if(previous===null)previous=now;const dt=Math.min((now-previous)/1000,.1);previous=now;if(playing&&!document.hidden){time=Math.min(duration,time+dt*+$('speed').value);if(Math.abs(time-lastPaint)>.025||time>=duration){render(time);lastPaint=time;}if(time>=duration){setPlaying(false);announce('All three organizations delivered every request. '+KINDS.map(kind=>kind+' finished at '+simulations[kind].finish.toFixed(1)).join('; ')+' illustrative time units.');}}requestAnimationFrame(tick);}
+rebuild();setPlaying(playing);requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>
