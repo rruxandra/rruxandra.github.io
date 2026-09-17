@@ -323,8 +323,8 @@
       <div class="paper" aria-hidden="true"></div>
       <div class="tape alt" aria-hidden="true"></div>
       <div class="body">
-        <p class="note">The stuff that actually mattered was the stuff that wasn&#8217;t even possible before and that no-one even imagined.</p>
-        <a class="src" href="https://www.ben-evans.com/benedictevans/2026/9/3/ai-tools-and-transformation" target="_blank" rel="noopener noreferrer">ben-evans.com<span class="arrow">↗</span></a>
+        <p class="note">The cheaper software becomes to create, the more expensive incoherence becomes.</p>
+        <a class="src" href="https://architectureintel.com/when-anyone-can-build-software-who-decides-what-not-to-build-ae07fdb370e4" target="_blank" rel="noopener noreferrer">architectureintel.com<span class="arrow">↗</span></a>
       </div>
     </article>
 
@@ -332,8 +332,25 @@
       <div class="paper" aria-hidden="true"></div>
       <div class="tape" aria-hidden="true"></div>
       <div class="body">
+        <p class="note">The stuff that actually mattered was the stuff that wasn&#8217;t even possible before and that no-one even imagined.</p>
+        <a class="src" href="https://www.ben-evans.com/benedictevans/2026/9/3/ai-tools-and-transformation" target="_blank" rel="noopener noreferrer">ben-evans.com<span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <article class="scrap">
+      <div class="paper" aria-hidden="true"></div>
+      <div class="tape alt" aria-hidden="true"></div>
+      <div class="body">
         <p class="note">Time, health, a quiet mind.</p>
         <a class="src" href="https://feld.com/archives/2026/09/the-real-luxuries-in-life/" target="_blank" rel="noopener noreferrer">feld.com<span class="arrow">↗</span></a>
+      </div>
+    </article>
+
+    <article class="scrap" style="z-index: 1;">
+      <div class="paper" aria-hidden="true"></div>
+      <div class="tape" aria-hidden="true"></div>
+      <div class="body">
+        <p class="note">Procrastination tip: do one dumb thing fast to get the energy for the ten real things you procrastinated on.</p>
       </div>
     </article>
 
@@ -342,7 +359,7 @@
   <footer class="mono">
     <span class="end">End of transmission</span>
     <a href="index.html"><span>return to </span>log<span class="arrow">↗</span></a>
-    <span id="tally">1 scrap</span>
+    <span id="tally">4 scraps</span>
   </footer>
 
 </div>
@@ -403,6 +420,7 @@
 
     el.style.left = '0px';
     el.style.top  = baseline + 'px';
+    el.style.zIndex = scraps.length - i;
     place(st);
     return st;
   });
