@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Sun, 06 Sep 2026 12:45:00 +0200</lastBuildDate>
+    <lastBuildDate>Thu, 17 Sep 2026 21:35:00 +02:00</lastBuildDate>
+
+    <item>
+      <title>Swiss Democracy</title>
+      <link>https://rruxandra.github.io/swiss-democracy.html</link>
+      <description>Three levels of government, the Federal Council, parliamentary elections, initiatives, and referendums mapped into an interactive 3D model for the Zürich naturalization test.</description>
+      <pubDate>Thu, 17 Sep 2026 21:35:00 +02:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/swiss-democracy.html</guid>
+    </item>
 
     <item>
       <title>Follow the Work</title>
