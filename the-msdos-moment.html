@@ -1,0 +1,651 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The MS-DOS Moment of Artificial Intelligence — SIGNAL</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root {
+    --bg:          #09090b;
+    --bg-raise:    #111114;
+    --ink:         #ece4d3;
+    --ink-dim:     #8a8578;
+    --ink-faint:   #4e4b44;
+    --amber:       #ffab2e;
+    --amber-dim:   #a6701f;
+    --amber-ghost: #3a270e;
+    --steel:       #aeb6bf;
+    --steel-dim:   #626971;
+    --rule:        rgba(236, 228, 211, 0.08);
+    --rule-strong: rgba(236, 228, 211, 0.16);
+    --mono:        'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --serif:       'Fraunces', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 14, 'SOFT' 40, 'WONK' 0;
+    font-weight: 350;
+    line-height: 1.68;
+    letter-spacing: 0.01em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  /* ── Film grain ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 99;
+    pointer-events: none; opacity: 0.04; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── Spatial Fluid Background Canvas ── */
+  #spatial-canvas {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 1; pointer-events: none;
+    opacity: 0.9;
+  }
+
+  /* ── Soft Vignette ── */
+  .vignette {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, rgba(9, 9, 11, 0.1) 0%, rgba(9, 9, 11, 0.45) 70%, rgba(9, 9, 11, 0.85) 100%);
+  }
+
+  /* ── Reading Progress Rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: ''; position: absolute; top: 0; left: -1px;
+    width: 3px; height: var(--p, 0%);
+    background: var(--amber);
+    transition: height 0.15s linear;
+  }
+
+  /* ── Corner Meta HUD ── */
+  .meta {
+    position: fixed; top: 28px; left: 28px; z-index: 50;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: rgba(9, 9, 11, 0.8); padding: 5px 12px; border-radius: 4px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--rule);
+  }
+  .meta a { color: var(--ink); text-decoration: none; transition: color 0.2s; }
+  .meta a:hover { color: var(--amber); }
+  .meta span { color: var(--amber); }
+
+  .meta-r {
+    position: fixed; top: 28px; right: 36px; z-index: 50;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: rgba(9, 9, 11, 0.8); padding: 5px 12px; border-radius: 4px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--rule);
+  }
+
+  /* ── Article Container ── */
+  main {
+    position: relative; z-index: 10;
+    max-width: 720px; margin: 0 auto;
+    padding: 140px 24px 120px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    margin-bottom: 70px;
+    padding-bottom: 50px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .kicker {
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.26em; text-transform: uppercase;
+    color: var(--amber); margin-bottom: 24px;
+  }
+
+  h1.title {
+    font-size: clamp(38px, 6vw, 68px);
+    font-weight: 300; line-height: 1.08; letter-spacing: -0.03em;
+    color: var(--ink); margin-bottom: 30px;
+    font-variation-settings: 'opsz' 72, 'SOFT' 60, 'WONK' 1;
+  }
+  h1.title em {
+    font-style: italic; font-weight: 300;
+    color: var(--amber);
+  }
+
+  .hero-deck {
+    font-size: clamp(17px, 2.2vw, 21px);
+    line-height: 1.58; color: var(--ink-dim);
+    font-weight: 320;
+  }
+  .hero-deck strong { color: var(--ink); font-weight: 450; }
+
+  /* ── Essay Sections ── */
+  .essay-section {
+    margin-bottom: 64px;
+  }
+  .section-num {
+    font-family: var(--mono);
+    font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--amber-dim); margin-bottom: 12px; display: block;
+  }
+
+  h2.section-title {
+    font-size: clamp(24px, 3.4vw, 36px);
+    font-weight: 300; line-height: 1.2; letter-spacing: -0.02em;
+    color: var(--ink); margin-bottom: 24px;
+    font-variation-settings: 'opsz' 36, 'SOFT' 40, 'WONK' 1;
+  }
+  h2.section-title i, h2.section-title em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .prose {
+    font-size: 17.5px; line-height: 1.72; color: #cfc8b8;
+    font-weight: 320;
+  }
+  .prose p { margin-bottom: 22px; }
+  .prose strong { color: var(--ink); font-weight: 500; }
+  .prose em { font-style: italic; }
+
+  .prose blockquote {
+    margin: 32px 0; padding: 18px 24px;
+    border-left: 1px solid var(--amber);
+    background: rgba(255, 171, 46, 0.03);
+    font-style: italic; font-size: 19px; line-height: 1.55;
+    color: var(--ink);
+  }
+
+  .prose code {
+    font-family: var(--mono); font-size: 0.88em;
+    color: var(--amber); background: rgba(255, 171, 46, 0.06);
+    padding: 2px 6px; border-radius: 3px;
+  }
+
+  /* ── Four Requirements List ── */
+  .req-list {
+    list-style: none; margin: 28px 0;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .req-item {
+    padding-left: 28px; position: relative;
+    font-size: 17px; line-height: 1.65; color: #cfc8b8;
+  }
+  .req-item::before {
+    content: "—"; position: absolute; left: 6px;
+    color: var(--amber-dim); font-family: var(--mono);
+  }
+  .req-item strong { color: var(--ink); font-weight: 500; }
+
+  /* ── Footer ── */
+  footer.page-footer {
+    border-top: 1px solid var(--rule);
+    padding: 48px 0 20px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 11px;
+    color: var(--ink-dim); letter-spacing: 0.12em; text-transform: uppercase;
+  }
+  footer.page-footer a {
+    color: var(--ink-dim); text-decoration: none; transition: color 0.2s;
+  }
+  footer.page-footer a:hover { color: var(--amber); }
+
+  @media (max-width: 640px) {
+    .meta-r { display: none; }
+    main { padding-top: 100px; }
+    footer.page-footer { flex-direction: column; gap: 14px; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<canvas id="spatial-canvas"></canvas>
+<div class="vignette"></div>
+<div class="rail" id="rail"></div>
+
+<div class="meta">
+  <a href="index.html">SIGNAL</a> // <span>NO. 21</span>
+</div>
+<div class="meta-r">
+  ESSAY · PARADIGMS
+</div>
+
+<main>
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="kicker">PARADIGM TRANSITION // FROM COMMAND PROMPT TO SPATIAL COLLABORATION</div>
+    <h1 class="title">The MS-DOS Moment<br><em>of Artificial Intelligence</em></h1>
+    <p class="hero-deck">
+      We are trapped in the command-line era of synthetic intelligence. We stare into a single rectangular chat input, typing serial strings into an opaque void, waiting for headless tools to execute in the dark. But computing history teaches us that the text terminal is merely a larval stage. The future is an operating system designed for humans and swarms of agents—where services are frictionless bimodal apps, and steering intelligence is as fluid as flight.
+    </p>
+  </section>
+
+  <!-- ── Chapter 1: The Tyranny of the Blank Box ── -->
+  <section class="essay-section" id="ch1">
+    <span class="section-num">01 // THE LINEAR BOTTLENECK</span>
+    <h2 class="section-title">The Tyranny of the Blank Box</h2>
+    <div class="prose">
+      <p>
+        <strong>The chat box is the MS-DOS of the agentic era.</strong>
+      </p>
+      <blockquote>
+        "Natural language is a marvelous medium for poetry, philosophy, and casual gossip. It is an excruciatingly clumsy medium for high-dimensional spatial orchestration, continuous feedback, and parallel system steering."
+      </blockquote>
+      <p>
+        When you command an autonomous AI agent through a linear chat box, you are forced into a serial, one-dimensional straw. You describe a complex, multi-agent objective—a marketing campaign, an architectural refactor, an international flight routing with four dependencies—in a paragraph of text. You press Enter. The agent vanishes into the digital ether.
+      </p>
+      <p>
+        Seconds later, the chat stream vomits a vertical avalanche of markdown: tool calls folding open and closed like cheap accordions, terminal logs, truncated JSON snippets, and apologies. If the agent misinterprets your intent at step three, you cannot reach in and grab the steering wheel. Your only recourse is to wait until the runaway train finishes its run, type another 200-word paragraph, and pray the model's attention mechanism doesn't suffer amnesia.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Chapter 2: The Integration Trap ── -->
+  <section class="essay-section" id="ch2">
+    <span class="section-num">02 // THE INTEGRATION ILLUSION</span>
+    <h2 class="section-title">Why MCP Didn't Magically Solve Integrations</h2>
+    <div class="prose">
+      <p>
+        When the Model Context Protocol arrived, it was heralded as an integration renaissance: the "USB-C for AI" that would magically connect any model to every tool, database, and enterprise service on earth.
+      </p>
+      <p>
+        It hasn't worked out that way. Standardizing the wire format did not magically solve the integration problem.
+      </p>
+      <p>
+        In practice, running and orchestrating MCP servers still feels remarkably like 1980s <code>config.sys</code> wrangling: finicky JSON configuration files, local environment conflicts, port collisions, and silent runtime drops. Even with the July 2026 specification moving to Streamable HTTP and stateless application-level handles, the deeper friction remains untouched. The more servers you plug into a host, the more tool schemas compete for the model's finite attention, degrading reasoning and baffling tool-selection heuristics. Standardizing the pipe does nothing to eliminate semantic ambiguity, API rate limits, or upstream schema drift.
+      </p>
+      <p>
+        The ecosystem has made undeniable progress—unifying protocol specifications across vendors and introducing progressive enhancements like <strong>MCP Apps</strong> for inline UI components. But having a standardized cable is not the same as having a working computer.
+      </p>
+      <p>
+        <strong>MCP standardizes an interoperability wire, but the industry still hasn't solved the operating environment above it: how humans inspect, steer, constrain, compose, interrupt, and reverse agentic work.</strong>
+      </p>
+      <p>
+        Embedding an interactive form inside an auto-scrolling markdown log is still just a prettier terminal prompt. When an autonomous swarm runs, you are still watching an unspooling vertical feed. If an agent misinterprets your intent or branches in the wrong direction at step four, an inline widget does not give you a steering wheel. And when an agent acts across multiple services, the protocol wire cannot protect you without a unified, user-facing transactional model, capability sandboxing, and universal rollback semantics.
+      </p>
+    </div>
+  </section>
+
+  <!-- ── Chapter 3: What Needs to Happen Next ── -->
+  <section class="essay-section" id="ch3">
+    <span class="section-num">03 // THE NEXT STEP</span>
+    <h2 class="section-title">What We Actually Need to Build</h2>
+    <div class="prose">
+      <p>
+        The problem is no longer the wire protocol. It is that we are attempting to run autonomous intelligence without an operating environment designed for human-agent collaboration.
+      </p>
+      <p>
+        If we are going to move beyond the MS-DOS era, the architecture above the wire has to change:
+      </p>
+
+      <ul class="req-list">
+        <li class="req-item">
+          <strong>Persistent spatial workspaces, not ephemeral chat widgets.</strong> MCP Apps demonstrated that services can ship interactive visual interfaces alongside headless capabilities. But rendering a disposable card inside a linear chat stream is still one-dimensional thinking. We need spatial workspaces where bimodal surfaces persist, dock, and remain directly manipulable by both humans and swarms of agents over time.
+        </li>
+        <li class="req-item">
+          <strong>Runtime capability discovery, out of the prompt.</strong> While modern runtimes increasingly experiment with dynamic tool filtering and routing, schemas and interface descriptions still frequently compete for context. An operating system runtime must handle discovery, capability filtering, and dynamic dispatch out-of-band—treating tools like dynamic libraries rather than prompt baggage.
+        </li>
+        <li class="req-item">
+          <strong>A single root of trust, not fragmented login silos.</strong> Authorization remains fragmented across many agent environments, even as MCP begins addressing enterprise access through OAuth 2.1 and centrally managed provisioning. The longer-term architectural opportunity is moving beyond per-service credentials toward OS-level capability delegation. Much like Apple Pay allows you to transact with any merchant without creating an account or handing over card details, an Agent OS must use cryptographic capability delegation. You authenticate <em>once</em> to your local secure enclave, define high-level policy boundaries (budgets, permissions, read/write limits), and the runtime issues ephemeral, verifiable proofs to services on your behalf.
+        </li>
+        <li class="req-item">
+          <strong>Universal transactional sandboxing and rollbacks.</strong> Existing agent runtimes can sandbox execution, checkpoint state, pause and resume runs, and in some environments restore entire execution environments. What they generally lack is a universal transactional model spanning heterogeneous external side effects—code changes, databases, SaaS APIs, financial transactions, physical actions—with a common inspect-before-commit and rollback semantics.
+        </li>
+        <li class="req-item">
+          <strong>Continuous steering and interruption primitives.</strong> Most agent interfaces still expose relatively coarse execution controls: start a run, interrupt it, or provide additional input. Fine-grained control—rewiring a dependency, changing a policy mid-run, branching from an intermediate state, or selectively replaying effects—remains poorly standardized.
+        </li>
+        <li class="req-item">
+          <strong>Actual interface design.</strong> Right now, the AI interface is still whatever an engineer could cobble together in an afternoon: a text prompt and an auto-scrolling log. We need designers who think in spatial layouts, glanceable status, direct manipulation, and fluid co-piloting.
+        </li>
+      </ul>
+
+      <p>
+        The MCP ecosystem is demonstrating that substantial parts of the interoperability layer can be standardized across vendors. But standardizing interoperability is only the first step. Until we build the operating environment that lets humans and agents inspect, steer, and compose work in a shared spatial reality, we will remain trapped at the command line.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="page-footer">
+    <div>SIGNAL // ESSAY NO. 21</div>
+    <div><a href="index.html">RETURN TO TRANSMISSIONS ↗</a></div>
+  </footer>
+</main>
+
+<script>
+  /* ── Reading Progress Rail ── */
+  const rail = document.getElementById('rail');
+  window.addEventListener('scroll', () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const progress = (window.scrollY / total) * 100;
+    rail.style.setProperty('--p', `${Math.min(100, Math.max(0, progress))}%`);
+  }, { passive: true });
+
+  /* ── Fluid Spatial Interface Background ── */
+  (function() {
+    const canvas = document.getElementById('spatial-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let w = window.innerWidth;
+    let h = window.innerHeight;
+    let dpr = 1;
+    let mouse = { x: w * 0.5, y: h * 0.4, tx: w * 0.5, ty: h * 0.4 };
+    let hasMouse = false;
+
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = window.innerWidth;
+      h = window.innerHeight;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+
+    window.addEventListener('mousemove', (e) => {
+      hasMouse = true;
+      mouse.tx = e.clientX;
+      mouse.ty = e.clientY;
+    }, { passive: true });
+
+    window.addEventListener('mouseleave', () => {
+      hasMouse = false;
+    });
+
+    // Autonomous agent & human coordinate beacons
+    const beacons = Array.from({ length: 16 }, (_, i) => ({
+      xRatio: Math.random(),
+      yRatio: Math.random(),
+      vx: (Math.random() - 0.5) * 0.0004,
+      vy: (Math.random() - 0.5) * 0.0003,
+      isAgent: i % 2 === 0,
+      phase: Math.random() * Math.PI * 2,
+      id: i % 2 === 0 ? `AGENT.0${(i/2 + 1)|0}` : `HUMAN.CORE`
+    }));
+
+    // Floating bimodal app surfaces drifting in the ambient gutters
+    const panels = [
+      { side: 'left', relY: 0.22, w: 220, h: 110, title: 'SWARM TELEMETRY', sub: '3 AGENTS · STATE: SYNC' },
+      { side: 'right', relY: 0.35, w: 240, h: 120, title: 'BIMODAL APP // AIRLINE', sub: 'LIVE SEATMAP · FARE CURVE' },
+      { side: 'left', relY: 0.68, w: 210, h: 95, title: 'SYSTEM ENCLAVE', sub: 'DELEGATED CAPABILITY · UCAN' }
+    ];
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let start = performance.now();
+
+    function draw(now) {
+      if (!prefersReducedMotion) {
+        requestAnimationFrame(draw);
+      }
+
+      const t = (now - start) * 0.001;
+
+      // Mouse smoothing
+      mouse.x += (mouse.tx - mouse.x) * 0.06;
+      mouse.y += (mouse.ty - mouse.y) * 0.06;
+
+      ctx.clearRect(0, 0, w, h);
+
+      // ── 1. Full-Screen Fluid Spatial Field Lines ──
+      const numLines = 26;
+      const stepY = h / (numLines - 1);
+      const pointsPerLine = 48;
+      const stepX = w / (pointsPerLine - 1);
+
+      for (let i = 0; i < numLines; i++) {
+        const baseY = i * stepY;
+        const isAmber = (i % 6 === 2);
+        const alpha = isAmber ? 0.38 : (i % 2 === 0 ? 0.22 : 0.14);
+
+        ctx.beginPath();
+        ctx.lineWidth = isAmber ? 1.0 : 0.6;
+        ctx.strokeStyle = isAmber
+          ? `rgba(255, 171, 46, ${alpha})`
+          : `rgba(236, 228, 211, ${alpha})`;
+
+        for (let j = 0; j < pointsPerLine; j++) {
+          const x = j * stepX;
+          const nx = x / w;
+          const ny = baseY / h;
+
+          // Harmonic fluid wave displacement
+          const wave1 = Math.sin(nx * 5.2 + t * 0.7 + ny * 3.8) * 18;
+          const wave2 = Math.cos(nx * 3.1 - t * 0.5 + ny * 6.2) * 12;
+          const wave3 = Math.sin(nx * 11.0 + t * 1.2) * 4;
+
+          // Mouse interaction ripple
+          let mouseDisp = 0;
+          if (hasMouse) {
+            const dx = x - mouse.x;
+            const dy = baseY - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 320) {
+              mouseDisp = Math.sin(dist * 0.035 - t * 4) * Math.exp(-dist / 140) * 26;
+            }
+          }
+
+          const y = baseY + wave1 + wave2 + wave3 + mouseDisp;
+
+          if (j === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      // ── 2. Transverse Perspective Warp Lines ──
+      const numTransverse = 18;
+      for (let j = 0; j < numTransverse; j++) {
+        const baseX = (j / (numTransverse - 1)) * w;
+        ctx.beginPath();
+        ctx.lineWidth = 0.5;
+        ctx.strokeStyle = `rgba(236, 228, 211, 0.08)`;
+
+        for (let i = 0; i < numLines; i++) {
+          const baseY = i * stepY;
+          const nx = baseX / w;
+          const ny = baseY / h;
+          const wave = Math.sin(nx * 5.2 + t * 0.7 + ny * 3.8) * 18 + Math.cos(nx * 3.1 - t * 0.5 + ny * 6.2) * 12;
+          const y = baseY + wave;
+          if (i === 0) ctx.moveTo(baseX, y);
+          else ctx.lineTo(baseX, y);
+        }
+        ctx.stroke();
+      }
+
+      // ── 3. Floating Bimodal Spatial Surfaces (Peripheral Panels) ──
+      // Rendered only when screen width provides sufficient gutter (> 1080px)
+      if (w > 1080) {
+        panels.forEach((p, idx) => {
+          const floatOffset = Math.sin(t * 0.6 + idx * 2.1) * 8;
+          const py = p.relY * h + floatOffset;
+          const px = p.side === 'left' ? 44 : (w - p.w - 44);
+
+          // Subtle tilt based on mouse parallax
+          const parallaxX = (mouse.x - w * 0.5) * 0.015 * (idx + 1);
+          const parallaxY = (mouse.y - h * 0.5) * 0.015 * (idx + 1);
+          const fx = px + parallaxX;
+          const fy = py + parallaxY;
+
+          // Panel container
+          ctx.save();
+          ctx.fillStyle = 'rgba(14, 14, 18, 0.75)';
+          ctx.strokeStyle = 'rgba(255, 171, 46, 0.28)';
+          ctx.lineWidth = 1;
+
+          // Rounded box
+          const r = 6;
+          ctx.beginPath();
+          ctx.moveTo(fx + r, fy);
+          ctx.lineTo(fx + p.w - r, fy);
+          ctx.quadraticCurveTo(fx + p.w, fy, fx + p.w, fy + r);
+          ctx.lineTo(fx + p.w, fy + p.h - r);
+          ctx.quadraticCurveTo(fx + p.w, fy + p.h, fx + p.w - r, fy + p.h);
+          ctx.lineTo(fx + r, fy + p.h);
+          ctx.quadraticCurveTo(fx, fy + p.h, fx, fy + p.h - r);
+          ctx.lineTo(fx, fy + r);
+          ctx.quadraticCurveTo(fx, fy, fx + r, fy);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Header line
+          ctx.strokeStyle = 'rgba(236, 228, 211, 0.12)';
+          ctx.beginPath();
+          ctx.moveTo(fx, fy + 26);
+          ctx.lineTo(fx + p.w, fy + 26);
+          ctx.stroke();
+
+          // Header dots
+          ctx.fillStyle = 'rgba(255, 171, 46, 0.8)';
+          ctx.beginPath(); ctx.arc(fx + 12, fy + 13, 2.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = 'rgba(236, 228, 211, 0.4)';
+          ctx.beginPath(); ctx.arc(fx + 20, fy + 13, 2, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath(); ctx.arc(fx + 27, fy + 13, 2, 0, Math.PI * 2); ctx.fill();
+
+          // Header title & subtitle
+          ctx.font = '9px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(255, 171, 46, 0.9)';
+          ctx.fillText(p.title, fx + 36, fy + 16);
+
+          ctx.font = '8px "JetBrains Mono", monospace';
+          ctx.fillStyle = 'rgba(236, 228, 211, 0.55)';
+          ctx.fillText(p.sub, fx + 12, fy + 42);
+
+          // Micro visual content inside the panel
+          if (idx === 0) {
+            // Live sparkline
+            ctx.beginPath();
+            ctx.strokeStyle = 'rgba(255, 171, 46, 0.7)';
+            ctx.lineWidth = 1.2;
+            for (let s = 0; s < 14; s++) {
+              const sx = fx + 12 + s * 14;
+              const sy = fy + 80 + Math.sin(t * 2 + s * 0.8) * 12;
+              if (s === 0) ctx.moveTo(sx, sy);
+              else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+          } else if (idx === 1) {
+            // Mini seatmap / bimodal app controls
+            for (let row = 0; row < 2; row++) {
+              for (let col = 0; col < 6; col++) {
+                const bx = fx + 12 + col * 18;
+                const by = fy + 58 + row * 18;
+                const isSelected = (row === 0 && col === 2);
+                ctx.fillStyle = isSelected ? 'rgba(255, 171, 46, 0.85)' : 'rgba(236, 228, 211, 0.12)';
+                ctx.strokeStyle = isSelected ? '#ffab2e' : 'rgba(236, 228, 211, 0.25)';
+                ctx.strokeRect(bx, by, 14, 14);
+                ctx.fillRect(bx, by, 14, 14);
+              }
+            }
+          } else {
+            // Cryptographic capability proof badge
+            ctx.fillStyle = 'rgba(255, 171, 46, 0.12)';
+            ctx.strokeStyle = 'rgba(255, 171, 46, 0.5)';
+            ctx.strokeRect(fx + 12, fy + 54, p.w - 24, 24);
+            ctx.fillRect(fx + 12, fy + 54, p.w - 24, 24);
+            ctx.fillStyle = 'rgba(255, 171, 46, 0.9)';
+            ctx.font = '8px "JetBrains Mono", monospace';
+            ctx.fillText('0x9F4C... SIGNED // TOUCH ID', fx + 18, fy + 69);
+          }
+
+          ctx.restore();
+        });
+      }
+
+      // ── 4. Autonomous Beacons & Collaboration Links ──
+      const renderedBeacons = [];
+
+      beacons.forEach((b) => {
+        if (!prefersReducedMotion) {
+          b.xRatio = (b.xRatio + b.vx + 1) % 1;
+          b.yRatio = (b.yRatio + b.vy + 1) % 1;
+        }
+
+        const bx = b.xRatio * w;
+        const by = b.yRatio * h;
+        renderedBeacons.push({ x: bx, y: by, isAgent: b.isAgent, phase: b.phase });
+
+        const pulse = 0.5 + 0.5 * Math.sin(b.phase + t * 2.5);
+
+        ctx.save();
+        ctx.translate(bx, by);
+
+        if (b.isAgent) {
+          // Agent beacon: amber diamond with pulse
+          ctx.strokeStyle = `rgba(255, 171, 46, ${0.6 + pulse * 0.4})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(0, -4); ctx.lineTo(4, 0); ctx.lineTo(0, 4); ctx.lineTo(-4, 0); ctx.closePath();
+          ctx.stroke();
+
+          ctx.fillStyle = `rgba(255, 171, 46, ${0.4 + pulse * 0.5})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Pulse ring
+          ctx.strokeStyle = `rgba(255, 171, 46, ${0.3 * (1 - pulse)})`;
+          ctx.beginPath();
+          ctx.arc(0, 0, 4 + pulse * 10, 0, Math.PI * 2);
+          ctx.stroke();
+        } else {
+          // Human anchor: bone crosshair
+          ctx.strokeStyle = `rgba(236, 228, 211, ${0.7 + pulse * 0.3})`;
+          ctx.lineWidth = 0.8;
+          ctx.beginPath();
+          ctx.moveTo(-5, 0); ctx.lineTo(5, 0);
+          ctx.moveTo(0, -5); ctx.lineTo(0, 5);
+          ctx.stroke();
+        }
+
+        ctx.restore();
+      });
+
+      // Collaborative synthesis vectors between human and agent nodes
+      for (let i = 0; i < renderedBeacons.length; i++) {
+        for (let j = i + 1; j < renderedBeacons.length; j++) {
+          const p1 = renderedBeacons[i];
+          const p2 = renderedBeacons[j];
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < 180) {
+            const linkAlpha = (1 - dist / 180) * 0.35;
+            ctx.beginPath();
+            ctx.setLineDash([3, 5]);
+            ctx.strokeStyle = p1.isAgent !== p2.isAgent
+              ? `rgba(255, 171, 46, ${linkAlpha * 1.5})` // Human-Agent collaboration
+              : `rgba(236, 228, 211, ${linkAlpha * 0.8})`;
+            ctx.lineWidth = 0.8;
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+      }
+    }
+
+    requestAnimationFrame(draw);
+  })();
+</script>
+</body>
+</html>
