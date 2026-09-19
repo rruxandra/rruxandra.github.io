@@ -74,8 +74,21 @@
   }
 
   /* ── Corner Meta HUD ── */
-  .meta {
+  .meta-left {
     position: fixed; top: 28px; left: 28px; z-index: 50;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .back-btn {
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: rgba(9, 9, 11, 0.8); padding: 5px 12px; border-radius: 4px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--rule); text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .back-btn:hover { color: var(--amber); border-color: var(--amber-dim); }
+
+  .meta {
     font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em;
     text-transform: uppercase; color: var(--ink-dim);
     background: rgba(9, 9, 11, 0.8); padding: 5px 12px; border-radius: 4px;
@@ -205,6 +218,8 @@
 
   @media (max-width: 640px) {
     .meta-r { display: none; }
+    .meta-left { top: 16px; left: 16px; gap: 6px; }
+    .back-btn, .meta { font-size: 10px; padding: 4px 9px; letter-spacing: 0.12em; }
     main { padding-top: 100px; }
     footer.page-footer { flex-direction: column; gap: 14px; align-items: flex-start; }
   }
@@ -217,8 +232,9 @@
 <div class="vignette"></div>
 <div class="rail" id="rail"></div>
 
-<div class="meta">
-  <a href="index.html">SIGNAL</a> // <span>NO. 21</span>
+<div class="meta-left">
+  <a class="back-btn" href="index.html">← return to log</a>
+  <div class="meta">SIGNAL // <span>NO. 21</span></div>
 </div>
 <div class="meta-r">
   ESSAY · PARADIGMS
