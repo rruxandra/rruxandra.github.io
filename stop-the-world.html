@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stop the World</title>
+<style>
+  :root {
+    --bg:      #0e0e10;
+    --ink:     #e2e2e4;
+    --ink-dim: #7e7e84;
+    --rule:    rgba(255, 255, 255, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── Breathing background canvas ── */
+  canvas#breath {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, transparent 60%, rgba(14,14,16,0.5) 100%);
+  }
+
+  /* ── Reading rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: '';
+    position: absolute; top: 0; left: -1px;
+    width: 2px; height: var(--p, 0%);
+    background: rgba(255, 255, 255, 0.35);
+    transition: height 0.15s linear;
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: fixed; top: 24px; left: 24px; z-index: 50;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .back {
+    font-size: 12px;
+    color: var(--ink-dim);
+    background: rgba(20, 20, 24, 0.8);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    text-decoration: none;
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .back:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.2); }
+
+  .meta-date {
+    position: fixed; top: 24px; right: 28px; z-index: 50;
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+
+  /* ── Main reading content ── */
+  main {
+    position: relative; z-index: 10;
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 140px 24px 100px;
+  }
+
+  h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    line-height: 1.25;
+    color: #ffffff;
+    margin: 0 0 1.5rem 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+  }
+
+  p {
+    font-size: 17px;
+    color: #eeeeef;
+    margin: 0 0 1.5rem 0;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  p em {
+    font-style: italic;
+    color: inherit;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+  footer a { color: inherit; text-decoration: none; }
+  footer a:hover { color: #ffffff; }
+
+  @media (max-width: 640px) {
+    .nav { left: 16px; top: 16px; }
+    .meta-date { display: none; }
+    main { padding: 100px 20px 80px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="breath"></canvas>
+<div class="vignette"></div>
+<div class="rail"></div>
+
+<div class="nav">
+  <a class="back" href="index.html">← Log</a>
+</div>
+<div class="meta-date">2026.09.24</div>
+
+<main>
+  <h1>Stop the world</h1>
+
+  <p>
+    10 years ago, when I started a new job, one of my first tasks was to evaluate various garbage collectors.
+  </p>
+
+  <p>
+    Many traditional Java collectors periodically stop the application to clean up memory. In the JVM world, this is called a Stop the World event. You run your service, memory fills up, and then everything halts while the garbage collector sweeps through the heap.
+  </p>
+
+  <p>
+    One of the collectors I looked at was from Azul. They claimed that GC pause time stayed remarkably flat even as the heap grew.
+  </p>
+
+  <p>
+    When I looked into how it worked, it initially felt like cheating.
+  </p>
+
+  <p>
+    They hadn't magically made the cleanup work disappear. Instead, they made the collector work concurrently with the application. By using read barriers, memory could be compacted while application threads kept running. There was still a cost: the application paid a small overhead on reading object references, while background threads did the work concurrently.
+  </p>
+
+  <p>
+    I remember thinking: that's a trick. You didn't eliminate the work, you just spread the cost out instead of making the entire application stop and pay for it all at once.
+  </p>
+
+  <p>
+    I thought about this from time to time, especially when dealing with chores I didn't really want to do. It motivated me to do them on the spot instead of deferring them.
+  </p>
+
+  <p>
+    Today, waiting at a traffic light, I realized I was tense. My first thought was that I should find time to start meditating, but then I remembered the GC example. It's better to take a couple of deep breaths on the spot instead of waiting for a Stop the World event.
+  </p>
+
+  <p>
+    Inhale, exhale. Right on the main thread.
+  </p>
+
+  <footer>
+    <span>No. 22</span>
+    <a href="index.html">Signal Log</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  // Reading rail
+  function updateProgress() {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const p = total > 0 ? (window.scrollY / total) * 100 : 0;
+    document.documentElement.style.setProperty('--p', `${p}%`);
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  // ── High-DPI Generative Breathing Field ──
+  const canvas = document.getElementById('breath');
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  let W, H;
+  let cx, cy;
+  let mouseX = 0, mouseY = 0;
+  let targetMx = 0, targetMy = 0;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = W * DPR;
+    canvas.height = H * DPR;
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    cx = W / 2;
+    cy = H * 0.46;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  window.addEventListener('mousemove', (e) => {
+    targetMx = (e.clientX - W / 2) * 0.06;
+    targetMy = (e.clientY - H / 2) * 0.06;
+  }, { passive: true });
+
+  // Floating breath filaments / stardust
+  const particles = [];
+  const PARTICLE_COUNT = 130;
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = Math.random() * Math.min(W, H) * 0.5 + 40;
+    particles.push({
+      angle: angle,
+      dist: dist,
+      baseDist: dist,
+      orbitSpeed: (Math.random() - 0.5) * 0.003,
+      size: Math.random() * 1.6 + 0.6,
+      alpha: Math.random() * 0.35 + 0.1,
+      phase: Math.random() * Math.PI * 2
+    });
+  }
+
+  // 14-second physiological breath cycle:
+  // Inhale: 4.5s, Hold: 2.0s, Exhale: 6.5s, Rest: 1.0s
+  const CYCLE = 14000;
+  const T_INHALE = 4500;
+  const T_HOLD = 6500;
+  const T_EXHALE = 13000;
+
+  function easeInOutCubic(t) {
+    return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+  }
+
+  let lastTime = 0;
+
+  function frame(now) {
+    if (!lastTime) lastTime = now;
+    const dt = Math.min(60, now - lastTime);
+    lastTime = now;
+
+    // Smooth mouse parallax drift
+    mouseX += (targetMx - mouseX) * 0.04;
+    mouseY += (targetMy - mouseY) * 0.04;
+
+    const currentCx = cx + mouseX;
+    const currentCy = cy + mouseY;
+    const minDim = Math.min(W, H);
+
+    // Calculate breath progress
+    const pos = now % CYCLE;
+    let b = 0; // 0 (empty) to 1 (full inhale)
+
+    if (pos < T_INHALE) {
+      b = easeInOutCubic(pos / T_INHALE);
+    } else if (pos < T_HOLD) {
+      b = 1.0;
+    } else if (pos < T_EXHALE) {
+      b = 1.0 - easeInOutCubic((pos - T_HOLD) / (T_EXHALE - T_HOLD));
+    } else {
+      b = 0;
+    }
+
+    // Clean frame clear to ensure deep black background and sharp text contrast
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, W, H);
+
+    ctx.globalCompositeOperation = 'lighter';
+
+    // ── 1. Volumetric blue breathing core glow ──
+    const coreRadius = minDim * (0.24 + b * 0.28);
+    const coreGrad = ctx.createRadialGradient(currentCx, currentCy, 0, currentCx, currentCy, coreRadius);
+    const alphaCore = 0.14 + b * 0.18;
+    const alphaMid = 0.05 + b * 0.09;
+
+    coreGrad.addColorStop(0, `rgba(56, 145, 255, ${alphaCore})`);
+    coreGrad.addColorStop(0.45, `rgba(30, 95, 210, ${alphaMid})`);
+    coreGrad.addColorStop(0.8, `rgba(14, 45, 120, ${alphaMid * 0.3})`);
+    coreGrad.addColorStop(1, 'rgba(9, 10, 15, 0)');
+
+    ctx.fillStyle = coreGrad;
+    ctx.beginPath();
+    ctx.arc(currentCx, currentCy, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ── 2. Concentric round breathing circles / rings ──
+    const baseRadius = minDim * (0.22 + b * 0.24);
+
+    // Inner core circle
+    ctx.beginPath();
+    ctx.arc(currentCx, currentCy, baseRadius * 0.45, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(120, 195, 255, ${0.08 + b * 0.15})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Mid circle
+    ctx.beginPath();
+    ctx.arc(currentCx, currentCy, baseRadius * 0.72, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(90, 180, 255, ${0.10 + b * 0.18})`;
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+
+    // Main breathing perimeter circle
+    ctx.beginPath();
+    ctx.arc(currentCx, currentCy, baseRadius, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(80, 175, 255, ${0.18 + b * 0.26})`;
+    ctx.lineWidth = 1.5;
+    ctx.shadowColor = '#3b82f6';
+    ctx.shadowBlur = 10 * b;
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Outer harmonic circle
+    ctx.beginPath();
+    ctx.arc(currentCx, currentCy, baseRadius * 1.30, 0, Math.PI * 2);
+    ctx.strokeStyle = `rgba(60, 150, 255, ${0.06 + b * 0.12})`;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // ── 3. Expansive blue breath ripples ──
+    const rippleR = baseRadius * (1.15 + b * 0.45);
+    const rippleAlpha = Math.sin(b * Math.PI) * 0.18;
+    if (rippleAlpha > 0.005) {
+      ctx.beginPath();
+      ctx.arc(currentCx, currentCy, rippleR, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(110, 205, 255, ${rippleAlpha})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(currentCx, currentCy, rippleR * 1.28, 0, Math.PI * 2);
+      ctx.strokeStyle = `rgba(90, 180, 255, ${rippleAlpha * 0.55})`;
+      ctx.lineWidth = 0.8;
+      ctx.stroke();
+    }
+
+    // ── 4. Floating blue stardust ──
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.angle += p.orbitSpeed;
+      // Inhale expands particles outwards; exhale draws them softly in
+      const breathPush = (b - 0.5) * 55;
+      const microSway = Math.sin(now * 0.0015 + p.phase) * 10;
+      const currentDist = p.baseDist + breathPush + microSway;
+
+      const px = currentCx + Math.cos(p.angle) * currentDist;
+      const py = currentCy + Math.sin(p.angle) * currentDist;
+
+      // Soft shimmering blue particle
+      const pAlpha = p.alpha * (0.6 + b * 0.8 + Math.sin(now * 0.002 + p.phase) * 0.3);
+      ctx.beginPath();
+      ctx.arc(px, py, p.size * (0.85 + b * 0.35), 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(140, 210, 255, ${Math.max(0, pAlpha)})`;
+      ctx.fill();
+    }
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
