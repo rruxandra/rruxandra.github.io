@@ -1,9 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-<meta name="theme-color" content="#04060d" />
+<meta charset="utf-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#04060d">
 <title>The Somatic Prism — Signal / Meaning</title>
 <style>
   :root{color-scheme:dark;--bg:#04060d;--ink:#edf4ff;--muted:#98a9c0;--accent:153,214,255}
@@ -98,22 +99,22 @@
   <section class="panel" aria-label="Choose an incoming signal">
     <div class="panel-title"><span>Incoming signal</span><span id="signalIndex">01 / 03</span></div>
     <div class="row" id="signalButtons"></div>
-    <p class="signal-desc" id="signalDesc"></p>
+    <p class="signal-desc" id="signalDesc">The same fever, ache or fatigue can be read as danger — or as a reason to ask, “what do I need right now?”</p>
   </section>
 </header>
 <div id="labels" role="group" aria-label="Explore a meaning"></div>
 <div class="scene-caption" id="sceneCaption" aria-hidden="true"><div class="scene-kicker">One shared signal</div><p>Four possible worlds</p></div>
-<div class="readout" aria-live="polite" aria-atomic="true"><div class="readout-kicker" id="readoutKicker">Same event · different inner worlds</div><p id="readoutText">Choose a meaning. Notice how the world reorganizes around it.</p></div>
+<div class="readout" aria-live="polite" aria-atomic="true"><div class="readout-kicker" id="readoutKicker">Protect the body</div><p id="readoutText">The same sensation becomes a request for care.</p></div>
 <footer class="footer">
   <a class="back" href="index.html">return to log</a>
   <div class="hint" id="hint">Move to explore · drag to orbit · tap the field to send a pulse</div>
   <div class="controls" aria-label="Animation controls">
-    <button class="control" id="pulseButton" aria-label="Send a signal pulse" title="Send a signal pulse"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h3l2-5 4 10 2-5h3"/></svg><span>Pulse</span></button>
-    <button class="control" id="pauseButton" aria-pressed="false" title="Pause animation"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10"/></svg><span>Pause</span></button>
-    <button class="control" id="immerseButton" aria-pressed="false" title="Hide the interface. Escape to return."><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4"/></svg><span>Immerse</span></button>
+    <button class="control" id="pulseButton" aria-label="Send a signal pulse" title="Send a signal pulse"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h3l2-5 4 10 2-5h3"></path></svg><span>Pulse</span></button>
+    <button class="control" id="pauseButton" aria-pressed="false" title="Pause animation"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10"></path></svg><span>Pause</span></button>
+    <button class="control" id="immerseButton" aria-pressed="false" title="Hide the interface. Escape to return."><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4"></path></svg><span>Immerse</span></button>
   </div>
 </footer>
-<div id="fallback" class="fallback" role="status" hidden></div>
+<div id="fallback" class="fallback" role="status" hidden=""></div>
 <script>
 (() => {
   'use strict';
@@ -205,6 +206,7 @@
       labels.append(b);
     });
   }
+  buttons.replaceChildren();
   signals.forEach((sig,i)=>{
     const b=document.createElement('button');b.type='button';b.className='signal-button';b.textContent=sig.name;
     b.addEventListener('click',()=>{selectedSignal=i;selectedBranch=-1;buildLabels();updateSelection();pulse();});buttons.append(b);
@@ -500,5 +502,6 @@
   sceneCenter=sceneCenterTarget;cameraRadius=Math.max(8.8,(mobile?2.9:5.15)/(Math.tan(.41)*(W/H)),(mobile?2.75:2.15)*H/(Math.tan(.41)*Math.max(130,layoutBottom-layoutTop)));
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
