@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#04060d" />
+<title>The Somatic Prism — Signal / Meaning</title>
+<style>
+  :root{color-scheme:dark;--bg:#04060d;--ink:#edf4ff;--muted:#98a9c0;--accent:153,214,255}
+  *{box-sizing:border-box}
+  html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+  button,a{-webkit-tap-highlight-color:transparent}
+  button{font:inherit;cursor:pointer;color:inherit}
+  button:focus-visible,a:focus-visible{outline:2px solid #ddf6ff;outline-offset:5px}
+  button{touch-action:manipulation}
+  [hidden]{display:none!important}
+  #atmosphere{position:fixed;inset:-12%;pointer-events:none;background:radial-gradient(ellipse at 50% 52%,rgba(var(--accent),.095),transparent 39%),radial-gradient(ellipse at 26% 72%,#26355d24,transparent 43%),radial-gradient(ellipse at 77% 30%,#412a5320,transparent 43%);transition:background 1.5s}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+  canvas:active{cursor:grabbing}
+  #vignette,#grain{position:fixed;inset:0;pointer-events:none}
+  #vignette{background:radial-gradient(ellipse at 50% 53%,transparent 30%,#02040a66 77%,#02040ac9 100%)}
+  #grain{opacity:.028;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.4' d='M0 0h160v160H0z'/%3E%3C/svg%3E")}
+  .hud{position:fixed;z-index:3;inset:30px 34px auto;display:flex;justify-content:space-between;gap:32px;pointer-events:none;transition:opacity .65s,transform .65s}
+  .intro{max-width:580px}
+  .eyebrow,.panel-title,.scene-kicker,.readout-kicker{font-size:9px;letter-spacing:.2em;text-transform:uppercase;font-weight:600}
+  .eyebrow{color:#8b9eb7;display:flex;align-items:center;gap:10px;margin-bottom:15px}
+  .eyebrow::before{content:"";width:19px;height:1px;background:#8bb1d1}
+  h1{font-size:clamp(32px,4vw,57px);line-height:1.04;letter-spacing:-.052em;font-weight:580;margin:0;text-shadow:0 0 44px #80baff17}
+  h1 span{color:#aabbd2}
+  .subtitle{font-size:12px;line-height:1.65;color:#879ab5;max-width:430px;margin:15px 0 0}
+  .panel{pointer-events:auto;flex:0 0 310px;padding:17px 18px 15px;border:1px solid #bfdcff14;border-radius:18px;background:linear-gradient(140deg,#101725a3,#070a1294);backdrop-filter:blur(16px);box-shadow:0 15px 45px #0002}
+  .panel-title{color:#95aac5;display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+  .panel-title span:last-child{color:#5f738e;font-size:8px;letter-spacing:.12em}
+  .row{display:flex;flex-wrap:wrap;gap:6px}
+  .signal-button{appearance:none;border:1px solid #c1d9ff16;background:#a9caff05;padding:8px 10px;border-radius:8px;font-size:10px;line-height:1.4;color:#aebed3;transition:background .25s,border-color .25s,color .25s;min-height:34px}
+  .signal-button:hover{background:#a9caff10;color:#fff}
+  .signal-button.active{border-color:#c1e7ff50;background:#a1dbff17;color:#e8f5ff}
+  .signal-desc{font-size:11px;line-height:1.6;color:#8fa0b8;margin:12px 0 0;padding-top:12px;border-top:1px solid #ffffff0c}
+  #labels{position:fixed;inset:0;z-index:2;pointer-events:none;transition:opacity .6s}
+  .tag{--tone:153,214,255;position:absolute;pointer-events:auto;appearance:none;text-align:left;transform:translate(-50%,-50%);padding:10px 13px;border-radius:11px;border:1px solid rgba(var(--tone),.19);background:linear-gradient(140deg,#0a101cdf,#060912b5);backdrop-filter:blur(12px);box-shadow:0 12px 40px #0003;max-width:245px;transition:opacity .5s,border-color .4s,background .4s,box-shadow .4s}
+  .tag::before{content:"";position:absolute;width:4px;height:4px;left:13px;top:16px;border-radius:50%;background:rgb(var(--tone));box-shadow:0 0 10px rgba(var(--tone),.85)}
+  .tag b{display:block;padding-left:12px;font-size:11px;line-height:1.35;font-weight:550;letter-spacing:.005em}
+  .tag small{display:block;font-size:8px;line-height:1.6;color:#91a2bc;margin-top:4px;letter-spacing:.065em;text-transform:uppercase}
+  .tag:hover,.tag.active{border-color:rgba(var(--tone),.65);background:#0d1523e8;box-shadow:0 0 34px rgba(var(--tone),.12),0 12px 40px #0004}
+  .tag.active b{color:#fff}
+  .scene-caption{position:fixed;z-index:1;pointer-events:none;left:50%;transform:translateX(-50%);text-align:center;transition:opacity .6s;white-space:nowrap}
+  .scene-kicker{color:#a2c8e2;font-size:8px;letter-spacing:.28em}
+  .scene-caption p{font-size:10px;color:#637e9b;letter-spacing:.03em;margin:7px 0 0}
+  .readout{position:fixed;z-index:3;bottom:83px;left:50%;transform:translateX(-50%);text-align:center;max-width:440px;width:70%;pointer-events:none;transition:opacity .6s}
+  .readout-kicker{font-size:8px;color:#7b93b0;letter-spacing:.23em}
+  .readout p{font-size:12px;line-height:1.7;color:#b0c3dc;margin:8px 0 0}
+  .footer{position:fixed;z-index:4;bottom:max(23px,env(safe-area-inset-bottom));left:34px;right:34px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+  .back{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#8396b0;text-decoration:none;white-space:nowrap;transition:color .2s}
+  .back:hover{color:#e9f4ff}
+  .back::before{content:"←";margin-right:9px}
+  .hint{position:absolute;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.055em;color:#607894;white-space:nowrap;pointer-events:none;transition:opacity .6s}
+  .controls{display:flex;gap:5px;padding:4px;border:1px solid #c4e1ff17;border-radius:11px;background:#080e18b8;backdrop-filter:blur(14px)}
+  .control{border:0;background:transparent;border-radius:7px;font-size:10px;color:#9bb0ca;padding:8px 10px;min-height:32px;display:flex;align-items:center;gap:6px;transition:color .25s,background .25s}
+  .control:hover,.control[aria-pressed="true"]{background:#a0d4ff12;color:#e8f5ff}
+  .control svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:1.4;stroke-linecap:round;stroke-linejoin:round}
+  body.immersed .hud,body.immersed #labels,body.immersed .readout,body.immersed .scene-caption,body.immersed .hint,body.immersed .back{opacity:0;pointer-events:none}
+  body.immersed .hud{transform:translateY(-8px)}
+  body.immersed .tag,body.immersed .panel{pointer-events:none}
+  body.immersed .footer{justify-content:flex-end}
+  .fallback{position:fixed;z-index:10;left:50%;top:52%;transform:translate(-50%,-50%);max-width:420px;width:90%;padding:20px;border:1px solid #a6ceff33;border-radius:14px;background:#080d16;color:#b1c9e4;font-size:13px;line-height:1.7;text-align:center}
+  body.no-webgl{overflow:auto;min-height:100%;height:100%}
+  body.no-webgl .hud{position:relative;inset:auto;margin:30px 34px}
+  body.no-webgl .panel{position:static}
+  body.no-webgl #labels{position:relative;inset:auto;display:flex;flex-wrap:wrap;justify-content:center;gap:12px;padding:12px 20px 110px}
+  body.no-webgl .tag{position:relative;inset:auto;transform:none;width:220px;max-width:100%}
+  body.no-webgl .fallback{position:relative;inset:auto;transform:none;margin:24px auto;width:calc(100% - 40px)}
+  body.no-webgl .readout{bottom:70px;background:#080d16e8;border-radius:12px;padding:10px}
+  body.no-webgl .hint{display:none}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+  @media(max-width:1050px){.hud{inset:24px 24px auto}.intro{max-width:440px}.panel{flex-basis:270px}.subtitle{max-width:350px}h1{font-size:42px}.hint{display:none}.footer{left:24px;right:24px}}
+  @media(max-width:760px){
+    .hud{inset:23px 20px auto;display:block}.intro{max-width:100%}.eyebrow{font-size:8px;margin-bottom:11px}h1{font-size:clamp(29px,7.4vw,43px);line-height:1.07}.subtitle{font-size:11px;max-width:360px;margin-top:10px;line-height:1.6}
+    .panel{position:fixed;left:20px;right:20px;bottom:77px;padding:12px 13px;border-radius:13px}.panel-title{font-size:8px;margin-bottom:9px}.panel-title span:last-child{font-size:7px}.row{gap:5px}.signal-button{font-size:9px;padding:7px 8px;min-height:32px}.signal-desc{font-size:10px;line-height:1.5;padding-top:9px;margin-top:9px}
+    .tag{width:156px;max-width:calc((100vw - 36px)/2);padding:9px 10px;border-radius:9px}.tag::before{left:10px;top:14px;width:3px;height:3px}.tag b{font-size:10px;padding-left:10px}.tag small{font-size:7px;letter-spacing:.04em;line-height:1.55;margin-top:3px}
+    .scene-kicker{font-size:7px;letter-spacing:.22em}.scene-caption p{font-size:9px;margin-top:5px}.readout{display:none}.footer{left:20px;right:20px;bottom:max(18px,env(safe-area-inset-bottom));gap:8px}.back{font-size:8px;letter-spacing:.07em}.control{font-size:9px;padding:7px 8px;min-height:32px}.controls{gap:1px}.control svg{width:11px;height:11px}
+  }
+  @media(max-width:360px){.footer{left:12px;right:12px}.control{padding:7px 6px;gap:4px}.back{font-size:7px}.back::before{margin-right:4px}.eyebrow{font-size:7px;letter-spacing:.16em}}
+  @media(max-width:760px) and (max-height:740px){.subtitle,.scene-caption{display:none}.panel-title{margin-bottom:6px}.panel{bottom:70px;padding:10px 12px}.signal-desc{font-size:9px;margin-top:7px;padding-top:7px}.footer{bottom:14px}.eyebrow{margin-bottom:8px}.hud{top:18px}h1{font-size:30px}}
+  @media(max-height:520px) and (min-width:761px){.subtitle,.signal-desc,.readout{display:none}.hud{top:18px}h1{font-size:32px}.eyebrow{margin-bottom:9px}.panel{padding:12px}.footer{bottom:14px}}
+  @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="atmosphere" aria-hidden="true"></div>
+<canvas id="gl" aria-label="A shared signal radiates into four different interpretations. Select a meaning to explore it."></canvas>
+<div id="vignette" aria-hidden="true"></div><div id="grain" aria-hidden="true"></div>
+<header class="hud" id="hud">
+  <div class="intro">
+    <div class="eyebrow">The somatic prism / a thought experiment</div>
+    <h1>The signal is shared.<br><span>The meaning isn't.</span></h1>
+    <p class="subtitle">One event. Several inner worlds.<br>Meaning emerges from context, memory, need, fear and desire.</p>
+  </div>
+  <section class="panel" aria-label="Choose an incoming signal">
+    <div class="panel-title"><span>Incoming signal</span><span id="signalIndex">01 / 03</span></div>
+    <div class="row" id="signalButtons"></div>
+    <p class="signal-desc" id="signalDesc"></p>
+  </section>
+</header>
+<div id="labels" role="group" aria-label="Explore a meaning"></div>
+<div class="scene-caption" id="sceneCaption" aria-hidden="true"><div class="scene-kicker">One shared signal</div><p>Four possible worlds</p></div>
+<div class="readout" aria-live="polite" aria-atomic="true"><div class="readout-kicker" id="readoutKicker">Same event · different inner worlds</div><p id="readoutText">Choose a meaning. Notice how the world reorganizes around it.</p></div>
+<footer class="footer">
+  <a class="back" href="index.html">return to log</a>
+  <div class="hint" id="hint">Move to explore · drag to orbit · tap the field to send a pulse</div>
+  <div class="controls" aria-label="Animation controls">
+    <button class="control" id="pulseButton" aria-label="Send a signal pulse" title="Send a signal pulse"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M1 8h3l2-5 4 10 2-5h3"/></svg><span>Pulse</span></button>
+    <button class="control" id="pauseButton" aria-pressed="false" title="Pause animation"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 3v10M11 3v10"/></svg><span>Pause</span></button>
+    <button class="control" id="immerseButton" aria-pressed="false" title="Hide the interface. Escape to return."><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M6 2H2v4m8-4h4v4M2 10v4h4m8-4v4h-4"/></svg><span>Immerse</span></button>
+  </div>
+</footer>
+<div id="fallback" class="fallback" role="status" hidden></div>
+<script>
+(() => {
+  'use strict';
+  const canvas=document.getElementById('gl');
+  const labels=document.getElementById('labels');
+  const buttons=document.getElementById('signalButtons');
+  const descEl=document.getElementById('signalDesc');
+  const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+  let paused=reducedMotion.matches,immersed=false,selectedSignal=0,selectedBranch=-1;
+  let time=0,last=0,raf=0,W=1,H=1,DPR=1,mobile=false,sceneCenterTarget=.54;
+  let pulseAge=20,pulseStrength=0,zoom=1,zoomTarget=1,focusAmount=0;
+  let sceneCenter=.54,layoutTop=0,layoutBottom=0,cameraRadius=9;
+  const pointer={x:0,y:0,tx:0,ty:0},drag={active:false,id:null,x:0,y:0,startX:0,startY:0,moved:false};
+  const orbit={x:0,y:0,tx:0,ty:0};
+  const look=[0,0,0],eye=[0,0,9],targets=Array.from({length:4},()=>[0,0,0]);
+  const tones=Array.from({length:4},()=>[.6,.8,1]),weights=[1,1,1,1];
+  const centerTone=[.40,.77,1],labelSizes=[];
+  const signals=[
+    {
+      name:"A virus enters the body",
+      title:"Signal / Biological threat",
+      text:"The same fever, ache or fatigue can be read as danger — or as a reason to ask, “what do I need right now?”",
+      branches:[
+        ["Protect the body","rest · recover · reduce load",[-3.45,1.22,-.25],[.72,.55,1]],
+        ["Buy something","search · acquire · optimize",[3.45,1.06,.15],[.53,.82,1]],
+        ["Seek closeness","contact · reassurance · attention",[2.88,-1.46,-.82],[.95,.64,.85]],
+        ["Withdraw","hide · conserve · reduce input",[-3.12,-1.40,.66],[.65,1,.76]]
+      ]
+    },
+    {
+      name:"A cold message",
+      title:"Signal / Ambiguous relational tone",
+      text:"A flat or curt reply can trigger a spiral, emotional shutdown, neutral acceptance, or grounded presence — depending on the nervous system that receives it.",
+      branches:[
+        ["Catastrophizing","gut drop · scan for fault · urge to repair",[-3.45,1.24,-.2],[.98,.58,.73]],
+        ["Emotional Shutdown","numb out · pull back · pre-emptive retreat",[3.42,1.03,.18],[.55,.84,1]],
+        ["Neutral Reality","flat medium · low bandwidth · take as is",[2.86,-1.48,-.82],[.94,.69,.98]],
+        ["Secure differentiation","hold own center · allow their weather · stay open",[-3.08,-1.38,.62],[.65,.85,1]]
+      ]
+    },
+    {
+      name:"A sudden drop in energy",
+      title:"Signal / Body state",
+      text:"Low energy may point toward food, rest, stimulation, company, a change of task, or simply permission to stop.",
+      branches:[
+        ["Need for rest","pause · sleep · reduce effort",[-3.42,1.20,-.2],[.64,.82,1]],
+        ["Need to eat","fuel · buy · prepare",[3.44,1.03,.16],[1,.72,.46]],
+        ["Need for company","talk · connect · be seen",[2.86,-1.46,-.82],[.90,.67,1]],
+        ["Need for novelty","change scene · play · move",[-3.06,-1.38,.62],[.62,1,.82]]
+      ]
+    }
+  ];
+
+
+  const readings=[
+    ["The same sensation becomes a request for care.","The same sensation becomes a problem to solve.","The same sensation becomes a wish to be held.","The same sensation becomes a reason to turn inward."],
+    ["An ambiguous reply becomes a story about danger.","An ambiguous reply becomes a reason to retreat.","An ambiguous reply remains a few words on a screen.","An ambiguous reply can coexist with a steady sense of self."],
+    ["Low energy becomes permission to slow down.","Low energy becomes a request for nourishment.","Low energy becomes a longing for connection.","Low energy becomes an invitation to change something."]
+  ];
+  const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+  const mix=(a,b,t)=>a+(b-a)*t;
+  const smooth=(q)=>q*q*(3-2*q);
+  const TAU=Math.PI*2;
+  let gl=canvas.getContext('webgl',{antialias:false,alpha:true,premultipliedAlpha:true,powerPreference:'low-power'});
+  let lost=false,ready=false;
+  function showFallback(message){const el=document.getElementById('fallback');el.textContent=message;el.hidden=false;}
+  function pulse(){if(!gl||lost)return;pulseAge=0;pulseStrength=1;requestRender();}
+  function updateSelection(){
+    const sig=signals[selectedSignal];
+    [...buttons.children].forEach((b,i)=>{b.classList.toggle('active',i===selectedSignal);b.setAttribute('aria-pressed',String(i===selectedSignal));});
+    [...labels.children].forEach((b,i)=>{b.classList.toggle('active',i===selectedBranch);b.setAttribute('aria-pressed',String(i===selectedBranch));});
+    descEl.textContent=sig.text;
+    document.getElementById('signalIndex').textContent=`0${selectedSignal+1} / 03`;
+    document.getElementById('readoutKicker').textContent=selectedBranch<0?'Same event · different inner worlds':sig.branches[selectedBranch][0];
+    document.getElementById('readoutText').textContent=selectedBranch<0?'Choose a meaning. Notice how the world reorganizes around it.':readings[selectedSignal][selectedBranch];
+    const color=selectedBranch<0?[.60,.84,1]:sig.branches[selectedBranch][3];
+    document.documentElement.style.setProperty('--accent',color.map(v=>Math.round(v*255)).join(','));
+    measureLayout();
+    requestRender();
+  }
+  function buildLabels(){
+    labels.replaceChildren();
+    signals[selectedSignal].branches.forEach((branch,i)=>{
+      const b=document.createElement('button');b.type='button';b.className='tag';
+      b.style.setProperty('--tone',branch[3].map(v=>Math.round(v*255)).join(','));
+      const name=document.createElement('b'),detail=document.createElement('small');
+      name.textContent=branch[0];detail.textContent=branch[1];b.append(name,detail);
+      b.addEventListener('click',()=>{selectedBranch=selectedBranch===i?-1:i;updateSelection();pulse();});
+      labels.append(b);
+    });
+  }
+  signals.forEach((sig,i)=>{
+    const b=document.createElement('button');b.type='button';b.className='signal-button';b.textContent=sig.name;
+    b.addEventListener('click',()=>{selectedSignal=i;selectedBranch=-1;buildLabels();updateSelection();pulse();});buttons.append(b);
+  });
+  const pauseButton=document.getElementById('pauseButton');
+  function updatePause(){
+    pauseButton.setAttribute('aria-pressed',String(paused));pauseButton.querySelector('span').textContent=paused?'Resume':'Pause';pauseButton.title=paused?'Resume animation':'Pause animation';
+    document.getElementById('hint').textContent=paused?'Motion paused · choose a signal or a meaning':'Move to explore · drag to orbit · tap the field to send a pulse';
+  }
+  pauseButton.addEventListener('click',()=>{paused=!paused;last=0;updatePause();requestRender();});
+  reducedMotion.addEventListener('change',e=>{paused=e.matches;last=0;updatePause();requestRender();});
+  document.getElementById('pulseButton').addEventListener('click',pulse);
+  const immerseButton=document.getElementById('immerseButton');
+  function setImmersed(value){
+    immersed=value;document.body.classList.toggle('immersed',value);document.getElementById('hud').inert=value;labels.inert=value;document.querySelector('.back').inert=value;
+    immerseButton.setAttribute('aria-pressed',String(value));immerseButton.querySelector('span').textContent=value?'Return':'Immerse';
+    immerseButton.title=value?'Restore the interface':'Hide the interface. Escape to return.';measureLayout();requestRender();
+  }
+  immerseButton.addEventListener('click',()=>setImmersed(!immersed));
+  addEventListener('keydown',e=>{if(e.key==='Escape'){if(immersed)setImmersed(false);else if(selectedBranch>=0){selectedBranch=-1;updateSelection();}else{orbit.tx=orbit.ty=0;zoomTarget=1;requestRender();}}});
+  function measureLayout(){
+    if(!ready)return;
+    const intro=document.querySelector('.intro').getBoundingClientRect(),panel=document.querySelector('.panel').getBoundingClientRect();
+    labelSizes.length=0;for(const label of labels.children)labelSizes.push([label.offsetWidth/2,label.offsetHeight/2]);
+    layoutTop=(mobile?intro.bottom:Math.max(intro.bottom,panel.bottom))+24;
+    layoutBottom=mobile?panel.top-22:H-(H<540?64:128);
+    sceneCenterTarget=immersed?.5:clamp((layoutTop+layoutBottom)/2/H,.35,.69);
+  }
+  function resize(){
+    W=innerWidth;H=innerHeight;mobile=W<=760;DPR=Math.min(devicePixelRatio||1,mobile?1.5:2);
+    canvas.width=Math.round(W*DPR);canvas.height=Math.round(H*DPR);
+    if(gl&&!lost)gl.viewport(0,0,canvas.width,canvas.height);
+    measureLayout();requestRender();
+  }
+  addEventListener('resize',resize);
+  addEventListener('pointermove',e=>{
+    if(e.pointerType!=='touch'){pointer.tx=(e.clientX/W-.5)*2;pointer.ty=(e.clientY/H-.5)*2;}
+    if(drag.active&&e.pointerId===drag.id){
+      const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.moved=drag.moved||Math.hypot(e.clientX-drag.startX,e.clientY-drag.startY)>5;
+      orbit.tx=clamp(orbit.tx+dx*.003,-.5,.5);orbit.ty=clamp(orbit.ty+dy*.002,-.24,.24);drag.x=e.clientX;drag.y=e.clientY;
+    }
+    if(!paused)requestRender();
+  });
+  document.documentElement.addEventListener('pointerleave',()=>{pointer.tx=pointer.ty=0;});
+  canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag.active=true;drag.id=e.pointerId;drag.x=drag.startX=e.clientX;drag.y=drag.startY=e.clientY;drag.moved=false;canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener('pointerup',e=>{if(drag.id!==e.pointerId)return;const click=!drag.moved;drag.active=false;drag.id=null;if(click)pulse();});
+  canvas.addEventListener('pointercancel',()=>{drag.active=false;drag.id=null;});
+  canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTarget=clamp(zoomTarget+e.deltaY*.0004,.88,1.16);requestRender();},{passive:false});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else{last=0;requestRender();}});
+  buildLabels();updatePause();
+  function staticFallback(message){
+    ready=false;cancelAnimationFrame(raf);raf=0;document.body.classList.add('no-webgl');
+    updateSelection();showFallback(message);document.getElementById('sceneCaption').hidden=true;document.querySelector('.controls').hidden=true;
+    labels.before(document.getElementById('fallback'));
+  }
+  if(!gl){staticFallback('This browser cannot draw the 3D field. You can still choose a signal and explore its meanings.');return;}
+
+  const vertex=`
+    attribute vec3 aPos,aCol;
+    attribute float aSize,aAlpha;
+    uniform mat4 uProj,uView;
+    uniform float uDpr,uTime,uDust;
+    varying vec3 vCol;
+    varying float vAlpha;
+    void main(){
+      vec3 p=aPos;
+      p.x+=sin(uTime*.065+aPos.z*.13)*.13*uDust;
+      p.y+=cos(uTime*.08+aPos.x*.16)*.09*uDust;
+      vec4 mv=uView*vec4(p,1.0);
+      gl_Position=uProj*mv;
+      float depth=max(.5,-mv.z);
+      gl_PointSize=clamp(aSize*uDpr*14.0/depth,1.0,240.0*uDpr);
+      float fog=1.0-smoothstep(13.0,38.0,depth)*uDust;
+      vCol=aCol;
+      vAlpha=aAlpha*fog*smoothstep(.5,2.0,depth);
+    }`;
+  const particleFragment=`
+    precision mediump float;
+    varying vec3 vCol;varying float vAlpha;
+    void main(){
+      float d=length(gl_PointCoord-.5)*2.0;
+      float halo=exp(-d*d*5.0)*(1.0-smoothstep(.65,1.0,d));
+      float core=exp(-d*d*48.0);
+      gl_FragColor=vec4(vCol,vAlpha*(halo*.65+core*.88));
+    }`;
+  const lineFragment=`precision mediump float;varying vec3 vCol;varying float vAlpha;void main(){gl_FragColor=vec4(vCol,vAlpha);}`;
+  function compile(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);if(!gl.getShaderParameter(s,gl.COMPILE_STATUS))throw new Error(gl.getShaderInfoLog(s));return s;}
+  function program(fragment){
+    const p=gl.createProgram(),vs=compile(gl.VERTEX_SHADER,vertex),fs=compile(gl.FRAGMENT_SHADER,fragment);gl.attachShader(p,vs);gl.attachShader(p,fs);gl.linkProgram(p);gl.deleteShader(vs);gl.deleteShader(fs);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS))throw new Error(gl.getProgramInfoLog(p));
+    return {p,attrs:['aPos','aCol','aSize','aAlpha'].map(n=>gl.getAttribLocation(p,n)),uniforms:Object.fromEntries(['uProj','uView','uDpr','uTime','uDust'].map(n=>[n,gl.getUniformLocation(p,n)]))};
+  }
+  let pointProg,lineProg,pointBuffer,lineBuffer,dustBuffer;
+  const points=new Float32Array(16000*8),lines=new Float32Array(16000*8),dust=new Float32Array(1800*8);
+  let pointCount=0,lineCount=0,dustCount=0;
+  const randoms=new Float32Array(16000);let seed=7819;
+  for(let i=0;i<randoms.length;i++){seed=(Math.imul(seed,1664525)+1013904223)>>>0;randoms[i]=seed/4294967296;}
+  const rand=i=>randoms[i%randoms.length];
+  function vertexAt(array,index,x,y,z,r,g,b,size,alpha){const j=index*8;array[j]=x;array[j+1]=y;array[j+2]=z;array[j+3]=r;array[j+4]=g;array[j+5]=b;array[j+6]=size;array[j+7]=alpha;}
+  function point(x,y,z,r,g,b,size,alpha){vertexAt(points,pointCount++,x,y,z,r,g,b,size,alpha);}
+  function line(ax,ay,az,bx,by,bz,r,g,b,alpha){vertexAt(lines,lineCount++,ax,ay,az,r,g,b,1,alpha);vertexAt(lines,lineCount++,bx,by,bz,r,g,b,1,alpha);}
+  for(let i=0;i<1800;i++){
+    const x=(rand(i*5)-.5)*36,y=(rand(i*5+1)-.5)*23,z=(rand(i*5+2)-.5)*27;
+    const bright=rand(i*5+3),warm=rand(i*5+4)>.89;
+    vertexAt(dust,dustCount++,x,y,z,warm?.70:.31,warm?.54:.46,warm?.65:.70,bright>.985?4:1+bright*1.9,.16+bright*.36);
+  }
+  function initGL(){
+    pointProg=program(particleFragment);lineProg=program(lineFragment);
+    pointBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,pointBuffer);gl.bufferData(gl.ARRAY_BUFFER,points.byteLength,gl.DYNAMIC_DRAW);
+    lineBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,lineBuffer);gl.bufferData(gl.ARRAY_BUFFER,lines.byteLength,gl.DYNAMIC_DRAW);
+    dustBuffer=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,dustBuffer);gl.bufferData(gl.ARRAY_BUFFER,dust,gl.STATIC_DRAW);
+    gl.disable(gl.DEPTH_TEST);gl.enable(gl.BLEND);gl.blendFuncSeparate(gl.SRC_ALPHA,gl.ONE,gl.ONE,gl.ONE_MINUS_SRC_ALPHA);gl.clearColor(0,0,0,0);
+  }
+  try{initGL();}catch(error){console.error(error);staticFallback('The 3D field could not start. You can still explore the signals and their meanings below.');return;}
+  canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();lost=true;cancelAnimationFrame(raf);raf=0;showFallback('The 3D field is resting while graphics reconnect.');});
+  canvas.addEventListener('webglcontextrestored',()=>{lost=false;try{initGL();document.getElementById('fallback').hidden=true;last=0;resize();}catch(error){console.error(error);staticFallback('The graphics connection could not recover. You can still explore the meanings, or reload to return to the field.');}});
+  function perspective(out,fov,aspect,n,f){
+    const q=1/Math.tan(fov/2), nf=1/(n-f);
+    out[0]=q/aspect;out[1]=0;out[2]=0;out[3]=0;
+    out[4]=0;out[5]=q;out[6]=0;out[7]=0;
+    out[8]=0;out[9]=0;out[10]=(f+n)*nf;out[11]=-1;
+    out[12]=0;out[13]=0;out[14]=2*f*n*nf;out[15]=0;
+  }
+  function lookAt(out,e,c,u){
+    let zx=e[0]-c[0],zy=e[1]-c[1],zz=e[2]-c[2],zl=Math.hypot(zx,zy,zz);
+    zx/=zl;zy/=zl;zz/=zl;
+    let xx=u[1]*zz-u[2]*zy,xy=u[2]*zx-u[0]*zz,xz=u[0]*zy-u[1]*zx,xl=Math.hypot(xx,xy,xz);
+    xx/=xl;xy/=xl;xz/=xl;
+    let yx=zy*xz-zz*xy,yy=zz*xx-zx*xz,yz=zx*xy-zy*xx;
+    out[0]=xx;out[1]=yx;out[2]=zx;out[3]=0;
+    out[4]=xy;out[5]=yy;out[6]=zy;out[7]=0;
+    out[8]=xz;out[9]=yz;out[10]=zz;out[11]=0;
+    out[12]=-(xx*e[0]+xy*e[1]+xz*e[2]);
+    out[13]=-(yx*e[0]+yy*e[1]+yz*e[2]);
+    out[14]=-(zx*e[0]+zy*e[1]+zz*e[2]);
+    out[15]=1;
+  }
+  function project(p,v,m){
+    const a=[0,0,0,0],c=[0,0,0,0];
+    for(let r=0;r<4;r++)a[r]=v[r]*p[0]+v[4+r]*p[1]+v[8+r]*p[2]+v[12+r];
+    for(let r=0;r<4;r++)c[r]=m[r]*a[0]+m[4+r]*a[1]+m[8+r]*a[2]+m[12+r]*a[3];
+    if(c[3]<=0)return null;
+    return{x:(c[0]/c[3]*.5+.5)*W,y:(1-(c[1]/c[3]*.5+.5))*H};
+  }
+
+
+  const proj=new Float32Array(16),view=new Float32Array(16);
+  const pathResult=[0,0,0];
+  function path(q,idx,strand=0){
+    const target=targets[idx],e=smooth(q),arc=Math.sin(q*Math.PI),side=idx===0||idx===3?-1:1;
+    const twist=q*TAU*1.3+strand*TAU/5-time*.18;
+    const spread=strand<0?0:.075*arc;
+    pathResult[0]=target[0]*e+Math.sin(twist)*spread;
+    pathResult[1]=target[1]*e+arc*(idx<2?.36:-.26)+Math.cos(twist)*spread;
+    pathResult[2]=target[2]*e+arc*side*.48+Math.sin(twist)*spread;
+    return pathResult;
+  }
+  function rebuild(){
+    pointCount=lineCount=0;
+    const cr=centerTone[0],cg=centerTone[1],cb=centerTone[2],breath=1+Math.sin(time*.85)*.035;
+    // Wide, low-opacity sprites create a luminous atmosphere without a postprocessing pass.
+    point(0,0,-.2,cr,cg,cb,235,.14+pulseStrength*.06);
+    point(0,0,.15,.55,.85,1,110,.18+pulseStrength*.08);
+    const coreCount=mobile?620:1000,coreScale=mobile?.85:1.15;
+    for(let i=0;i<coreCount;i++){
+      const y=1-2*(i+.5)/coreCount,a=i*2.39996323+time*.16,s=Math.sqrt(1-y*y),wave=Math.sin(a*3+y*8+time*.8);
+      const radius=(.66+wave*.05+rand(i+2300)*.10)*breath*coreScale;
+      const x=Math.cos(a)*s*radius,z=Math.sin(a)*s*radius;
+      const ripple=1+Math.max(0,1-pulseAge/1.2)*.13;
+      point(x*ripple,y*radius*ripple,z*ripple,cr+.11,cg+.05,cb,1.5+rand(i+3400)*2.5,.32+rand(i+4400)*.52);
+    }
+    // A second rotating shell makes the shared signal feel volumetric.
+    for(let i=0;i<240;i++){
+      const a=rand(i+5600)*TAU+time*.09,b=rand(i+5900)*TAU,r=(.14+rand(i+6300)*.52)*coreScale;
+      point(Math.cos(a)*Math.sin(b)*r,Math.cos(b)*r,Math.sin(a)*Math.sin(b)*r,.56,.83,1,2+rand(i+6600)*3,.45);
+    }
+    // Tilted luminous orbits, with brighter moving packets around each ellipse.
+    for(let ring=0;ring<3;ring++){
+      const tilt=.35+ring*.78,r=(1.0+ring*.11)*coreScale;let px=0,py=0,pz=0;
+      for(let i=0;i<=180;i++){
+        const a=i/180*TAU+time*(ring===1?-.10:.08),x=Math.cos(a)*r,y=Math.sin(a)*r*Math.sin(tilt),z=Math.sin(a)*r*Math.cos(tilt);
+        if(i)line(px,py,pz,x,y,z,cr,cg,cb,.10);
+        if(i%2===0)point(x,y,z,cr,cg,cb,1.4,.27);
+        px=x;py=y;pz=z;
+      }
+      const a=time*(.35+ring*.09)+ring*2;
+      point(Math.cos(a)*r,Math.sin(a)*r*Math.sin(tilt),Math.sin(a)*r*Math.cos(tilt),.7,.91,1,7,.9);
+    }
+    // The incoming stream arrives from depth, curling into the center.
+    for(let i=0;i<(mobile?160:270);i++){
+      const q=(rand(i+7300)+time*.14)%1,fade=Math.sin(q*Math.PI),a=q*8+rand(i+7600)*TAU+time*.20,width=(1-q)*.18;
+      const x=-4.6*(1-q),y=-.35*(1-q)+Math.sin(q*TAU)*.20+Math.sin(a)*width,z=-2.9*(1-q)+Math.cos(a)*width;
+      point(x,y,z,.96,.49+q*.25,.55+q*.4,1.8+rand(i+7900)*2.8,fade*.56);
+    }
+    for(let idx=0;idx<4;idx++){
+      const target=targets[idx],color=tones[idx],w=weights[idx],r=color[0],g=color[1],b=color[2];
+      // Five fine strands instead of a single flat connecting line.
+      for(let strand=0;strand<5;strand++){
+        let px=0,py=0,pz=0;
+        for(let k=1;k<=65;k++){
+          const q=k/65,p=path(q,idx,strand);
+          line(px,py,pz,p[0],p[1],p[2],r,g,b,(.11+strand*.012)*w*Math.sin(q*Math.PI));px=p[0];py=p[1];pz=p[2];
+        }
+      }
+      // Individual light packets carry the event outward into each interpretation.
+      for(let j=0;j<(mobile?74:125);j++){
+        const q=(rand(8300+idx*150+j)+time*(.11+idx*.012))%1,p=path(q,idx,j%5),spread=Math.sin(q*Math.PI)*.11;
+        point(p[0]+(rand(9100+j)-.5)*spread,p[1]+(rand(9400+j)-.5)*spread,p[2]+(rand(9800+j)-.5)*spread,r,g,b,1.6+rand(10100+j)*2.8,Math.sin(q*Math.PI)*.72*w);
+      }
+      if(pulseAge<3.3){
+        const head=clamp(pulseAge/2.3,0,1);
+        for(let j=0;j<24;j++){
+          const q=head-j*.006;if(q<0||q>1)continue;const p=path(q,idx,-1);
+          point(p[0],p[1],p[2],r,g,b,8-j*.21,(1-j/24)*w*Math.min(1,(3.3-pulseAge)*1.5));
+        }
+      }
+      const cloudScale=(mobile?.62:.78)*(1+Math.max(0,w-1)*.12),count=mobile?180:270;
+      point(target[0],target[1],target[2],r,g,b,145*cloudScale,.13*w);
+      for(let j=0;j<count;j++){
+        const a=rand(10600+idx*300+j)*TAU+time*(.07+idx*.012),v=2*rand(11800+idx*300+j)-1,radial=Math.sqrt(1-v*v);
+        const shell=(.38+rand(13100+idx*300+j)*.42)*cloudScale;
+        const deform=1+Math.sin(a*3+time*.45+v*4)*.12;
+        point(target[0]+Math.cos(a)*radial*shell*deform,target[1]+v*shell*.83,target[2]+Math.sin(a)*radial*shell,r,g,b,1.4+rand(14500+j)*2.8,(.35+rand(15000+j)*.45)*w);
+      }
+      // A quiet expanding halo registers the arrival of the deliberate pulse.
+      const arrival=pulseAge-2.05;
+      if(arrival>0&&arrival<2.2){
+        const radius=(.20+arrival*.47)*cloudScale;
+        for(let j=0;j<100;j++){const a=j/100*TAU;point(target[0]+Math.cos(a)*radius,target[1]+Math.sin(a)*radius,target[2],r,g,b,2,(1-arrival/2.2)*.7*w);}
+      }
+    }
+    // A sparse orbital horizon gives the field scale, without competing with the meanings.
+    for(let ring=0;ring<2;ring++){
+      const radius=4.8+ring*1.0;
+      for(let j=0;j<240;j++){const a=j/240*TAU+time*.012;point(Math.cos(a)*radius,-1.2+Math.sin(a*2)*.05,Math.sin(a)*radius,.23,.39,.58,1.25,.16);}
+    }
+    if(pulseAge<3.7){
+      const r=.8+pulseAge*1.5,alpha=Math.max(0,1-pulseAge/3.7)*.38;
+      for(let j=0;j<250;j++){const a=j/250*TAU;point(Math.cos(a)*r,Math.sin(a)*r*.43,Math.sin(a)*r*.65,cr,cg,cb,1.7,alpha);}
+    }
+  }
+  function draw(program,buffer,count,mode,dustPass=0){
+    gl.useProgram(program.p);gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+    const sizes=[3,3,1,1],offsets=[0,12,24,28];
+    program.attrs.forEach((loc,i)=>{if(loc>=0){gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,sizes[i],gl.FLOAT,false,32,offsets[i]);}});
+    const u=program.uniforms;gl.uniformMatrix4fv(u.uProj,false,proj);gl.uniformMatrix4fv(u.uView,false,view);gl.uniform1f(u.uDpr,DPR);gl.uniform1f(u.uTime,time);gl.uniform1f(u.uDust,dustPass);
+    gl.drawArrays(mode,0,count);
+  }
+  function requestRender(){if(ready&&!raf&&!document.hidden&&!lost)raf=requestAnimationFrame(animate);}
+  function animate(now){
+    raf=0;if(lost||document.hidden)return;
+    const dt=last?Math.min(.05,(now-last)/1000):1/60;last=now;
+    const motion=paused?0:dt,ease=paused?1:1-Math.exp(-dt*3),slow=paused?1:1-Math.exp(-dt*2);
+    time+=motion;pulseAge+=motion;pulseStrength=Math.max(0,1-pulseAge/2.4);
+    // A paused scene still updates once in response to deliberate control changes.
+    pointer.x=mix(pointer.x,paused?0:pointer.tx,ease);pointer.y=mix(pointer.y,paused?0:pointer.ty,ease);
+    orbit.x=mix(orbit.x,orbit.tx,ease);orbit.y=mix(orbit.y,orbit.ty,ease);zoom=mix(zoom,zoomTarget,ease);focusAmount=mix(focusAmount,selectedBranch<0?0:1,slow);
+    const sig=signals[selectedSignal];
+    for(let i=0;i<4;i++){
+      const b=sig.branches[i],side=i===0||i===3?-1:1;
+      targets[i][0]=mobile?side*1.42:b[2][0]*.91;targets[i][1]=mobile?(i<2?1.40:-1.40):b[2][1];targets[i][2]=b[2][2]*.65;
+      weights[i]=mix(weights[i],selectedBranch<0?1:(selectedBranch===i?1.65:.22),ease);
+      for(let j=0;j<3;j++)tones[i][j]=mix(tones[i][j],b[3][j],ease);
+    }
+    const focus=selectedBranch<0?null:targets[selectedBranch],tone=selectedBranch<0?[.40,.77,1]:tones[selectedBranch];
+    for(let j=0;j<3;j++){look[j]=mix(look[j],focus?focus[j]*(mobile?.10:.17):0,slow);centerTone[j]=mix(centerTone[j],tone[j],slow);}
+    const fov=.82,tan=Math.tan(fov/2),available=Math.max(130,layoutBottom-layoutTop);
+    const desiredRadius=immersed?Math.max(7.8,(mobile?2.6:4.8)/(tan*(W/H))):Math.max(8.8,(mobile?2.9:5.15)/(tan*(W/H)),(mobile?2.75:2.15)*H/(tan*available));
+    cameraRadius=mix(cameraRadius,desiredRadius,slow);sceneCenter=mix(sceneCenter,sceneCenterTarget,slow);
+    const radius=cameraRadius*zoom*(1-focusAmount*(mobile?.015:.045));
+    const yaw=Math.sin(time*.075)*.105+pointer.x*.095+orbit.x,pitch=.12+pointer.y*.045+orbit.y;
+    eye[0]=look[0]+Math.sin(yaw)*radius;eye[1]=look[1]+Math.sin(pitch)*radius;eye[2]=look[2]+Math.cos(yaw)*Math.cos(pitch)*radius;
+    lookAt(view,eye,look,[0,1,0]);perspective(proj,fov,W/H,.1,65);proj[9]=sceneCenter*2-1;
+    rebuild();
+    gl.clear(gl.COLOR_BUFFER_BIT);
+    draw(pointProg,dustBuffer,dustCount,gl.POINTS,1);
+    gl.bindBuffer(gl.ARRAY_BUFFER,lineBuffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,lines.subarray(0,lineCount*8));draw(lineProg,lineBuffer,lineCount,gl.LINES);
+    gl.bindBuffer(gl.ARRAY_BUFFER,pointBuffer);gl.bufferSubData(gl.ARRAY_BUFFER,0,points.subarray(0,pointCount*8));draw(pointProg,pointBuffer,pointCount,gl.POINTS);
+    const minY=layoutTop+18,maxY=Math.max(minY+24,layoutBottom-12);
+    [...labels.children].forEach((el,i)=>{
+      const p=project(targets[i],view,proj);if(!p){el.style.opacity='0';return;}
+      const selected=selectedBranch===i,half=labelSizes[i][0]+10,halfHeight=labelSizes[i][1];
+      // Labels sit outside each cloud; clamp them to the usable stage on narrow screens.
+      const y=p.y+(i<2?-1:1)*(mobile?34:48);
+      el.style.left=(mobile?W*(i===0||i===3?.25:.75):clamp(p.x,half,W-half))+'px';el.style.top=clamp(y,Math.max(minY,layoutTop+halfHeight),Math.max(layoutTop+halfHeight,Math.min(maxY,layoutBottom-halfHeight+10)))+'px';
+      el.style.opacity=selectedBranch<0||selected?'1':'.55';el.style.transform=`translate(-50%,-50%) scale(${selected?1.035:1})`;
+    });
+    const center=project([0,0,0],view,proj),caption=document.getElementById('sceneCaption');
+    if(center){caption.style.left=center.x+'px';caption.style.top=(center.y+Math.min(mobile?54:78,H*.105))+'px';caption.style.opacity=immersed?'0':selectedBranch<0?'.85':'.28';}
+    if(!paused)requestRender();
+  }
+  ready=true;resize();updateSelection();
+  sceneCenter=sceneCenterTarget;cameraRadius=Math.max(8.8,(mobile?2.9:5.15)/(Math.tan(.41)*(W/H)),(mobile?2.75:2.15)*H/(Math.tan(.41)*Math.max(130,layoutBottom-layoutTop)));
+})();
+</script>
+</body>
+</html>

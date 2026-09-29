@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Thu, 24 Sep 2026 22:50:00 +02:00</lastBuildDate>
+    <lastBuildDate>Tue, 29 Sep 2026 22:25:00 +02:00</lastBuildDate>
+
+    <item>
+      <title>The Somatic Prism</title>
+      <link>https://rruxandra.github.io/the-somatic-prism.html</link>
+      <description>One event can arrive at several minds as several different worlds. The signal is the same; the interpretation emerges from context, memory, need, fear and desire.</description>
+      <pubDate>Tue, 29 Sep 2026 22:25:00 +02:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-somatic-prism.html</guid>
+    </item>
 
     <item>
       <title>Stop the World</title>
