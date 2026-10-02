@@ -123,7 +123,7 @@
   const buttons=document.getElementById('signalButtons');
   const descEl=document.getElementById('signalDesc');
   const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
-  let paused=reducedMotion.matches,immersed=false,selectedSignal=0,selectedBranch=-1;
+  let paused=false,immersed=false,selectedSignal=0,selectedBranch=-1;
   let time=0,last=0,raf=0,W=1,H=1,DPR=1,mobile=false,sceneCenterTarget=.54;
   let pulseAge=20,pulseStrength=0,zoom=1,zoomTarget=1,focusAmount=0;
   let sceneCenter=.54,layoutTop=0,layoutBottom=0,cameraRadius=9;
@@ -229,7 +229,7 @@
     document.getElementById('hint').textContent=paused?'Motion paused · choose a signal or a meaning':'Move to explore · drag to orbit · tap the field to send a pulse';
   }
   pauseButton.addEventListener('click',()=>{paused=!paused;last=0;updatePause();requestRender();});
-  reducedMotion.addEventListener('change',e=>{paused=e.matches;last=0;updatePause();requestRender();});
+  reducedMotion.addEventListener('change',()=>{last=0;requestRender();});
   document.getElementById('pulseButton').addEventListener('click',pulse);
   const immerseButton=document.getElementById('immerseButton');
   function setImmersed(value){
@@ -263,11 +263,13 @@
     if(!paused)requestRender();
   });
   document.documentElement.addEventListener('pointerleave',()=>{pointer.tx=pointer.ty=0;});
-  canvas.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag.active=true;drag.id=e.pointerId;drag.x=drag.startX=e.clientX;drag.y=drag.startY=e.clientY;drag.moved=false;canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener('pointerdown',e=>{if(e.pointerType==='mouse'&&e.button!==0)return;drag.active=true;drag.id=e.pointerId;drag.x=drag.startX=e.clientX;drag.y=drag.startY=e.clientY;drag.moved=false;try{canvas.setPointerCapture(e.pointerId);}catch(_){}});
   canvas.addEventListener('pointerup',e=>{if(drag.id!==e.pointerId)return;const click=!drag.moved;drag.active=false;drag.id=null;if(click)pulse();});
   canvas.addEventListener('pointercancel',()=>{drag.active=false;drag.id=null;});
   canvas.addEventListener('wheel',e=>{e.preventDefault();zoomTarget=clamp(zoomTarget+e.deltaY*.0004,.88,1.16);requestRender();},{passive:false});
   document.addEventListener('visibilitychange',()=>{if(document.hidden){cancelAnimationFrame(raf);raf=0;}else{last=0;requestRender();}});
+  window.addEventListener('pageshow',()=>{last=0;requestRender();});
+  window.addEventListener('focus',()=>{last=0;requestRender();});
   buildLabels();updatePause();
   function staticFallback(message){
     ready=false;cancelAnimationFrame(raf);raf=0;document.body.classList.add('no-webgl');
@@ -467,11 +469,11 @@
     const u=program.uniforms;gl.uniformMatrix4fv(u.uProj,false,proj);gl.uniformMatrix4fv(u.uView,false,view);gl.uniform1f(u.uDpr,DPR);gl.uniform1f(u.uTime,time);gl.uniform1f(u.uDust,dustPass);
     gl.drawArrays(mode,0,count);
   }
-  function requestRender(){if(ready&&!raf&&!document.hidden&&!lost)raf=requestAnimationFrame(animate);}
+  function requestRender(){if(ready&&!raf&&!lost)raf=requestAnimationFrame(animate);}
   function animate(now){
     raf=0;if(lost||document.hidden)return;
     const dt=last?Math.min(.05,(now-last)/1000):1/60;last=now;
-    const motion=paused?0:dt,ease=paused?1:1-Math.exp(-dt*3),slow=paused?1:1-Math.exp(-dt*2);
+    const motion=paused?0:(reducedMotion.matches?dt*.4:dt),ease=paused?1:1-Math.exp(-dt*3),slow=paused?1:1-Math.exp(-dt*2);
     time+=motion;pulseAge+=motion;pulseStrength=Math.max(0,1-pulseAge/2.4);
     // A paused scene still updates once in response to deliberate control changes.
     pointer.x=mix(pointer.x,paused?0:pointer.tx,ease);pointer.y=mix(pointer.y,paused?0:pointer.ty,ease);
@@ -512,6 +514,9 @@
   }
   ready=true;resize();updateSelection();
   sceneCenter=sceneCenterTarget;cameraRadius=Math.max(8.8,(mobile?2.9:5.15)/(Math.tan(.41)*(W/H)),(mobile?2.75:2.15)*H/(Math.tan(.41)*Math.max(130,layoutBottom-layoutTop)));
+  requestRender();
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',()=>{resize();requestRender();});}
+  setTimeout(()=>{resize();requestRender();},120);
 })();
 </script>
 
