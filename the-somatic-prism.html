@@ -97,7 +97,7 @@
     <p class="subtitle">One event. Several inner worlds.<br>Meaning emerges from context, memory, need, fear and desire.</p>
   </div>
   <section class="panel" aria-label="Choose an incoming signal">
-    <div class="panel-title"><span>Incoming signal</span><span id="signalIndex">01 / 03</span></div>
+    <div class="panel-title"><span>Incoming signal</span><span id="signalIndex">01 / 04</span></div>
     <div class="row" id="signalButtons"></div>
     <p class="signal-desc" id="signalDesc">The same fever, ache or fatigue can be read as danger — or as a reason to ask, “what do I need right now?”</p>
   </section>
@@ -165,6 +165,17 @@
         ["Need for company","talk · connect · be seen",[2.86,-1.46,-.82],[.90,.67,1]],
         ["Need for novelty","change scene · play · move",[-3.06,-1.38,.62],[.62,1,.82]]
       ]
+    },
+    {
+      name:"Caloric deficit",
+      title:"Signal / Metabolic depletion",
+      text:"A deficit of fuel can trigger adrenaline and hollow the gut — easily misread as anxiety, weaponized as discipline, felt as an ache of yearning, or heard simply as a request to eat.",
+      branches:[
+        ["Existential dread","cortisol surge · hollow gut · scan for threat",[-3.44,1.22,-.22],[.96,.58,.68]],
+        ["Ascetic control","override hunger · pride in restraint · harness the rush",[3.42,1.05,.16],[.52,.84,1]],
+        ["Yearning","visceral hollow · mistake fuel for love · ache for connection",[2.86,-1.46,-.82],[.94,.58,.82]],
+        ["Simple hunger","drop the narrative · listen inward · prepare food",[-3.10,-1.38,.62],[.58,.96,.74]]
+      ]
     }
   ];
 
@@ -172,7 +183,8 @@
   const readings=[
     ["The same sensation becomes a request for care.","The same sensation becomes a problem to solve.","The same sensation becomes a wish to be held.","The same sensation becomes a reason to turn inward."],
     ["An ambiguous reply becomes a story about danger.","An ambiguous reply becomes a reason to retreat.","An ambiguous reply remains a few words on a screen.","An ambiguous reply can coexist with a steady sense of self."],
-    ["Low energy becomes permission to slow down.","Low energy becomes a request for nourishment.","Low energy becomes a longing for connection.","Low energy becomes an invitation to change something."]
+    ["Low energy becomes permission to slow down.","Low energy becomes a request for nourishment.","Low energy becomes a longing for connection.","Low energy becomes an invitation to change something."],
+    ["A caloric deficit becomes an unexplained story of dread.","A caloric deficit becomes proof of discipline and self-mastery.","A caloric deficit becomes a tender ache for love and connection.","A caloric deficit becomes an uncomplicated biological call to eat."]
   ];
   const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
   const mix=(a,b,t)=>a+(b-a)*t;
@@ -187,7 +199,7 @@
     [...buttons.children].forEach((b,i)=>{b.classList.toggle('active',i===selectedSignal);b.setAttribute('aria-pressed',String(i===selectedSignal));});
     [...labels.children].forEach((b,i)=>{b.classList.toggle('active',i===selectedBranch);b.setAttribute('aria-pressed',String(i===selectedBranch));});
     descEl.textContent=sig.text;
-    document.getElementById('signalIndex').textContent=`0${selectedSignal+1} / 03`;
+    document.getElementById('signalIndex').textContent=`${String(selectedSignal+1).padStart(2,'0')} / ${String(signals.length).padStart(2,'0')}`;
     document.getElementById('readoutKicker').textContent=selectedBranch<0?'Same event · different inner worlds':sig.branches[selectedBranch][0];
     document.getElementById('readoutText').textContent=selectedBranch<0?'Choose a meaning. Notice how the world reorganizes around it.':readings[selectedSignal][selectedBranch];
     const color=selectedBranch<0?[.60,.84,1]:sig.branches[selectedBranch][3];
