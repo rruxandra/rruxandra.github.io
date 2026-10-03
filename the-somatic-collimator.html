@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#060d0a">
+<title>The Somatic Collimator · Signal → Action</title>
+<style>
+  :root {
+    --bg:      #060d0a;
+    --ink:     #e2efe8;
+    --ink-dim: #6e8e7e;
+    --ink-bright: #ffffff;
+    --accent:  #50ffb4;
+    --accent-dim: rgba(80, 255, 180, 0.12);
+    --rule:    rgba(255, 255, 255, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 17px;
+    line-height: 1.72;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+  }
+
+  /* ── Fixed WebGL background ── */
+  canvas#field {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background:
+      /* Subtle center reading mask: keeps text readable while letting animation shine through */
+      linear-gradient(to right, transparent 0%, rgba(6,13,10,0.26) 28%, rgba(6,13,10,0.48) 50%, rgba(6,13,10,0.26) 72%, transparent 100%),
+      /* Soft top and bottom edge vignettes */
+      linear-gradient(to bottom, rgba(6,13,10,0.30) 0%, transparent 16%, transparent 84%, rgba(6,13,10,0.5) 100%);
+  }
+
+  .grain {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    opacity: .025;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Cpath fill='%23fff' filter='url(%23n)' opacity='.4' d='M0 0h160v160H0z'/%3E%3C/svg%3E");
+  }
+
+  /* ── Reading rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: '';
+    position: absolute; top: 0; left: -1px;
+    width: 2px; height: var(--p, 0%);
+    background: var(--accent);
+    opacity: 0.5;
+    transition: height 0.15s linear;
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: fixed; top: 24px; left: 24px; z-index: 50;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .back {
+    font-size: 12px;
+    color: var(--ink-dim);
+    background: rgba(6, 13, 10, 0.8);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .back:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.2); }
+
+  .meta-date {
+    position: fixed; top: 24px; right: 28px; z-index: 50;
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+
+  /* ── Main reading content ── */
+  main {
+    position: relative; z-index: 10;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 130px 24px 90px;
+  }
+
+  h1 {
+    font-size: 2.2rem;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--ink-bright);
+    margin: 0 0 0.5rem 0;
+    text-shadow: 0 2px 20px rgba(0, 0, 0, 0.9);
+  }
+
+  .kicker {
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    opacity: 0.7;
+    margin-bottom: 12px;
+    display: block;
+    text-shadow: 0 0 20px rgba(80, 255, 180, 0.3);
+  }
+
+  .subtitle {
+    font-size: 15px;
+    color: var(--ink-dim);
+    margin-bottom: 1.6rem;
+    line-height: 1.6;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  p {
+    font-size: 17px;
+    color: #ddeee5;
+    margin: 0 0 1.05rem 0;
+    text-shadow: 0 1px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  p em { font-style: italic; color: inherit; }
+
+
+  h2 {
+    font-size: 1.15rem;
+    font-weight: 550;
+    color: var(--ink-bright);
+    margin: 2.2rem 0 0.75rem;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.8);
+  }
+
+  h2 .signal-arrow {
+    color: var(--accent);
+    opacity: 0.6;
+    margin: 0 0.3em;
+  }
+
+  .highlight {
+    color: var(--accent);
+    opacity: 0.85;
+  }
+
+  .indent {
+    padding-left: 1.2em;
+    border-left: 2px solid var(--accent-dim);
+    margin: 0.9rem 0 1.1rem;
+    color: #b0d4c2;
+    font-size: 16px;
+  }
+
+  .caption {
+    font-size: 13px;
+    color: var(--ink-dim);
+    margin-top: -0.8rem;
+    margin-bottom: 2rem;
+    opacity: 0.7;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-size: 12px;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+  }
+  footer a { color: inherit; text-decoration: none; }
+  footer a:hover { color: #ffffff; }
+
+  @media (max-width: 640px) {
+    .nav { left: 16px; top: 16px; }
+    .meta-date { display: none; }
+    main { padding: 100px 20px 80px; }
+    h1 { font-size: 1.75rem; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="field"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="rail"></div>
+
+<div class="nav">
+  <a class="back" href="index.html">← Log</a>
+</div>
+<div class="meta-date">2026.10.03</div>
+
+<main>
+  <h1>The somatic collimator / a follow-up</h1>
+  <p class="subtitle">What if every signal carried enough data to be read exactly as it is, and every system had enough sensors to act on it precisely?</p>
+
+  <p>
+    What if the nervous system were <em>perfect?</em>
+  </p>
+
+  <p>
+    Not more resilient. Not wiser. <em>Perfectly calibrated.</em> Enough sensors, enough resolution, enough data to pinpoint exactly what every signal means and route it to the precisely correct action. No ambiguity. No narrative. No gap between sensing something and knowing what it is.
+  </p>
+
+  <p>
+    This is not an impossible thought experiment. It's the logical end of the trajectory we're already on. Every biosensor, every wearable, every diagnostic model, every real-time analytics pipeline moves us one step closer to a world where signals don't need to be <em>interpreted</em>; they only need to be <em>recognized.</em>
+  </p>
+
+  <h2>The body as API</h2>
+
+  <p>
+    In a perfectly calibrated world, the body is an API. A glucose drop is a glucose drop: not anxiety, not discipline, not longing. The system reads the signal, identifies the deficit, and acts. The narrative never forms.
+  </p>
+
+  <p class="indent">
+    Signal: low serotonin precursor<span class="signal-arrow"> → </span>Action: targeted amino acid intake.<br>
+    The fridge loses its emotional gravity. No more comfort food.
+  </p>
+
+  <p class="indent">
+    Signal: prefrontal cortex glycogen depletion<span class="signal-arrow"> → </span>Action: sleep trigger sequence.<br>
+    The feed loses its hypnotic gravity. No more losing two hours to an algorithmic trance.
+  </p>
+
+  <p class="indent">
+    Signal: cortisol spike from social threat<span class="signal-arrow"> → </span>Action: boundary adjustment.<br>
+    Not a pill, not a doctor, not panic. The psychosomatic pathway never opens.
+  </p>
+
+  <p>
+    Comfort food is a misrouted signal: fuel need dressed as emotional need. Perfect calibration undresses it. Doomscrolling requires fatigue to be ambiguous enough to mistake for curiosity; clarity breaks the trance. Half of chronic pain is the nervous system misclassifying social threat as tissue damage. Resolve the classifier, and the pain dissolves.
+  </p>
+
+  <h2>Zero-packet-loss semantics</h2>
+
+  <p>
+    If every message came with full telemetry (tone, intent, emotional state, context), there would be nothing left to misread. No subtext. No passive aggression. No poetry.
+  </p>
+
+  <p>
+    Subtext is a compression artifact of low-bandwidth communication. Full-duplex emotional telemetry makes it obsolete. Ghosting only works because silence is ambiguous; in a calibrated world, silence has a return code. The love letter exists because longing requires a gap between signal and fulfillment. Close the gap; lose the letter.
+  </p>
+
+  <h2>Metaphor as lossy compression</h2>
+
+  <p>
+    Art exists in the gap between what a signal <em>is</em> and what it <em>might mean.</em> Perfect calibration closes that gap. Would anything remain to create?
+  </p>
+
+  <p>
+    Metaphor is lossy compression of a state that lacks a direct channel. Build the channel; lose the poem. Music is the scenic route to a neurochemical destination. With direct access, who takes the long way home? A cathedral is a building where the <em>excess</em> (the light, the height, the silence) is the point. Calibration has no concept of excess.
+  </p>
+
+  <p>
+    The debugging epiphany is the most interesting loss. That aha moment in the shower, the elegant hack at 3am: it's a misclassified background thread completing. It's a signal that was <em>too noisy to read</em> in real time, so it resolved itself offline and delivered the answer as a flash of insight. Beautiful. But in a calibrated world, the fault is identified, the patch is applied, and you never get to feel that particular joy.
+  </p>
+
+  <h2>Latency as substrate</h2>
+
+  <p>
+    The Somatic Prism showed that one signal becomes many worlds. This follow-up asks: what if you collapsed all those worlds into one? What if meaning were never constructed, only recognized?
+  </p>
+
+  <p>
+    The answer is unsettling. You get a world of extraordinary efficiency and zero unnecessary suffering, but also a world without art, without longing, without the particular human experience of <em>not knowing what you feel</em> and building something in the space of that not-knowing.
+  </p>
+
+  <p>
+    Every poem is a routing failure. Every love letter is a latency artifact. Every cathedral is an unoptimized allocation. Every startup is a patch for a network that hasn't finished indexing.
+  </p>
+
+  <p>
+    The gap between signal and meaning is where most of human culture lives. It is wasteful, painful, and the source of most of our confusion. It is also the only place where anything truly <em>new</em> can be made.
+  </p>
+
+  <p>
+    A perfectly collimated world would work flawlessly. But would it <em>matter?</em>
+  </p>
+
+  <footer>
+    <span>No. 24</span>
+    <a href="index.html">Signal Log</a>
+  </footer>
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  // ── Reading rail ──
+  function updateProgress() {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    const p = total > 0 ? (window.scrollY / total) * 100 : 0;
+    document.documentElement.style.setProperty('--p', `${p}%`);
+  }
+  window.addEventListener('scroll', updateProgress, { passive: true });
+  updateProgress();
+
+  // ── WebGL signal-routing field ──
+  const canvas = document.getElementById('field');
+  const gl = canvas.getContext('webgl', {
+    antialias: false, alpha: true, premultipliedAlpha: true, powerPreference: 'low-power'
+  });
+  if (!gl) return; // graceful fallback: text still readable
+
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let W, H, time = 0, lastTime = 0;
+  let mouseX = 0, mouseY = 0, targetMx = 0, targetMy = 0;
+  let scrollY = 0, scrollTarget = 0;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  window.addEventListener('mousemove', e => {
+    targetMx = (e.clientX / W - 0.5) * 2;
+    targetMy = (e.clientY / H - 0.5) * 2;
+  }, { passive: true });
+
+  window.addEventListener('scroll', () => {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    scrollTarget = total > 0 ? window.scrollY / total : 0;
+  }, { passive: true });
+
+  // ── Shaders ──
+  const vertexSrc = `
+    attribute vec3 aPos;
+    attribute vec3 aCol;
+    attribute float aSize;
+    attribute float aAlpha;
+    uniform mat4 uProj, uView;
+    uniform float uDpr;
+    varying vec3 vCol;
+    varying float vAlpha;
+    void main() {
+      vec4 mv = uView * vec4(aPos, 1.0);
+      gl_Position = uProj * mv;
+      float depth = max(0.5, -mv.z);
+      gl_PointSize = clamp(aSize * uDpr * 14.0 / depth, 1.0, 200.0 * uDpr);
+      float fog = 1.0 - smoothstep(14.0, 40.0, depth);
+      vCol = aCol;
+      vAlpha = aAlpha * fog * smoothstep(0.3, 2.0, depth);
+    }`;
+
+  const fragmentSrc = `
+    precision mediump float;
+    varying vec3 vCol;
+    varying float vAlpha;
+    void main() {
+      float d = length(gl_PointCoord - 0.5) * 2.0;
+      float halo = exp(-d * d * 5.0) * (1.0 - smoothstep(0.65, 1.0, d));
+      float core = exp(-d * d * 48.0);
+      gl_FragColor = vec4(vCol, vAlpha * (halo * 0.6 + core * 0.85));
+    }`;
+
+  const lineFrag = `
+    precision mediump float;
+    varying vec3 vCol;
+    varying float vAlpha;
+    void main() { gl_FragColor = vec4(vCol, vAlpha); }`;
+
+  function compile(type, src) {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src);
+    gl.compileShader(s);
+    return s;
+  }
+
+  function makeProgram(frag) {
+    const p = gl.createProgram();
+    const vs = compile(gl.VERTEX_SHADER, vertexSrc);
+    const fs = compile(gl.FRAGMENT_SHADER, frag);
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    const locs = {};
+    ['aPos','aCol','aSize','aAlpha'].forEach(n => locs[n] = gl.getAttribLocation(p, n));
+    ['uProj','uView','uDpr'].forEach(n => locs[n] = gl.getUniformLocation(p, n));
+    return { p, locs };
+  }
+
+  const pointProg = makeProgram(fragmentSrc);
+  const lineProg = makeProgram(lineFrag);
+
+  // Buffers
+  const MAX_POINTS = 12000, MAX_LINES = 8000;
+  const points = new Float32Array(MAX_POINTS * 8);
+  const lines = new Float32Array(MAX_LINES * 8);
+  let pointCount = 0, lineCount = 0;
+
+  const pointBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, pointBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, points.byteLength, gl.DYNAMIC_DRAW);
+
+  const lineBuf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, lineBuf);
+  gl.bufferData(gl.ARRAY_BUFFER, lines.byteLength, gl.DYNAMIC_DRAW);
+
+  gl.disable(gl.DEPTH_TEST);
+  gl.enable(gl.BLEND);
+  gl.blendFuncSeparate(gl.SRC_ALPHA, gl.ONE, gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+  gl.clearColor(0, 0, 0, 0);
+
+  // Deterministic random
+  const randoms = new Float32Array(16000);
+  let seed = 4217;
+  for (let i = 0; i < randoms.length; i++) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    randoms[i] = seed / 4294967296;
+  }
+  const rand = i => randoms[i % randoms.length];
+
+  const TAU = Math.PI * 2;
+
+  function addPoint(x, y, z, r, g, b, size, alpha) {
+    if (pointCount >= MAX_POINTS) return;
+    const j = pointCount * 8;
+    points[j]=x; points[j+1]=y; points[j+2]=z;
+    points[j+3]=r; points[j+4]=g; points[j+5]=b;
+    points[j+6]=size; points[j+7]=alpha;
+    pointCount++;
+  }
+
+  function addLine(ax,ay,az, bx,by,bz, r,g,b, alpha) {
+    if (lineCount >= MAX_LINES - 1) return;
+    const j1 = lineCount * 8;
+    lines[j1]=ax; lines[j1+1]=ay; lines[j1+2]=az;
+    lines[j1+3]=r; lines[j1+4]=g; lines[j1+5]=b;
+    lines[j1+6]=1; lines[j1+7]=alpha;
+    lineCount++;
+    const j2 = lineCount * 8;
+    lines[j2]=bx; lines[j2+1]=by; lines[j2+2]=bz;
+    lines[j2+3]=r; lines[j2+4]=g; lines[j2+5]=b;
+    lines[j2+6]=1; lines[j2+7]=alpha;
+    lineCount++;
+  }
+
+  // ── Matrix helpers ──
+  const proj = new Float32Array(16), view = new Float32Array(16);
+
+  function perspective(out, fov, aspect, n, f) {
+    const q = 1 / Math.tan(fov / 2), nf = 1 / (n - f);
+    out.fill(0);
+    out[0] = q / aspect; out[5] = q;
+    out[10] = (f + n) * nf; out[11] = -1;
+    out[14] = 2 * f * n * nf;
+  }
+
+  function lookAt(out, e, c, u) {
+    let zx=e[0]-c[0], zy=e[1]-c[1], zz=e[2]-c[2], zl=Math.hypot(zx,zy,zz);
+    zx/=zl; zy/=zl; zz/=zl;
+    let xx=u[1]*zz-u[2]*zy, xy=u[2]*zx-u[0]*zz, xz=u[0]*zy-u[1]*zx, xl=Math.hypot(xx,xy,xz);
+    xx/=xl; xy/=xl; xz/=xl;
+    let yx=zy*xz-zz*xy, yy=zz*xx-zx*xz, yz=zx*xy-zy*xx;
+    out[0]=xx;out[1]=yx;out[2]=zx;out[3]=0;
+    out[4]=xy;out[5]=yy;out[6]=zy;out[7]=0;
+    out[8]=xz;out[9]=yz;out[10]=zz;out[11]=0;
+    out[12]=-(xx*e[0]+xy*e[1]+xz*e[2]);
+    out[13]=-(yx*e[0]+yy*e[1]+yz*e[2]);
+    out[14]=-(zx*e[0]+zy*e[1]+zz*e[2]);
+    out[15]=1;
+  }
+
+  // ── Routing node positions (spread wide into the screen margins) ──
+  const nodes = [
+    { pos: [-5.2, 1.8, -0.6],  col: [0.45, 0.95, 0.72] },   // top left
+    { pos: [ 5.2, 1.5,  0.4],  col: [0.55, 0.90, 1.00] },   // top right
+    { pos: [ 4.8,-1.7, -0.6],  col: [1.00, 0.72, 0.55] },   // bottom right
+    { pos: [-4.8,-1.5,  0.5],  col: [0.85, 0.65, 1.00] },   // bottom left
+  ];
+
+  function buildScene() {
+    pointCount = 0;
+    lineCount = 0;
+
+    const breath = 1 + Math.sin(time * 0.7) * 0.03;
+    const scrollFade = 1 - scrollY * 0.2; // dim slightly as you read deeper
+    const baseBright = Math.max(0.5, scrollFade);
+
+    // ── Central resolver hub ──
+    addPoint(0, 0, -0.1, 0.31, 1, 0.71, 140, 0.08 * baseBright);
+    addPoint(0, 0, 0.1, 0.35, 0.85, 0.60, 80, 0.10 * baseBright);
+
+    // Crystalline core particles
+    const coreCount = W <= 760 ? 300 : 500;
+    for (let i = 0; i < coreCount; i++) {
+      const y = 1 - 2 * (i + 0.5) / coreCount;
+      const a = i * 2.39996323 + time * 0.08;
+      const s = Math.sqrt(1 - y * y);
+      const r = (0.44 + rand(i + 2300) * 0.05) * breath;
+      const x = Math.cos(a) * s * r, z = Math.sin(a) * s * r;
+      const flicker = 0.7 + Math.sin(time * 1.5 + i * 0.2) * 0.2;
+      addPoint(x, y * r, z, 0.28, 0.90, 0.65, 1.3 + rand(i+3400)*1.6, 0.22 * flicker * baseBright);
+    }
+
+    // Hexagonal orbit rings
+    for (let ring = 0; ring < 4; ring++) {
+      const tilt = ring * Math.PI / 4;
+      const r = (0.65 + ring * 0.06) * breath;
+      let px = 0, py = 0, pz = 0;
+      for (let i = 0; i <= 60; i++) {
+        const a = i / 60 * TAU + time * (ring % 2 === 0 ? 0.04 : -0.04);
+        const x = Math.cos(a) * r, y = Math.sin(a) * r * Math.sin(tilt), z = Math.sin(a) * r * Math.cos(tilt);
+        if (i) addLine(px, py, pz, x, y, z, 0.22, 0.70, 0.50, 0.055 * baseBright);
+        px = x; py = y; pz = z;
+      }
+      // Orbiting pulse packet
+      const aScan = time * (0.35 + ring * 0.05) + ring;
+      addPoint(Math.cos(aScan)*r, Math.sin(aScan)*r*Math.sin(tilt), Math.sin(aScan)*r*Math.cos(tilt), 0.45, 1, 0.70, 4.0, 0.85 * baseBright);
+    }
+
+    // ── Incoming signal stream ──
+    const streamCount = W <= 760 ? 100 : 180;
+    for (let i = 0; i < streamCount; i++) {
+      const q = (rand(i + 7300) + time * 0.15) % 1;
+      const fade = Math.sin(q * Math.PI);
+      const x = -5.0 * (1 - q);
+      const y = -0.03 * (1 - q) + Math.sin(q * 14 + time) * 0.02;
+      const z = -1.5 * (1 - q) + Math.cos(q * 14 + time) * 0.02;
+      addPoint(x, y, z, 0.38 + q * 0.30, 0.78 + q * 0.18, 0.52 + q * 0.28, 1.4 + rand(i+7900)*2.0, fade * 0.55 * baseBright);
+    }
+
+    // Signal packets (brighter moving dots)
+    for (let i = 0; i < 6; i++) {
+      const q = (rand(i + 16000) + time * 0.15) % 1;
+      const x = -5.0 * (1 - q), y = -0.03 * (1 - q), z = -1.5 * (1 - q);
+      addPoint(x, y, z, 0.45, 1, 0.70, 4.0, Math.sin(q * Math.PI) * 0.95 * baseBright);
+    }
+
+    // ── Routing paths to peripheral nodes ──
+    for (let idx = 0; idx < 4; idx++) {
+      const node = nodes[idx];
+      const tx = node.pos[0], ty = node.pos[1], tz = node.pos[2];
+      const cr = node.col[0], cg = node.col[1], cb = node.col[2];
+
+      const sectionPhase = scrollY * 4;
+      const proximity = Math.max(0, 1 - Math.abs(sectionPhase - idx) * 0.7);
+      const nodeWeight = 0.75 + proximity * 0.75;
+
+      // Routing lines outwards to sides
+      for (let strand = 0; strand < 3; strand++) {
+        let px = 0, py = 0, pz = 0;
+        for (let k = 1; k <= 40; k++) {
+          const q = k / 40;
+          const e = q * q * (3 - 2 * q);
+          const twist = q * TAU * 0.6 + strand * TAU / 4;
+          const spread = 0.04 * Math.sin(q * Math.PI);
+          const x = tx * e + Math.sin(twist) * spread;
+          const y = ty * e + Math.cos(twist) * spread;
+          const z = tz * e + Math.sin(twist + 1.57) * spread * 0.5;
+          addLine(px, py, pz, x, y, z, cr, cg, cb, 0.18 * nodeWeight * Math.sin(q * Math.PI) * baseBright);
+          px = x; py = y; pz = z;
+        }
+      }
+
+      // Data packets along routes
+      const packetCount = W <= 760 ? 30 : 55;
+      for (let j = 0; j < packetCount; j++) {
+        const q = (rand(8300 + idx * 150 + j) + time * (0.10 + idx * 0.006)) % 1;
+        const e = q * q * (3 - 2 * q);
+        const x = tx * e + (rand(9100 + j) - 0.5) * 0.04;
+        const y = ty * e + (rand(9400 + j) - 0.5) * 0.04;
+        const z = tz * e + (rand(9800 + j) - 0.5) * 0.02;
+        addPoint(x, y, z, cr, cg, cb, 1.8 + rand(10100+j) * 2.2, Math.sin(q * Math.PI) * 0.85 * nodeWeight * baseBright);
+      }
+
+      // Endpoint node: prominent geometric glow on the margins
+      addPoint(tx, ty, tz, cr, cg, cb, 120 * (0.6 + proximity * 0.4), 0.32 * nodeWeight * baseBright);
+
+      // Endpoint particles (crystalline side clouds)
+      const cloudCount = W <= 760 ? 100 : 180;
+      for (let j = 0; j < cloudCount; j++) {
+        const a = rand(10600 + idx * 300 + j) * TAU + time * (0.04 + idx * 0.006);
+        const v = 2 * rand(11800 + idx * 300 + j) - 1;
+        const radial = Math.sqrt(1 - v * v);
+        const shell = (0.28 + rand(13100 + idx * 300 + j) * 0.38);
+        addPoint(
+          tx + Math.cos(a) * radial * shell,
+          ty + v * shell * 0.8,
+          tz + Math.sin(a) * radial * shell,
+          cr, cg, cb, 1.4 + rand(14500+j) * 2.2, (0.45 + rand(15000+j) * 0.50) * nodeWeight * baseBright
+        );
+      }
+
+      // Octahedron wireframe
+      const dSize = 0.26 * (1 + Math.sin(time * 0.8 + idx) * 0.06);
+      const oVerts = [[0,dSize,0],[dSize,0,0],[0,0,dSize],[-dSize,0,0],[0,0,-dSize],[0,-dSize,0]];
+      const oEdges = [[0,1],[0,2],[0,3],[0,4],[1,2],[2,3],[3,4],[4,1],[5,1],[5,2],[5,3],[5,4]];
+      for (const [a, b] of oEdges) {
+        addLine(
+          tx+oVerts[a][0], ty+oVerts[a][1], tz+oVerts[a][2],
+          tx+oVerts[b][0], ty+oVerts[b][1], tz+oVerts[b][2],
+          cr, cg, cb, 0.28 * nodeWeight * baseBright
+        );
+      }
+      for (const v of oVerts) {
+        addPoint(tx+v[0], ty+v[1], tz+v[2], cr, cg, cb, 3.5, 0.85 * nodeWeight * baseBright);
+      }
+    }
+
+    // ── Ambient dust ──
+    for (let i = 0; i < 600; i++) {
+      const x = (rand(i * 5) - 0.5) * 28;
+      const y = (rand(i * 5 + 1) - 0.5) * 18;
+      const z = (rand(i * 5 + 2) - 0.5) * 22;
+      const bright = rand(i * 5 + 3);
+      addPoint(
+        x + Math.sin(time * 0.05 + z * 0.1) * 0.1,
+        y + Math.cos(time * 0.06 + x * 0.12) * 0.07,
+        z, 0.20, 0.45, 0.35, 1.2 + bright * 1.8, (0.14 + bright * 0.26) * baseBright
+      );
+    }
+
+    // ── Grid meridians ──
+    for (let m = 0; m < 6; m++) {
+      const angle = m / 6 * TAU + time * 0.008;
+      let px = 0, py = 0, pz = 0;
+      for (let i = 0; i <= 30; i++) {
+        const r = 1.2 + i * 0.14;
+        const x = Math.cos(angle) * r, z = Math.sin(angle) * r, y = -0.6 + Math.sin(r * 0.4) * 0.08;
+        if (i) addLine(px, py, pz, x, y, z, 0.18, 0.42, 0.30, 0.06 * baseBright);
+        px = x; py = y; pz = z;
+      }
+    }
+
+    // ── Orbital rings ──
+    for (let ring = 0; ring < 2; ring++) {
+      const radius = 3.5 + ring * 1.0;
+      for (let j = 0; j < 150; j++) {
+        const a = j / 150 * TAU + time * 0.006 * (ring % 2 === 0 ? 1 : -1);
+        addPoint(Math.cos(a) * radius, -0.6, Math.sin(a) * radius, 0.18, 0.45, 0.32, 1.2, 0.18 * baseBright);
+      }
+    }
+  }
+
+  function drawBuffer(prog, buffer, count, mode) {
+    gl.useProgram(prog.p);
+    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+    const l = prog.locs;
+    const sizes = [3,3,1,1], offsets = [0,12,24,28];
+    ['aPos','aCol','aSize','aAlpha'].forEach((n, i) => {
+      if (l[n] >= 0) { gl.enableVertexAttribArray(l[n]); gl.vertexAttribPointer(l[n], sizes[i], gl.FLOAT, false, 32, offsets[i]); }
+    });
+    gl.uniformMatrix4fv(l.uProj, false, proj);
+    gl.uniformMatrix4fv(l.uView, false, view);
+    gl.uniform1f(l.uDpr, DPR);
+    gl.drawArrays(mode, 0, count);
+  }
+
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  function animate(now) {
+    const dt = lastTime ? Math.min(0.05, (now - lastTime) / 1000) : 1/60;
+    lastTime = now;
+
+    const motion = reducedMotion.matches ? dt * 0.3 : dt;
+    time += motion;
+
+    mouseX += (targetMx - mouseX) * 0.04;
+    mouseY += (targetMy - mouseY) * 0.04;
+    scrollY += (scrollTarget - scrollY) * 0.05;
+
+    // Camera
+    const fov = 0.85;
+    const yaw = Math.sin(time * 0.06) * 0.08 + mouseX * 0.06;
+    const pitch = 0.08 + mouseY * 0.03 + scrollY * 0.15; // tilt down as you scroll
+    const radius = 9.5 - scrollY * 1.5; // slowly push in
+
+    const eyeX = Math.sin(yaw) * radius;
+    const eyeY = Math.sin(pitch) * radius * 0.5;
+    const eyeZ = Math.cos(yaw) * Math.cos(pitch) * radius;
+
+    lookAt(view, [eyeX, eyeY, eyeZ], [0, 0, 0], [0, 1, 0]);
+    perspective(proj, fov, W / H, 0.1, 60);
+
+    buildScene();
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    // Draw lines
+    gl.bindBuffer(gl.ARRAY_BUFFER, lineBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, lines.subarray(0, lineCount * 8));
+    drawBuffer(lineProg, lineBuf, lineCount, gl.LINES);
+
+    // Draw points
+    gl.bindBuffer(gl.ARRAY_BUFFER, pointBuf);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, points.subarray(0, pointCount * 8));
+    drawBuffer(pointProg, pointBuf, pointCount, gl.POINTS);
+
+    requestAnimationFrame(animate);
+  }
+
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>

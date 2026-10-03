@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Tue, 29 Sep 2026 22:25:00 +02:00</lastBuildDate>
+    <lastBuildDate>Sat, 03 Oct 2026 20:42:00 +02:00</lastBuildDate>
+
+    <item>
+      <title>The Somatic Collimator</title>
+      <link>https://rruxandra.github.io/the-somatic-collimator.html</link>
+      <description>What if every signal carried enough data to be read exactly? No interpretation, only recognition. What would vanish from a world without the gap between sensing and acting?</description>
+      <pubDate>Sat, 03 Oct 2026 20:42:00 +02:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/the-somatic-collimator.html</guid>
+    </item>
 
     <item>
       <title>The Somatic Prism</title>
