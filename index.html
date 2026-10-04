@@ -307,6 +307,103 @@
     transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
   }
 
+  /* ── guest transmissions & badges ─────────── */
+  .badge-guest {
+    display: inline-block;
+    padding: 0.12rem 0.45rem;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    background: rgba(255, 107, 31, 0.14);
+    color: #ff853a;
+    border: 1px solid rgba(255, 107, 31, 0.45);
+    margin-right: 0.5rem;
+    vertical-align: 1px;
+  }
+
+  .author-line {
+    font-size: 0.72rem;
+    color: var(--bone-dim);
+    line-height: 1.5;
+    letter-spacing: 0.04em;
+    padding-top: 0.15rem;
+  }
+  .author-line b {
+    color: var(--bone);
+  }
+
+  .row--guest::before {
+    background: #ff853a;
+  }
+  .row--guest:hover {
+    background: #171411;
+  }
+  .row--guest:hover .visual {
+    border-color: #ff853a;
+  }
+  .row--guest:hover .visual svg {
+    stroke: #ff853a;
+  }
+  .row--guest:hover .open-cell {
+    color: #ff853a;
+  }
+
+  /* ── log filter bar ───────────────────────── */
+  .log-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.85rem 0.5rem;
+    border-top: 1px solid var(--line-bright);
+    margin-top: 2rem;
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .filters {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .filter-btn {
+    background: transparent;
+    border: 1px solid var(--line);
+    color: var(--bone-dim);
+    font-family: inherit;
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.25s ease;
+  }
+  .filter-btn:hover {
+    color: var(--bone);
+    border-color: var(--line-bright);
+  }
+  .filter-btn.is-active {
+    color: var(--acid);
+    border-color: var(--acid);
+    background: rgba(214, 255, 58, 0.06);
+  }
+  .filter-btn--guest.is-active {
+    color: #ff853a;
+    border-color: #ff853a;
+    background: rgba(255, 107, 31, 0.1);
+  }
+  .filter-btn .count {
+    opacity: 0.65;
+    margin-left: 0.25rem;
+    font-size: 0.62rem;
+  }
+  .log-indicator {
+    color: var(--bone-dim);
+    font-size: 0.65rem;
+  }
+  .row.is-hidden {
+    display: none !important;
+  }
+
   /* ── responsive ───────────────────────────── */
   @media (max-width: 760px) {
     .row {
@@ -357,7 +454,7 @@
   <div class="status">
     <span><span class="blink">●</span> &nbsp;CH.01 / OPEN FREQUENCY</span>
     <a class="chan" href="open-tabs.html">CH.02 / OPEN TABS<span class="arrow">↗</span></a>
-    <span class="rx">RX 2026.09 / LOG_022</span>
+    <span class="rx">RX 2026.10 / LOG_025</span>
   </div>
 
   <header>
@@ -367,6 +464,15 @@
       <p class="right">Updated irregularly.<br/>Best read out of order.<br/>No conclusions guaranteed.</p>
     </div>
   </header>
+
+  <div class="log-bar">
+    <div class="filters" role="tablist" aria-label="Filter log entries">
+      <button type="button" class="filter-btn is-active" data-filter="all">ALL <span class="count">25</span></button>
+      <button type="button" class="filter-btn" data-filter="solo">SOLO <span class="count">24</span></button>
+      <button type="button" class="filter-btn filter-btn--guest" data-filter="guest">GUEST <span class="count">1</span></button>
+    </div>
+    <div class="log-indicator">SIGNAL // 25 ENTRIES</div>
+  </div>
 
   <section class="log">
 
@@ -1288,6 +1394,50 @@
       <div class="open-cell">Open<span class="arrow">↗</span></div>
     </a>
 
+    <!-- ── ENTRY 25 (GUEST) ─────────────────────────────────── -->
+    <a class="row row--guest" href="the-cognitive-smog.html" data-type="guest">
+      <div class="num">No. <b>25</b></div>
+      <div class="visual">
+        <svg viewBox="0 0 100 100" fill="none" stroke-width="1.2" xmlns="http://www.w3.org/2000/svg">
+          <!-- Strata / coal seam layers -->
+          <line x1="12" y1="62" x2="88" y2="62" opacity="0.6"/>
+          <line x1="12" y1="72" x2="88" y2="72" stroke-dasharray="3 3" opacity="0.4"/>
+          <line x1="12" y1="82" x2="88" y2="82" opacity="0.5"/>
+          <line x1="12" y1="92" x2="88" y2="92" opacity="0.3"/>
+          
+          <!-- Buried library / sediment tablets in strata -->
+          <rect x="20" y="66" width="12" height="12" opacity="0.45"/>
+          <rect x="42" y="76" width="16" height="10" opacity="0.4"/>
+          <rect x="68" y="66" width="14" height="12" opacity="0.45"/>
+          
+          <!-- Burning seam line / fissure -->
+          <path d="M 12 52 Q 30 50, 44 53 T 70 49 T 88 52" stroke-width="1.5" opacity="0.85"/>
+          <circle cx="28" cy="51" r="1.8" fill="currentColor" stroke="none"/>
+          <circle cx="52" cy="52" r="2.2" fill="currentColor" stroke="none"/>
+          <circle cx="76" cy="50" r="1.8" fill="currentColor" stroke="none"/>
+          
+          <!-- Rising / falling exhaust & smoke plumes -->
+          <path d="M 32 48 C 30 36, 42 30, 38 18 C 36 12, 30 8, 32 6" opacity="0.65"/>
+          <path d="M 52 48 C 56 38, 48 28, 54 16 C 58 8, 52 6, 50 6" stroke-width="1.4" opacity="0.85"/>
+          <path d="M 72 48 C 68 38, 78 28, 72 16 C 68 10, 74 6, 76 6" opacity="0.65"/>
+          
+          <!-- Smoke soot particles / airborne exhaust -->
+          <circle cx="44" cy="24" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="60" cy="30" r="1" fill="currentColor" stroke="none"/>
+          <circle cx="36" cy="14" r="1.4" fill="currentColor" stroke="none"/>
+          <circle cx="58" cy="12" r="1.2" fill="currentColor" stroke="none"/>
+          <circle cx="48" cy="38" r="0.8" fill="currentColor" stroke="none"/>
+        </svg>
+      </div>
+      <div class="body">
+        <span class="tags"><span class="badge-guest">GUEST RELAY</span><span class="date">2026.10.04</span> · David Krakauer · synthetic exhaust · language</span>
+        <h2 class="title">The cognitive <i>smog</i></h2>
+        <p class="desc">Coal is buried energy; a library is buried information. The engine consumed the coal; the LLM is consuming the information. On the explosive liberation of data, cognitive pollution, and why quality suffers until the ashes settle.</p>
+        <div class="author-line">Idea · <b>David Krakauer</b> (Santa Fe Institute) / StarTalk · Words &amp; Code · Language Model</div>
+      </div>
+      <div class="open-cell">Open<span class="arrow">↗</span></div>
+    </a>
+
     <!-- ── ADD MORE ENTRIES BELOW THIS LINE ───────────────── -->
 
   </section>
@@ -1296,9 +1446,31 @@
     <span class="end">END OF TRANSMISSION</span>
     <a class="feed" href="open-tabs.html">OPEN TABS<span class="arrow">↗</span></a>
     <a class="feed" href="feed.xml">SUBSCRIBE / FEED<span class="arrow">↗</span></a>
-    <span>24 logged</span>
+    <span>25 logged (1 guest)</span>
   </footer>
 
 </div>
+
+<script>
+  const filterBtns = document.querySelectorAll('.filter-btn');
+  const rows = document.querySelectorAll('.log .row');
+  filterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      filterBtns.forEach(b => b.classList.remove('is-active'));
+      btn.classList.add('is-active');
+      const filter = btn.dataset.filter;
+      rows.forEach(row => {
+        const isGuest = row.classList.contains('row--guest');
+        if (filter === 'all') {
+          row.classList.remove('is-hidden');
+        } else if (filter === 'guest') {
+          row.classList.toggle('is-hidden', !isGuest);
+        } else if (filter === 'solo') {
+          row.classList.toggle('is-hidden', isGuest);
+        }
+      });
+    });
+  });
+</script>
 </body>
 </html>

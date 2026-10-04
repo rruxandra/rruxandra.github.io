@@ -1,0 +1,635 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Cognitive Smog</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@400;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders:wght@800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English:ital@0;1&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: one sticky screen. The bottom third is the seam (a library pressed into
+     strata of real sentences); the top two thirds carry one statement at a time.
+     Scroll is the engine. The ending hands the reader the filter. */
+  :root {
+    color-scheme: dark;
+    --soot:   #0b0a09;   /* inside the mine */
+    --coal:   #060504;
+    --ivory:  #efe5d3;   /* old paper, the original text */
+    --ember:  #ff6b1f;   /* the seam on fire */
+    --smoke:  #8e8a85;   /* exhaust; rendered in the default sans, on purpose */
+    --dim:    #6f675e;
+    --display: 'Big Shoulders Display', 'Big Shoulders', 'Arial Narrow', Impact, sans-serif;  /* foundry & smokestack */
+    --book:    'IM Fell English', 'Iowan Old Style', Georgia, serif;          /* 17th-c. press type */
+    --mono:    'DM Mono', ui-monospace, Menlo, Consolas, monospace;
+    --glop:    Arial, Helvetica, sans-serif;                                  /* the font of nobody */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { background: var(--soot); }
+  body {
+    background: var(--soot);
+    color: var(--ivory);
+    font-family: var(--book);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: var(--ember); color: var(--soot); }
+
+  .grain {
+    position: fixed; inset: 0; z-index: 40; pointer-events: none;
+    opacity: 0.07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.7 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  .corner {
+    position: fixed; z-index: 30;
+    top: calc(18px + env(safe-area-inset-top, 0px));
+    font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.22em; text-transform: uppercase; color: var(--dim);
+    text-decoration: none;
+  }
+  .corner.l { left: 18px; }
+  .corner.r { right: 18px; }
+  a.corner:hover, a.corner:focus-visible { color: var(--ember); }
+  a.corner:focus-visible { outline: 1px solid var(--ember); outline-offset: 4px; }
+
+  /* ── the sticky mine ── */
+  #story { position: relative; height: 1000vh; }
+  .stage {
+    position: sticky; top: 0;
+    height: 100vh; height: 100dvh;
+    overflow: hidden;
+  }
+  #c { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .stage::after {               /* vignette */
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,0.6) 100%);
+  }
+
+  .beat {
+    position: absolute; z-index: 5;
+    left: max(18px, 6vw); right: max(18px, 6vw);
+    top: calc(11vh + env(safe-area-inset-top, 0px));
+    opacity: 0; pointer-events: none;
+    will-change: opacity, transform;
+  }
+  .beat.on { pointer-events: auto; }
+
+  .d {
+    font-family: var(--display);
+    font-weight: 900; text-transform: uppercase;
+    font-size: clamp(46px, 10vw, 156px);
+    line-height: 0.84; letter-spacing: -0.005em;
+    color: var(--ivory);
+    text-wrap: balance;
+    text-shadow: 0 0 40px rgba(11,10,9,0.9);
+  }
+  .d.mid { font-size: clamp(40px, 7.4vw, 116px); }
+  .d em { font-style: normal; color: var(--ember); }
+  .d .ghost { color: transparent; -webkit-text-stroke: 1.5px var(--ivory); }
+
+  .s {
+    font-family: var(--book); font-style: italic;
+    font-size: clamp(42px, 8.4vw, 132px);
+    line-height: 0.95; letter-spacing: -0.01em;
+    color: var(--ivory);
+    text-wrap: balance;
+    text-shadow: 0 0 40px rgba(11,10,9,0.9);
+  }
+  .s.mid { font-size: clamp(32px, 5.6vw, 88px); }
+  .s em { color: var(--ember); }
+
+  .explainer {
+    margin-top: 1.1em;
+    font-family: var(--book);
+    font-size: clamp(17px, 2.2vw, 25px);
+    line-height: 1.45;
+    color: var(--ivory);
+    opacity: 0.86;
+    max-width: 50ch;
+    text-wrap: balance;
+    text-shadow: 0 0 30px rgba(11,10,9,0.9);
+  }
+  .explainer em {
+    font-style: italic;
+    color: var(--ember);
+  }
+
+  .cap {
+    margin-top: 1.4em;
+    font-family: var(--mono); font-size: 11px;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--dim); line-height: 2;
+  }
+  .cap b { color: var(--ember); font-weight: 500; }
+  .cap .num { color: var(--ivory); font-variant-numeric: tabular-nums; letter-spacing: 0.06em; font-size: 13px; }
+  .redact {
+    display: inline-block; width: 6.2em; height: 0.95em; vertical-align: -0.1em;
+    background: var(--ivory); margin: 0 0.15em;
+  }
+  .cursor { display: inline-block; width: 0.6em; height: 1em; vertical-align: -0.15em; background: var(--ember); animation: blink 1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  /* "DOWN" falls as you scroll */
+  .fall span { display: inline-block; transform: translateY(calc(var(--q, 0) * var(--dy) * 1em)) rotate(calc(var(--q, 0) * var(--rot) * 1deg)); }
+
+  /* the infected sentence: letters drop into the font of nobody */
+  .infect .ch { transition: color .4s ease; }
+  .infect .ch.inf {
+    font-family: var(--glop); font-style: normal; font-size: 0.78em;
+    color: var(--smoke); letter-spacing: -0.02em;
+  }
+  .gens { display: flex; gap: 1.6em; flex-wrap: wrap; }
+  .gens span { opacity: 0.35; }
+  .gens span.cur { opacity: 1; color: var(--ivory); }
+
+  .split { display: grid; gap: 0.35em; }
+
+  /* the filter pad sits exactly over the seam in the final scene */
+  #pad {
+    position: absolute; left: 0; right: 0; z-index: 6;
+    touch-action: none; cursor: crosshair;
+  }
+  #pad:focus-visible { outline: 1px dashed var(--ember); outline-offset: -6px; }
+
+  /* ── coda ── */
+  .coda {
+    min-height: 100vh; min-height: 100dvh;
+    display: grid; align-content: center; gap: 28px;
+    padding-block: 18vh; padding-inline: max(18px, 6vw);
+    background: var(--soot);
+    border-top: 1px solid rgba(239,229,211,0.08);
+    position: relative; z-index: 1;
+  }
+  .coda .s { font-size: clamp(30px, 5vw, 72px); max-width: 18ch; }
+  .coda .d { font-size: clamp(52px, 12vw, 190px); color: var(--ember); }
+  .coda .cap { margin-top: 12px; max-width: 60ch; }
+  .coda .cap a { color: var(--ivory); text-decoration: none; border-bottom: 1px solid var(--dim); }
+  .coda .cap a:hover, .coda .cap a:focus-visible { color: var(--ember); border-color: var(--ember); }
+
+  @media (max-width: 720px) {
+    .beat { top: calc(9vh + env(safe-area-inset-top, 0px)); }
+    .cap { font-size: 10px; letter-spacing: 0.16em; }
+    .explainer { font-size: 14px; line-height: 1.35; margin-top: 0.8em; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cursor { animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<a class="corner l" href="index.html">← log</a>
+<div class="corner r">№ 25 · GUEST RELAY · 2026.10.04</div>
+
+<section id="story">
+  <div class="stage">
+    <canvas id="c" aria-hidden="true"></canvas>
+
+    <div class="beat" data-in="-1" data-out=".09">
+      <h1 class="d">Coal is buried <em>energy.</em></h1>
+      <p class="explainer">The industrial revolution enabled the explosive liberation of energy accumulated in coal underground over millennia.</p>
+      <p class="cap">↓ scroll to dig</p>
+    </div>
+
+    <div class="beat" data-in=".09" data-out=".19">
+      <p class="s">A library is buried <em>information.</em></p>
+      <p class="explainer">The AI revolution is enabling the explosive liberation of all the data accumulated over millennia in books and other forms.</p>
+      <p class="cap">uruk, 3200 bce → yesterday · hundreds of millions of books, pressed into strata</p>
+    </div>
+
+    <div class="beat" data-in=".19" data-out=".33">
+      <p class="d mid">The engine consumed the coal.<br><em>The LLM is consuming the information.</em></p>
+      <p class="cap">tokens burned to train one model, 2024 · <span class="num" id="tok">0</span><br>
+        barons, class of 1870 · carnegie · rockefeller · vanderbilt<br>
+        barons, class of 2025 · <span class="redact"></span><span class="redact"></span><span class="cursor"></span></p>
+    </div>
+
+    <div class="beat" data-in=".33" data-out=".44">
+      <p class="d">Every engine <em>smokes.</em></p>
+      <p class="explainer">The byproduct of industrialization was pollution and dirt. The byproduct of LLMs consuming information is entropy, hallucination, and slop.</p>
+    </div>
+
+    <div class="beat" data-in=".44" data-out=".55">
+      <p class="d split"><span class="ghost">Coal smoke went up.</span><span class="fall">This smoke comes <em><span style="--dy:.9;--rot:-8">D</span><span style="--dy:1.6;--rot:6">O</span><span style="--dy:.6;--rot:12">W</span><span style="--dy:2.2;--rot:-14">N</span>.</em></span></p>
+    </div>
+
+    <div class="beat" data-in=".55" data-out=".64">
+      <p class="d mid">Coal runs out. Knowledge doesn't.<br><em>It just gets dirty.</em></p>
+    </div>
+
+    <div class="beat" data-in=".64" data-out=".78">
+      <p class="s mid infect" id="infect">Every model is trained on the ashes of the last.</p>
+      <p class="cap gens"><span data-g="1">gen 1</span><span data-g="2">gen 2</span><span data-g="3">gen 3</span></p>
+    </div>
+
+    <div class="beat" data-in=".78" data-out=".885">
+      <p class="s mid">London needed a smog that killed thousands to learn how to filter its air.</p>
+      <p class="d mid" style="margin-top:.35em"><em>What will it take this time?</em></p>
+      <p class="cap">london · 5–9 december 1952</p>
+    </div>
+
+    <div class="beat" data-in=".885" data-out="2">
+      <p class="d mid">Answers are free now.<br><em>Until the ashes settle, quality suffers.</em></p>
+      <p class="cap" id="hint"><span id="h1"><b>touch the seam.</b> be the filter.</span><span id="h2" hidden><b>that took effort.</b> it always will.</span> · <span class="num" id="pct">0</span>% filtered</p>
+    </div>
+
+    <div id="pad" hidden tabindex="0" role="img" aria-label="The polluted seam. Drag across it to filter out the synthetic text and reveal the original sentences. Press Enter to filter a strip."></div>
+  </div>
+</section>
+
+<section class="coda">
+  <p class="s">This page was mined from a podcast, by a machine.</p>
+  <p class="d">Breathe accordingly.</p>
+  <p class="cap">guest transmission · idea · david krakauer, santa fe institute, on startalk with neil degrasse tyson (special edition: intelligence) · words &amp; code · a language model · filter · you<br><a href="index.html">← return to the log</a></p>
+</section>
+
+<script>
+(() => {
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const story = document.getElementById('story');
+  const stage = document.querySelector('.stage');
+  const cv = document.getElementById('c');
+  const ctx = cv.getContext('2d');
+  const pad = document.getElementById('pad');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  const rand = (a, b) => a + Math.random() * (b - a);
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const c01 = (t) => t < 0 ? 0 : t > 1 ? 1 : t;
+  const ss = (t) => { t = c01(t); return t * t * (3 - 2 * t); };
+  const win = (p, a, b, e) => ss((p - a) / e) * (1 - ss((p - (b - e)) / e));
+  const pick = (a) => a[(Math.random() * a.length) | 0];
+
+  // ── the deposit ─────────────────────────────────────────
+  const CANON = [
+    'In the beginning was the Word.', 'Cogito, ergo sum.', 'Call me Ishmael.', 'Eppur si muove.',
+    'We hold these truths to be self-evident.', 'The unexamined life is not worth living.',
+    'To be, or not to be, that is the question.', 'It was the best of times, it was the worst of times.',
+    'Know thyself.', 'Πάντα ῥεῖ.', 'Nature does nothing in vain.', 'Man is born free, and everywhere he is in chains.',
+    'There is grandeur in this view of life.', 'Sing, O goddess, the anger of Achilles.',
+    'The heart has its reasons which reason knows nothing of.', 'Whereof one cannot speak, thereof one must be silent.',
+    'If I have seen further it is by standing on the shoulders of giants.', 'Happy families are all alike.',
+    'The Analytical Engine weaves algebraical patterns just as the Jacquard loom weaves flowers and leaves.',
+    'E = mc²', 'I have a dream.', 'Veni, vidi, vici.', 'The medium is the message.', 'Arma virumque cano.',
+    'Love the questions themselves.', 'Give me a place to stand and I will move the earth.',
+    'All happy families resemble one another.', 'Midway upon the journey of our life.', 'Fiat lux.',
+    'A room of one’s own.', 'The only thing we have to fear is fear itself.', 'Ex nihilo nihil fit.',
+  ];
+  // ── the exhaust ─────────────────────────────────────────
+  const GLOP = [
+    'Cogito, ergo sum — great question!', 'Call me Ishmael. As an AI language model, I', 'To be or not to be? Let’s delve into both.',
+    'It was the best of times. Here are 5 key takeaways.', 'In the beginning was the Word count.', 'Know thyself: a comprehensive guide',
+    'E = mc² (citation needed)', 'Eppur si muove — and that’s okay!', 'All men are created equal, it’s important to note.',
+    'I have a dream. Unlock your potential today.', 'There is grandeur in this view of life. Subscribe for more.',
+    'We hold these truths in today’s fast-paced world.', 'The unexamined life: why it matters in 2025.',
+    'Happy families are all alike — ranked.', 'Sing, O goddess, a rich tapestry of the anger of Achilles.',
+    'Man is born free (Smith et al., 2023).', 'One giant leap for engagement.', 'Whereof one cannot speak, generate 800 words.',
+    'On the shoulders of giants: an SEO journey.', 'Certainly! Here is the meaning of life:', 'As of my last update, the universe is expanding.',
+    'What to do with a witch? Great question! Here are 3 methods:', 'Fiat lux. Fiat content. Fiat engagement.',
+    'Love the questions themselves. Here are the answers.', 'In conclusion, the heart has its reasons.',
+  ];
+  const NOISE = '▒░▓·#%&?¿';
+
+  function degrade(s, gen) {
+    if (gen === 1) return s;
+    const pr = gen === 2 ? 0.14 : 0.42;
+    return s.split('').map(ch => {
+      if (ch === ' ' || Math.random() > pr) return ch;
+      return gen === 2 ? (Math.random() < 0.5 ? ch.toLowerCase() : 'aeiourstln'[(Math.random() * 10) | 0]) : NOISE[(Math.random() * NOISE.length) | 0];
+    }).join('');
+  }
+  const splice = (a, b) => a.slice(0, Math.ceil(a.length / 2)) + b.slice(Math.floor(b.length / 2));
+
+  // ── geometry & layers ───────────────────────────────────
+  let W = 0, H = 0, mobile = false, seamTop = 0, seamBot = 0, fs = 13, rowH = 16, nRows = 0;
+  let pristine, glop, gctx, smogPat, specks = [];
+  let stamps = [], stamped = 0, falling = [], embers = [], risers = [];
+  let cellW = 16, cellCols = 0, cellRowsN = 0, cells = null, cleanCount = 0;
+
+  function layer() {
+    const c = document.createElement('canvas');
+    c.width = Math.round(W * DPR); c.height = Math.round(H * DPR);
+    const x = c.getContext('2d'); x.setTransform(DPR, 0, 0, DPR, 0, 0);
+    return [c, x];
+  }
+
+  function buildPristine() {
+    const [c, x] = layer(); pristine = c;
+    x.textBaseline = 'alphabetic';
+    for (let r = 0; r < nRows; r++) {
+      const y = seamTop + fs + r * rowH;
+      const depth = r / Math.max(1, nRows - 1);           // deeper = older = hotter
+      x.font = `${Math.random() < 0.3 ? 'italic ' : ''}${fs}px "IM Fell English", Georgia, serif`;
+      let s = ''; while (s.length * fs * 0.42 < W + 260) s += pick(CANON) + '   ';
+      x.fillStyle = `rgba(${Math.round(lerp(239, 255, depth))},${Math.round(lerp(222, 130, depth))},${Math.round(lerp(196, 60, depth))},${lerp(0.82, 0.6, depth)})`;
+      x.fillText(s, -rand(0, 240), y);
+    }
+  }
+
+  function buildSmog() {
+    const s = 256, c = document.createElement('canvas'); c.width = c.height = s;
+    const x = c.getContext('2d');
+    for (let i = 0; i < 80; i++) {
+      const r = rand(18, 90), cx = rand(0, s), cy = rand(0, s);
+      for (const dx of [-s, 0, s]) for (const dy of [-s, 0, s]) {
+        const g = x.createRadialGradient(cx + dx, cy + dy, 0, cx + dx, cy + dy, r);
+        g.addColorStop(0, 'rgba(142,136,128,0.3)'); g.addColorStop(1, 'rgba(142,136,128,0)');
+        x.fillStyle = g; x.fillRect(cx + dx - r, cy + dy - r, r * 2, r * 2);
+      }
+    }
+    smogPat = ctx.createPattern(c, 'repeat');
+  }
+
+  function buildStamps() {
+    stamps = [];
+    const N = mobile ? 300 : 540;
+    for (let i = 0; i < N; i++) {
+      const q = i / N, gen = q < 0.45 ? 1 : q < 0.75 ? 2 : 3;
+      const row = (Math.random() * nRows) | 0;
+      const text = degrade(gen === 3 ? splice(pick(GLOP), pick(GLOP)) : pick(GLOP), gen);
+      stamps.push({ x: rand(-0.2 * W, W * 0.96), y: seamTop + fs + row * rowH, text, gen, size: fs * (gen === 1 ? 1.06 : gen === 2 ? 1 : 0.94) });
+    }
+  }
+
+  function stamp(s) {
+    gctx.font = `${s.size}px Arial, Helvetica, sans-serif`;
+    const w = gctx.measureText(s.text).width;
+    gctx.fillStyle = 'rgba(11,10,9,0.95)';
+    gctx.fillRect(s.x - 3, s.y - s.size * 0.86, w + 6, rowH);
+    gctx.fillStyle = s.gen === 1 ? 'rgba(168,163,157,0.92)' : s.gen === 2 ? 'rgba(140,135,130,0.86)' : 'rgba(112,108,104,0.82)';
+    gctx.fillText(s.text, s.x, s.y);
+  }
+
+  function resetCells() {
+    cellCols = Math.ceil(W / cellW); cellRowsN = Math.ceil((seamBot - seamTop) / cellW);
+    cells = new Uint8Array(cellCols * cellRowsN); cleanCount = 0;
+  }
+
+  function resize() {
+    W = stage.clientWidth; H = stage.clientHeight;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    mobile = W < 720;
+    fs = mobile ? 11 : 13; rowH = Math.round(fs * 1.28);
+    seamTop = H * (mobile ? 0.69 : 0.665); seamBot = H * 0.955;
+    nRows = Math.floor((seamBot - seamTop - fs) / rowH) + 1;
+    specks = Array.from({ length: mobile ? 90 : 180 }, () => ({ x: rand(0, W), y: rand(seamTop, seamBot), ph: rand(0, 6.3), sp: rand(0.6, 1.8) }));
+    buildPristine(); buildSmog(); buildStamps();
+    [glop, gctx] = layer();
+    const keep = stamped; stamped = 0; falling = [];
+    for (let i = 0; i < keep && i < stamps.length; i++) { stamp(stamps[i]); stamped++; }
+    resetCells();
+    pad.style.top = seamTop + 'px'; pad.style.height = (seamBot - seamTop) + 'px';
+  }
+
+  // ── scroll ──────────────────────────────────────────────
+  let progress = 0;
+  function onScroll() {
+    const span = story.offsetHeight - stage.offsetHeight;
+    progress = span > 0 ? c01((window.scrollY - story.offsetTop) / span) : 0;
+  }
+
+  // ── DOM beats ───────────────────────────────────────────
+  const beats = [...document.querySelectorAll('.beat')].map(el => ({ el, a: +el.dataset.in, b: +el.dataset.out }));
+  const tok = document.getElementById('tok');
+  const pct = document.getElementById('pct');
+  const h1 = document.getElementById('h1'), h2 = document.getElementById('h2');
+  const fallEl = document.querySelector('.fall');
+  const gens = [...document.querySelectorAll('.gens span')];
+  const infect = document.getElementById('infect');
+  infect.innerHTML = infect.textContent.split('').map(ch => ch === ' ' ? ' ' : `<span class="ch" data-t="${Math.random().toFixed(3)}">${ch}</span>`).join('');
+  const chars = [...infect.querySelectorAll('.ch')];
+
+  function updateDOM(p, q) {
+    for (const bt of beats) {
+      const v = bt.a < 0 ? 1 - ss((p - (bt.b - 0.025)) / 0.025) : bt.b > 1 ? ss((p - bt.a) / 0.025) : win(p, bt.a, bt.b, 0.025);
+      bt.el.style.opacity = v.toFixed(3);
+      bt.el.style.transform = `translateY(${((1 - v) * 14).toFixed(1)}px)`;
+      bt.el.classList.toggle('on', v > 0.5);
+    }
+    const local = (a, b) => c01((p - a) / (b - a));
+    tok.textContent = Math.floor(15e12 * ss(local(0.2, 0.3))).toLocaleString('en-US');
+    fallEl.style.setProperty('--q', ss(local(0.47, 0.545)).toFixed(3));
+    const iq = local(0.645, 0.76) * 1.15;
+    for (const ch of chars) ch.classList.toggle('inf', iq > +ch.dataset.t);
+    const g = q < 0.45 ? 1 : q < 0.75 ? 2 : 3;
+    gens.forEach(s => s.classList.toggle('cur', +s.dataset.g === g));
+    const percent = cells ? Math.round(100 * cleanCount / cells.length) : 0;
+    pct.textContent = percent;
+    h1.hidden = percent >= 60; h2.hidden = percent < 60;
+  }
+
+  // ── the filter ──────────────────────────────────────────
+  let drawing = false, lastX = null, lastY = null;
+  function eraseAt(x, y) {
+    const R = mobile ? 30 : 40;
+    gctx.save();
+    gctx.globalCompositeOperation = 'destination-out';
+    const g = gctx.createRadialGradient(x, y, 0, x, y, R);
+    g.addColorStop(0, 'rgba(0,0,0,1)'); g.addColorStop(0.55, 'rgba(0,0,0,0.95)'); g.addColorStop(1, 'rgba(0,0,0,0)');
+    gctx.fillStyle = g; gctx.fillRect(x - R, y - R, R * 2, R * 2);
+    gctx.restore();
+    const r2 = R * 0.7, sy = seamTop;
+    for (let cy = Math.max(0, ((y - r2 - sy) / cellW) | 0); cy <= Math.min(cellRowsN - 1, ((y + r2 - sy) / cellW) | 0); cy++)
+      for (let cx = Math.max(0, ((x - r2) / cellW) | 0); cx <= Math.min(cellCols - 1, ((x + r2) / cellW) | 0); cx++) {
+        const i = cy * cellCols + cx;
+        if (!cells[i]) { cells[i] = 1; cleanCount++; }
+      }
+    if (embers.length < 500 && Math.random() < 0.6) spawnEmber(x + rand(-10, 10), y, true);
+  }
+  function strokeTo(x, y) {
+    if (lastX === null) { eraseAt(x, y); }
+    else {
+      const d = Math.hypot(x - lastX, y - lastY), n = Math.max(1, Math.ceil(d / 10));
+      for (let i = 1; i <= n; i++) eraseAt(lerp(lastX, x, i / n), lerp(lastY, y, i / n));
+    }
+    lastX = x; lastY = y;
+  }
+  const local = (e) => { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+  pad.addEventListener('pointerdown', e => { drawing = true; lastX = null; pad.setPointerCapture(e.pointerId); strokeTo(...local(e)); });
+  pad.addEventListener('pointermove', e => { if (drawing || e.pointerType === 'mouse') strokeTo(...local(e)); });
+  const stop = () => { drawing = false; lastX = null; };
+  pad.addEventListener('pointerup', stop); pad.addEventListener('pointercancel', stop); pad.addEventListener('pointerleave', stop);
+  pad.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    e.preventDefault();
+    const y = rand(seamTop + 10, seamBot - 10); lastX = null;
+    for (let x = 0; x <= W; x += 12) strokeTo(x, y + Math.sin(x * 0.02) * 8);
+    lastX = null;
+  });
+
+  // ── particles ───────────────────────────────────────────
+  const CHARS = CANON.join('').replace(/\s/g, '');
+  function spawnEmber(x, y, clean) {
+    embers.push({
+      x, y, vx: rand(-0.35, 0.35), vy: clean ? rand(-0.8, -1.8) : rand(-1.2, -3.4),
+      ch: CHARS[(Math.random() * CHARS.length) | 0], size: rand(fs * 0.9, fs * (clean ? 1.3 : 1.8)),
+      life: 0, max: clean ? rand(50, 90) : rand(110, 240), ph: rand(0, 6.3), clean,
+    });
+  }
+
+  // ── render ──────────────────────────────────────────────
+  let last = 0;
+  function frame(now) {
+    const dt = Math.min(50, now - (last || now)); last = now;
+    const f = dt / 16.7;
+    const p = progress;
+
+    const reveal  = ss((p - 0.07) / 0.09);
+    const emberOn = win(p, 0.19, 0.45, 0.02);
+    const cool    = ss((p - 0.31) / 0.07);
+    const riseOn  = win(p, 0.33, 0.48, 0.02);
+    const q       = c01((p - 0.45) / (0.78 - 0.45));
+    const smog    = win(p, 0.77, 0.9, 0.035);
+    const fin     = ss((p - 0.875) / 0.025);
+
+    // scrolling back above the exhaust resets the seam
+    if (p < 0.40 && (stamped > 0 || falling.length)) { gctx.clearRect(0, 0, W, H); stamped = 0; falling = []; resetCells(); }
+
+    // spawn falling exhaust for every stamp the scroll has reached
+    const want = Math.floor(q * stamps.length);
+    let budget = mobile ? 14 : 26;
+    while (stamped < want && budget-- > 0) {
+      const s = stamps[stamped++];
+      falling.push({ s, x: s.x + rand(-120, 120), y: rand(-0.08 * H, seamTop * 0.55), vy: rand(0.5, 2) });
+    }
+
+    // spawn embers and rising glop
+    const rate = (mobile ? 3 : 6) * emberOn * (reduce ? 0.35 : 1);
+    for (let i = 0; i < rate; i++) if (embers.length < (mobile ? 220 : 420)) spawnEmber(rand(0, W), rand(seamTop, seamBot), false);
+    if (riseOn > 0.1 && risers.length < (mobile ? 26 : 60) && Math.random() < riseOn * (0.25 + 0.6 * c01((p - 0.33) / 0.14))) {
+      risers.push({ x: rand(-0.1 * W, W * 0.85), y: rand(seamTop, seamBot), vy: rand(-0.6, -1.5), text: pick(GLOP), size: rand(fs, fs * 1.6), life: 0, max: rand(220, 400), ph: rand(0, 6.3) });
+    }
+
+    // ground
+    ctx.globalAlpha = 1; ctx.globalCompositeOperation = 'source-over';
+    ctx.fillStyle = '#0b0a09'; ctx.fillRect(0, 0, W, H);
+
+    // the seam
+    ctx.fillStyle = '#0e0c0a'; ctx.fillRect(0, seamTop - 6, W, seamBot - seamTop + 12);
+    ctx.globalAlpha = 0.1 + 0.72 * reveal + 0.18 * fin;
+    ctx.drawImage(pristine, 0, 0, W, H);
+    if (reveal < 1) {                       // coal: black rock with glints of old sunlight
+      ctx.globalAlpha = 1 - reveal;
+      ctx.fillStyle = '#060504'; ctx.fillRect(0, seamTop - 6, W, seamBot - seamTop + 12);
+      for (const s of specks) {
+        const a = (0.25 + 0.75 * Math.max(0, Math.sin(now * 0.0016 * s.sp + s.ph))) * (1 - reveal);
+        ctx.fillStyle = `rgba(255,${190 + ((s.ph * 10) | 0)},120,${a * 0.85})`;
+        ctx.fillRect(s.x, s.y, 1.6, 1.6);
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.drawImage(glop, 0, 0, W, H);
+
+    // seam edge + labels
+    ctx.fillStyle = `rgba(239,229,211,${0.1 + 0.1 * reveal})`; ctx.fillRect(0, seamTop - 7, W, 1);
+    ctx.font = `${mobile ? 9 : 10}px "DM Mono", ui-monospace, monospace`;
+    ctx.textBaseline = 'bottom';
+    ctx.textAlign = 'left';
+    ctx.fillStyle = `rgba(111,103,94,${0.5 + 0.5 * reveal})`;
+    ctx.fillText(reveal < 0.5 ? 'CARBONIFEROUS · 300 000 000 YEARS DEEP' : 'THE LIBRARY · URUK 3200 BCE → NOW', 14, seamTop - 12);
+    if (q > 0.02) {
+      ctx.textAlign = 'right';
+      ctx.fillStyle = `rgba(142,138,133,${Math.min(1, q * 4) * (1 - fin * 0.5)})`;
+      ctx.fillText(`+ SYNTHETIC · GEN ${q < 0.45 ? 1 : q < 0.75 ? 2 : 3}`, W - 14, seamTop - 12);
+    }
+
+    // embers: letters of the canon, set on fire, cooling into smoke
+    ctx.textBaseline = 'alphabetic'; ctx.textAlign = 'left';
+    for (let i = embers.length - 1; i >= 0; i--) {
+      const e = embers[i];
+      e.life += f;
+      e.vy -= 0.018 * f;
+      e.x += (e.vx + Math.sin(e.life * 0.05 + e.ph) * (reduce ? 0.1 : 0.45)) * f;
+      e.y += e.vy * f;
+      const lt = e.life / e.max;
+      if (lt >= 1 || e.y < -30) { embers.splice(i, 1); continue; }
+      const c = e.clean ? 0 : c01(cool + lt * 0.35);
+      if (!e.clean && cool > 0.3 && Math.random() < 0.03) e.ch = NOISE[(Math.random() * NOISE.length) | 0];
+      const r = Math.round(lerp(255, 142, c)), g = Math.round(lerp(107, 138, c)), b = Math.round(lerp(31, 133, c));
+      const a = (1 - lt) * (e.clean ? 1 : 0.95);
+      ctx.font = `${e.size.toFixed(1)}px ${c > 0.6 ? 'Arial, sans-serif' : '"IM Fell English", Georgia, serif'}`;
+      if (c < 0.5) {
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.fillStyle = `rgba(${r},${g},${b},${a * 0.25})`;
+        ctx.font = `${(e.size * 1.6).toFixed(1)}px "IM Fell English", Georgia, serif`;
+        ctx.fillText(e.ch, e.x - e.size * 0.15, e.y + e.size * 0.15);
+        ctx.font = `${e.size.toFixed(1)}px "IM Fell English", Georgia, serif`;
+      }
+      ctx.fillStyle = e.clean ? `rgba(255,236,200,${a})` : `rgba(${r},${g},${b},${a})`;
+      ctx.fillText(e.ch, e.x, e.y);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+
+    // rising glop: whole phrases of exhaust
+    for (let i = risers.length - 1; i >= 0; i--) {
+      const s = risers[i];
+      s.life += f; s.y += s.vy * f; s.x += Math.sin(s.life * 0.02 + s.ph) * 0.4 * f;
+      const lt = s.life / s.max;
+      if (lt >= 1 || s.y < -20) { risers.splice(i, 1); continue; }
+      ctx.font = `${s.size.toFixed(1)}px Arial, Helvetica, sans-serif`;
+      ctx.fillStyle = `rgba(150,145,139,${Math.sin(lt * Math.PI) * 0.75})`;
+      ctx.fillText(s.text, s.x, s.y);
+    }
+
+    // falling exhaust: comes back down and lands in the seam
+    for (let i = falling.length - 1; i >= 0; i--) {
+      const d = falling[i];
+      d.vy += 0.22 * f; d.y += d.vy * f; d.x += (d.s.x - d.x) * 0.06 * f;
+      if (d.y >= d.s.y) { stamp(d.s); falling.splice(i, 1); continue; }
+      ctx.font = `${d.s.size}px Arial, Helvetica, sans-serif`;
+      ctx.fillStyle = 'rgba(160,155,149,0.8)';
+      ctx.fillText(d.s.text, d.x, d.y);
+    }
+
+    // smog over everything
+    if (smog > 0.01) {
+      for (const [sp, sc, al] of [[0.018, 3.2, 0.95], [-0.011, 2.1, 0.7]]) {
+        ctx.save();
+        ctx.globalAlpha = smog * al;
+        const off = ((now * sp) % (256 * sc) + 256 * sc) % (256 * sc);
+        ctx.translate(-off, -((now * 0.006) % (256 * sc)));
+        ctx.scale(sc, sc);
+        ctx.fillStyle = smogPat;
+        ctx.fillRect(0, 0, (W + 512 * sc) / sc, (H + 512 * sc) / sc);
+        ctx.restore();
+      }
+      ctx.fillStyle = `rgba(60,56,52,${smog * 0.35})`; ctx.fillRect(0, 0, W, H);
+    }
+
+    // the hint ring
+    if (fin > 0.5 && cleanCount < 4) {
+      const cx = W * 0.5, cy = (seamTop + seamBot) / 2, k = (now % 1600) / 1600;
+      ctx.strokeStyle = `rgba(255,107,31,${(1 - k) * 0.8})`; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, 10 + k * 34, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    pad.hidden = fin < 0.5;
+    updateDOM(p, q);
+    requestAnimationFrame(frame);
+  }
+
+  // ── boot ────────────────────────────────────────────────
+  resize(); onScroll();
+  window.addEventListener('scroll', onScroll, { passive: true });
+  let rt, lastW = W, lastH = H;
+  window.addEventListener('resize', () => {
+    clearTimeout(rt);
+    rt = setTimeout(() => {
+      const w = stage.clientWidth, h = stage.clientHeight;
+      if (w !== lastW || Math.abs(h - lastH) > 140) { lastW = w; lastH = h; resize(); }
+      onScroll();
+    }, 150);
+  });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => { buildPristine(); });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
