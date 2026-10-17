@@ -1,0 +1,1448 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>A Light Switch for the Brain — Optogenetics 3D · Signal</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Three.js Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <style>
+        :root {
+            --font-sans: 'Inter', sans-serif;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background-color: #020617;
+            font-family: var(--font-sans);
+            color: #f8fafc;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        #webgl-container {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+        .font-display {
+            font-family: var(--font-display);
+        }
+        .font-mono-tech {
+            font-family: var(--font-mono);
+        }
+        /* Glassmorphism Panels */
+        .glass-panel {
+            background: rgba(8, 15, 34, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(56, 189, 248, 0.22);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .glass-pill {
+            background: rgba(9, 18, 40, 0.78);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(56, 189, 248, 0.35);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+        }
+        /* 3D Floating Anchored Labels */
+        .hud-label {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            transition: opacity 0.35s ease, border-color 0.35s ease, box-shadow 0.35s ease;
+            z-index: 10;
+            will-change: transform, opacity;
+        }
+        .hud-label.active-focus {
+            border-color: rgba(56, 189, 248, 0.95);
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.45), inset 0 0 12px rgba(56, 189, 248, 0.2);
+        }
+        .hud-label.active-fire {
+            border-color: rgba(251, 191, 36, 0.95);
+            box-shadow: 0 0 25px rgba(251, 191, 36, 0.5), inset 0 0 12px rgba(251, 191, 36, 0.25);
+        }
+        /* Custom Scrollbar for Modal */
+        .custom-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.35);
+            border-radius: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(56, 189, 248, 0.6);
+        }
+        /* Subtle pulse animation for primary button */
+        @keyframes pulse-glow {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(14, 165, 233, 0.4), 0 0 30px rgba(14, 165, 233, 0.15);
+            }
+            50% {
+                box-shadow: 0 0 25px rgba(56, 189, 248, 0.75), 0 0 45px rgba(56, 189, 248, 0.35);
+            }
+        }
+        .btn-glow {
+            animation: pulse-glow 3s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="relative select-none">
+
+    <!-- 3D WebGL Canvas Container -->
+    <div id="webgl-container" title="Drag to look around • Scroll to zoom"></div>
+
+    <!-- 3D Floating HUD Labels Overlay -->
+    <div id="hud-labels-container" class="fixed inset-0 pointer-events-none z-10 overflow-hidden">
+        <!-- Label 1: Gentle Blue Light Beam -->
+        <div id="label-fiber" class="hud-label glass-pill px-3.5 py-2 rounded-full flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 animate-ping"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 -ml-5"></span>
+            <div>
+                <div class="text-xs font-bold tracking-wide text-cyan-300">💡 Gentle Blue Light Beam</div>
+                <div class="text-[11px] text-slate-300 hidden sm:block">Acts like a remote-control light switch</div>
+            </div>
+        </div>
+
+        <!-- Label 2: Tiny Light-Activated Door -->
+        <div id="label-chr2" class="hud-label glass-pill px-3.5 py-2 rounded-full flex items-center gap-2.5">
+            <span id="dot-chr2" class="w-2.5 h-2.5 rounded-full bg-sky-400 transition-colors duration-300"></span>
+            <div>
+                <div class="text-xs font-bold tracking-wide text-white">🚪 Tiny Light-Activated Door</div>
+                <div id="sub-chr2" class="text-[11px] text-sky-300">Borrowed from green pond algae (Closed)</div>
+            </div>
+        </div>
+
+        <!-- Label 3: Magic Light Sensor -->
+        <div id="label-retinal" class="hud-label glass-pill px-3 py-1.5 rounded-full flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+            <div>
+                <div class="text-[11px] font-bold tracking-wide text-amber-300">🔑 Tiny Light Sensor</div>
+                <div class="text-[10px] text-slate-300 hidden md:block">Unlocks the door when blue light hits it</div>
+            </div>
+        </div>
+
+        <!-- Label 4: Energy Sparks -->
+        <div id="label-ions" class="hud-label glass-pill px-3 py-1.5 rounded-full flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-teal-300"></span>
+            <div>
+                <div class="text-[11px] font-bold tracking-wide text-teal-200">✨ Energy Sparks</div>
+                <div id="sub-ions" class="text-[10px] text-slate-300">Waiting outside the cell</div>
+            </div>
+        </div>
+
+        <!-- Label 5: Brain Cell Surface -->
+        <div id="label-membrane" class="hud-label glass-pill px-3 py-1.5 rounded-full flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+            <div>
+                <div class="text-[11px] font-bold tracking-wide text-indigo-200">🛡️ Brain Cell Surface</div>
+                <div class="text-[10px] text-slate-400 hidden sm:block">Protective outer wall of the cell</div>
+            </div>
+        </div>
+
+        <!-- Label 6: Message Sent to Other Brain Cells -->
+        <div id="label-axon" class="hud-label glass-pill px-3.5 py-2 rounded-full flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+            <div>
+                <div class="text-xs font-bold tracking-wide text-amber-300">⚡ Message Sent to Other Brain Cells!</div>
+                <div class="text-[11px] text-slate-300 hidden sm:block">Wakes up neighbors to create thoughts &amp; actions</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Header & Primary Action Bar -->
+    <header class="fixed top-0 left-0 right-0 z-20 p-3 sm:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 pointer-events-none">
+        <!-- Left Title Block -->
+        <div class="glass-panel px-4 py-3 sm:px-5 sm:py-3.5 rounded-2xl pointer-events-auto max-w-xl">
+            <div class="flex items-center gap-2 mb-1">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-semibold tracking-wider uppercase bg-amber-500/20 text-amber-300 border border-amber-400/40">
+                    <svg class="w-3.5 h-3.5 mr-1 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                    </svg>
+                    2026 Nobel Prize in Medicine
+                </span>
+                <span class="hidden sm:inline-block text-xs text-slate-300 font-medium">Deisseroth • Hegemann • Nagel</span>
+            </div>
+            <h1 class="font-display text-lg sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+                A Light Switch for the Brain
+            </h1>
+            <p class="text-xs sm:text-sm text-slate-300 mt-0.5">
+                Watch how a gentle beam of blue light turns living brain cells ON and OFF!
+            </p>
+        </div>
+
+        <!-- Right Prominent Buttons: Return to Log & Actions -->
+        <div class="flex items-center gap-2.5 pointer-events-auto self-stretch md:self-auto justify-end">
+            <a href="index.html" class="glass-panel hover:bg-slate-800/80 text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border border-slate-700/60" title="Return to Signal Log">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span>Log</span>
+            </a>
+
+            <button id="btn-toggle-labels" class="glass-panel hover:bg-slate-800/80 text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-medium transition flex items-center gap-1.5 border border-slate-700/60" title="Show or Hide Helpful Labels">
+                <svg class="w-4 h-4 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                </svg>
+                <span class="hidden sm:inline">Labels:</span> <span id="label-status-text" class="text-sky-400 font-semibold">ON</span>
+            </button>
+
+            <button id="btn-open-modal" class="btn-glow bg-gradient-to-r from-sky-400 via-cyan-400 to-blue-500 hover:from-sky-300 hover:via-cyan-300 hover:to-blue-400 text-slate-950 font-display font-bold text-xs sm:text-sm px-4 sm:px-5 py-2.5 sm:py-3 rounded-xl shadow-lg transition transform active:scale-95 flex items-center gap-2">
+                <svg class="w-5 h-5 text-slate-950 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+                <span>Explain in Simple Terms</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Bottom Self-Explanatory Story & Friendly Activity Meter HUD -->
+    <footer class="fixed bottom-0 left-0 right-0 z-20 p-3 sm:p-5 pointer-events-none flex justify-center">
+        <div class="glass-panel rounded-2xl p-3.5 sm:p-5 w-full max-w-6xl pointer-events-auto grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
+            
+            <!-- Left 7 Cols: 4-Step Story Progress & Friendly Story Box -->
+            <div class="lg:col-span-7 flex flex-col justify-between space-y-2.5">
+                <!-- 4-Step Story Indicator Pills -->
+                <div class="grid grid-cols-4 gap-1.5 sm:gap-2">
+                    <button data-phase="0" class="phase-step-btn text-left p-2 rounded-xl border transition-all duration-300 bg-slate-900/70 border-slate-700/70 hover:border-sky-400/60">
+                        <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase">
+                            <span>STEP 1</span>
+                            <span class="w-2 h-2 rounded-full bg-slate-500 step-dot"></span>
+                        </div>
+                        <div class="text-[11px] sm:text-xs font-semibold text-slate-200 truncate mt-0.5">😴 Sleeping Cell</div>
+                    </button>
+                    <button data-phase="1" class="phase-step-btn text-left p-2 rounded-xl border transition-all duration-300 bg-slate-900/70 border-slate-700/70 hover:border-sky-400/60">
+                        <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase">
+                            <span>STEP 2</span>
+                            <span class="w-2 h-2 rounded-full bg-slate-500 step-dot"></span>
+                        </div>
+                        <div class="text-[11px] sm:text-xs font-semibold text-slate-200 truncate mt-0.5">💡 Blue Light</div>
+                    </button>
+                    <button data-phase="2" class="phase-step-btn text-left p-2 rounded-xl border transition-all duration-300 bg-slate-900/70 border-slate-700/70 hover:border-sky-400/60">
+                        <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase">
+                            <span>STEP 3</span>
+                            <span class="w-2 h-2 rounded-full bg-slate-500 step-dot"></span>
+                        </div>
+                        <div class="text-[11px] sm:text-xs font-semibold text-slate-200 truncate mt-0.5">🚪 Doors Open</div>
+                    </button>
+                    <button data-phase="3" class="phase-step-btn text-left p-2 rounded-xl border transition-all duration-300 bg-slate-900/70 border-slate-700/70 hover:border-sky-400/60">
+                        <div class="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase">
+                            <span>STEP 4</span>
+                            <span class="w-2 h-2 rounded-full bg-slate-500 step-dot"></span>
+                        </div>
+                        <div class="text-[11px] sm:text-xs font-semibold text-slate-200 truncate mt-0.5">⚡ Cell Wakes Up!</div>
+                    </button>
+                </div>
+
+                <!-- Live Friendly Story Banner -->
+                <div class="bg-slate-950/75 border border-slate-800/90 rounded-xl p-3.5 sm:p-4 flex flex-col justify-center min-h-[84px]">
+                    <div class="flex items-center justify-between gap-2 mb-1">
+                        <span id="narrative-badge" class="text-xs sm:text-sm font-display font-bold tracking-wide text-sky-400">
+                            STEP 1: THE SLEEPING BRAIN CELL
+                        </span>
+                        <span class="text-[11px] text-slate-400 hidden sm:inline" id="camera-status-hint">
+                            🎥 Auto-Camera Tour (Drag to look around)
+                        </span>
+                    </div>
+                    <p id="narrative-text" class="text-xs sm:text-sm text-slate-200 leading-relaxed">
+                        Our brain has billions of cells that control our thoughts, memories, and movements. Right now, this cell is resting and its tiny "light doors" are closed.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right 5 Cols: Warm Visual "Brain Cell Activity Meter" & Big Easy Controls -->
+            <div class="lg:col-span-5 flex flex-col justify-between gap-3 bg-slate-950/85 border border-slate-800/90 rounded-xl p-3.5 sm:p-4">
+                
+                <!-- Top Row: Brain Cell Status & Light Switch Status -->
+                <div class="flex items-center justify-between gap-2">
+                    <div>
+                        <div class="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Brain Cell Activity Meter</div>
+                        <div id="activity-status-text" class="font-display text-base sm:text-lg font-bold text-sky-400 flex items-center gap-1.5 mt-0.5">
+                            <span id="activity-emoji">😴</span>
+                            <span>Sleeping / Off</span>
+                        </div>
+                    </div>
+
+                    <!-- Light Switch & Door Status Pill -->
+                    <div class="text-right">
+                        <div class="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Light Switch</div>
+                        <div id="channel-state-pill" class="inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700">
+                            <span>🌑 Light OFF • Doors Closed</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Warm Visual Energy Progress Bar -->
+                <div class="w-full bg-slate-900 h-4 rounded-full overflow-hidden border border-slate-800 p-0.5">
+                    <div id="energy-bar-fill" class="h-full rounded-full transition-all duration-300 bg-gradient-to-r from-sky-500 via-cyan-400 to-amber-400" style="width: 12%;"></div>
+                </div>
+
+                <!-- Playback & Manual "Shine the Blue Light!" Controls -->
+                <div class="flex items-center gap-2.5 pt-1">
+                    <button id="btn-pulse-now" class="flex-1 bg-gradient-to-r from-sky-500 to-cyan-500 hover:from-sky-400 hover:to-cyan-400 text-slate-950 font-display font-bold rounded-xl px-4 py-2.5 text-xs sm:text-sm shadow-md transition transform active:scale-95 flex items-center justify-center gap-2" title="Turn on the blue light right now!">
+                        <span class="text-base">🔦</span>
+                        <span>Shine the Blue Light!</span>
+                    </button>
+
+                    <button id="btn-pause-cycle" class="bg-slate-800/90 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl px-3.5 py-2.5 text-xs sm:text-sm font-medium transition flex items-center justify-center gap-1.5 shrink-0">
+                        <span id="icon-pause">⏸️</span>
+                        <span id="text-pause">Pause Story</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+    <!-- Simple Explanation Modal Overlay (Hidden by default) -->
+    <div id="explanation-modal" class="fixed inset-0 z-50 hidden items-center justify-center p-3 sm:p-6 bg-slate-950/80 backdrop-blur-md transition-opacity">
+        <div class="glass-panel rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-sky-400/30 shadow-2xl">
+            
+            <!-- Modal Header -->
+            <div class="p-5 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900/60">
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-widest text-amber-400">
+                        🏆 2026 Nobel Prize in Medicine — For Everyone!
+                    </div>
+                    <h2 class="font-display text-xl sm:text-2xl font-bold text-white mt-0.5">
+                        What is Optogenetics? (A Light Switch for the Brain)
+                    </h2>
+                </div>
+                <button id="btn-close-modal" class="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="Close">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-5 sm:p-7 overflow-y-auto custom-scroll space-y-6 text-slate-200 text-sm sm:text-base leading-relaxed">
+                
+                <!-- Section 1: What is Optogenetics? -->
+                <div class="bg-gradient-to-br from-sky-950/70 via-slate-900/90 to-indigo-950/70 border border-sky-400/30 rounded-2xl p-5">
+                    <h3 class="font-display text-lg sm:text-xl font-bold text-sky-300 flex items-center gap-2 mb-2">
+                        <span>💡</span>
+                        <span>Imagine Having a Remote Control for Single Brain Cells</span>
+                    </h3>
+                    <p class="text-slate-200">
+                        Inside your head, you have nearly <strong>86 billion brain cells</strong> tangled together like a giant bowl of spaghetti. Every time you laugh, remember a song, kick a soccer ball, or feel hungry, tiny groups of these cells are chatting with each other using little sparks of electricity.
+                    </p>
+                    <p class="mt-3 text-sky-200 font-medium">
+                        For a long time, scientists couldn't figure out which brain cells did what, because they had no way to turn just <em>one</em> type of cell on without accidentally waking up all the neighbors. <strong>Optogenetics</strong> solved this by putting a tiny "light switch" on specific brain cells—so scientists can turn them ON or OFF just by shining a gentle flash of light!
+                    </p>
+                </div>
+
+                <!-- Section 2: How Pond Scum Helped Us Understand the Brain -->
+                <div>
+                    <h3 class="font-display text-lg sm:text-xl font-bold text-white mb-3 flex items-center gap-2">
+                        <span>🌿</span>
+                        <span>How Green Pond Scum Helped Us Understand the Brain</span>
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Step 1 -->
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+                            <div class="text-2xl mb-2">🦠 1. Sun-Loving Algae</div>
+                            <h4 class="font-display font-bold text-emerald-300 mb-1">A Tiny Eye in a Pond</h4>
+                            <p class="text-xs sm:text-sm text-slate-300">
+                                Have you ever seen green pond algae floating on water? To make food from sunlight, these tiny creatures swim toward the light using a microscopic "eye" made of a special trapdoor that pops open whenever blue light shines on it.
+                            </p>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+                            <div class="text-2xl mb-2">🧬 2. Borrowing the Door</div>
+                            <h4 class="font-display font-bold text-sky-300 mb-1">Adding It to Brain Cells</h4>
+                            <p class="text-xs sm:text-sm text-slate-300">
+                                Scientists realized they could copy the recipe for this light-sensing trapdoor from the green algae and place it onto <strong>specific brain cells</strong> (like only the cells that help us move, or only the cells that help us see).
+                            </p>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-2xl p-4">
+                            <div class="text-2xl mb-2">⚡ 3. Flip the Switch!</div>
+                            <h4 class="font-display font-bold text-amber-300 mb-1">Light Opens the Door</h4>
+                            <p class="text-xs sm:text-sm text-slate-300">
+                                When scientists shine a gentle blue light, those tiny doors swing open! Glowing energy sparks rush inside, waking the brain cell up so it sends a message to its neighbors—all in a fraction of a second.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Section 3: Why Did It Win the 2026 Nobel Prize? -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Laureates -->
+                    <div class="bg-slate-900/80 border border-amber-500/30 rounded-2xl p-4 sm:p-5">
+                        <h3 class="font-display text-base sm:text-lg font-bold text-amber-300 mb-2 flex items-center gap-2">
+                            <span>🏅</span>
+                            <span>Why Did It Win the 2026 Nobel Prize?</span>
+                        </h3>
+                        <p class="text-xs sm:text-sm text-slate-300 mb-3">
+                            The 2026 Nobel Prize in Physiology or Medicine celebrates three pioneering scientists who turned this wild idea into reality:
+                        </p>
+                        <ul class="space-y-2 text-xs sm:text-sm text-slate-300">
+                            <li>
+                                🌟 <strong class="text-white">Peter Hegemann &amp; Georg Nagel:</strong> Discovered how the tiny light-activated doors in green pond algae actually work.
+                            </li>
+                            <li>
+                                🌟 <strong class="text-white">Karl Deisseroth:</strong> Figured out how to put these light switches into living brain cells and use tiny light beams to study how the brain works.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Real World Medicine -->
+                    <div class="bg-slate-900/80 border border-cyan-500/30 rounded-2xl p-4 sm:p-5">
+                        <h3 class="font-display text-base sm:text-lg font-bold text-cyan-300 mb-2 flex items-center gap-2">
+                            <span>❤️</span>
+                            <span>How It Helps People Today</span>
+                        </h3>
+                        <ul class="space-y-2.5 text-xs sm:text-sm text-slate-300">
+                            <li class="flex items-start gap-2">
+                                <span>👀</span>
+                                <span><strong>Helping Blind People See Again:</strong> Doctors have already used these algae light-sensors in human eyes to help people with blindness see shapes and objects again!</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span>🏃</span>
+                                <span><strong>Calming Shaky Hands:</strong> It showed doctors which exact brain pathways can stop tremors in people with Parkinson’s disease.</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <span>🧠</span>
+                                <span><strong>Understanding Feelings &amp; Sleep:</strong> It helps us discover how our brains store happy memories, why we sleep, and how to heal anxiety and sadness.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-4 sm:p-5 border-t border-slate-800 bg-slate-900/80 flex items-center justify-between">
+                <span class="text-xs text-slate-400">Tip: Click the "Shine the Blue Light!" button anytime to watch the doors open!</span>
+                <button id="btn-close-modal-bottom" class="bg-sky-400 hover:bg-sky-300 text-slate-950 font-display font-bold text-xs sm:text-sm px-5 py-2.5 rounded-xl transition">
+                    Back to the 3D Story
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Main 3D Simulation & Narrative Script -->
+    <script>
+        window.onload = function () {
+            // ============================================================================
+            // 1. FRIENDLY 4-STEP STORY CONFIGURATION
+            // ============================================================================
+            const CYCLE_DURATION = 18.0; // Total seconds for a full 4-step story loop
+            const PHASES = [
+                {
+                    id: 0,
+                    start: 0.0,
+                    end: 4.5,
+                    badge: "STEP 1: THE SLEEPING BRAIN CELL 😴",
+                    badgeColor: "text-sky-400",
+                    text: "Our brain has billions of cells that control our thoughts, memories, and movements. Right now, this cell is resting and its tiny \"light doors\" are closed.",
+                    camPos: new THREE.Vector3(0, 7.5, 29),
+                    camTarget: new THREE.Vector3(0, 0.5, 0)
+                },
+                {
+                    id: 1,
+                    start: 4.5,
+                    end: 9.0,
+                    badge: "STEP 2: SHINING A BLUE LIGHT 💡",
+                    badgeColor: "text-cyan-300",
+                    text: "Scientists borrowed a special light-sensing protein from green pond algae and put it on the brain cell. Watch what happens when we shine a gentle beam of blue light on it!",
+                    camPos: new THREE.Vector3(-10, 6.2, 22),
+                    camTarget: new THREE.Vector3(-1.5, 2.2, 0)
+                },
+                {
+                    id: 2,
+                    start: 9.0,
+                    end: 13.5,
+                    badge: "STEP 3: THE SECRET DOORS OPEN 🚪✨",
+                    badgeColor: "text-teal-300",
+                    text: "The blue light acts like a magic key! It unlocks the tiny doors on the cell's surface, letting glowing energy sparks flow inside.",
+                    camPos: new THREE.Vector3(7, -1.2, 19),
+                    camTarget: new THREE.Vector3(-1.0, -0.5, 0)
+                },
+                {
+                    id: 3,
+                    start: 13.5,
+                    end: 18.0,
+                    badge: "STEP 4: THE BRAIN CELL WAKES UP! ⚡🎉",
+                    badgeColor: "text-amber-300",
+                    text: "Filled with energy sparks, the cell lights up and sends a flash of electricity to its neighbors! Scientists can now turn specific brain cells ON and OFF just like flipping a light switch.",
+                    camPos: new THREE.Vector3(-4, 8.5, 34),
+                    camTarget: new THREE.Vector3(6, 1.0, -7)
+                }
+            ];
+
+            let simTime = 0;
+            let isPaused = false;
+            let showLabels = true;
+            let currentPhaseIndex = 0;
+
+            // User Camera Orbit Overrides (Smoothly blends back to Auto-Director when idle)
+            let isDragging = false;
+            let prevMouse = { x: 0, y: 0 };
+            let userOrbitAngles = { theta: 0, phi: 0 };
+            let userZoomOffset = 0;
+            let lastUserInteractionTime = -999;
+
+            // ============================================================================
+            // 2. THREE.JS SCENE, CAMERA, RENDERER & PROCEDURAL GLOW TEXTURE
+            // ============================================================================
+            const container = document.getElementById('webgl-container');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x020617);
+            scene.fog = new THREE.FogExp2(0x020617, 0.0145);
+
+            const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 200);
+            camera.position.set(0, 7.5, 29);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.25;
+            container.appendChild(renderer.domElement);
+
+            // Helper: Generate soft radial glow sprite texture for bioluminescence & bloom feel
+            function createGlowTexture(colorHex) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 128;
+                canvas.height = 128;
+                const ctx = canvas.getContext('2d');
+                const grad = ctx.createRadialGradient(64, 64, 0, 64, 64, 64);
+                const c = new THREE.Color(colorHex);
+                const r = Math.floor(c.r * 255);
+                const g = Math.floor(c.g * 255);
+                const b = Math.floor(c.b * 255);
+                grad.addColorStop(0, `rgba(255, 255, 255, 1)`);
+                grad.addColorStop(0.22, `rgba(${r}, ${g}, ${b}, 0.85)`);
+                grad.addColorStop(0.55, `rgba(${r}, ${g}, ${b}, 0.25)`);
+                grad.addColorStop(1, `rgba(0, 0, 0, 0)`);
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 128, 128);
+                return new THREE.CanvasTexture(canvas);
+            }
+
+            const cyanGlowTex = createGlowTexture(0x00f2fe);
+            const goldGlowTex = createGlowTexture(0xfbbf24);
+            const blueLaserGlowTex = createGlowTexture(0x38bdf8);
+
+            // ============================================================================
+            // 3. LIGHTING SETUP
+            // ============================================================================
+            const ambientLight = new THREE.AmbientLight(0x1e293b, 1.4);
+            scene.add(ambientLight);
+
+            const hemiLight = new THREE.HemisphereLight(0x38bdf8, 0x0f172a, 0.85);
+            scene.add(hemiLight);
+
+            const dirLight = new THREE.DirectionalLight(0xe0f2fe, 1.2);
+            dirLight.position.set(15, 25, 20);
+            scene.add(dirLight);
+
+            // Dynamic Laser PointLight (illuminates the ChR2 channels when 470nm beam fires)
+            const laserLight = new THREE.PointLight(0x00d8ff, 0, 28, 1.5);
+            laserLight.position.set(-1.5, 4.5, 0);
+            scene.add(laserLight);
+
+            // Dynamic Action Potential PointLight (warm gold/amber flash during depolarization)
+            const depolarizationLight = new THREE.PointLight(0xf59e0b, 0, 35, 1.5);
+            depolarizationLight.position.set(0, -3.5, 0);
+            scene.add(depolarizationLight);
+
+            // ============================================================================
+            // 4. BUILD THE LIPID BILAYER NEURON MEMBRANE (INSTANCED MESH FOR HIGH FPS)
+            // ============================================================================
+            const membraneGroup = new THREE.Group();
+            scene.add(membraneGroup);
+
+            // Channel Centers in XZ plane (where holes in the lipid bilayer exist)
+            const channelLocations = [
+                { x: -1.8, z: 0.4, scale: 1.15, isPrimary: true },
+                { x: 5.2, z: -2.2, scale: 0.92, isPrimary: false },
+                { x: -7.5, z: -1.8, scale: 0.90, isPrimary: false }
+            ];
+
+            // Lipid coordinates generator avoiding channel pores
+            const lipidCoords = [];
+            const gridX = 28;
+            const gridZ = 16;
+            const spacing = 0.92;
+
+            for (let ix = -gridX / 2; ix <= gridX / 2; ix++) {
+                for (let iz = -gridZ / 2; iz <= gridZ / 2; iz++) {
+                    const x = ix * spacing + (iz % 2) * 0.42;
+                    const z = iz * spacing;
+                    // Check distance to any Channelrhodopsin pore
+                    let insidePore = false;
+                    for (const ch of channelLocations) {
+                        const dist = Math.hypot(x - ch.x, z - ch.z);
+                        if (dist < 2.35 * ch.scale) {
+                            insidePore = true;
+                            break;
+                        }
+                    }
+                    if (!insidePore) {
+                        lipidCoords.push({ x, z, phase: Math.random() * Math.PI * 2 });
+                    }
+                }
+            }
+
+            const lipidCount = lipidCoords.length;
+            const headGeo = new THREE.SphereGeometry(0.36, 12, 12);
+            const tailGeo = new THREE.CylinderGeometry(0.07, 0.07, 1.35, 8);
+
+            const headMat = new THREE.MeshPhysicalMaterial({
+                color: 0x3b82f6,
+                emissive: 0x0f172a,
+                roughness: 0.25,
+                metalness: 0.1,
+                clearcoat: 0.6
+            });
+            const tailMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                roughness: 0.7,
+                metalness: 0.1
+            });
+
+            // Upper & Lower leaflet heads + 2 tails per head
+            const upperHeads = new THREE.InstancedMesh(headGeo, headMat, lipidCount);
+            const lowerHeads = new THREE.InstancedMesh(headGeo, headMat, lipidCount);
+            const upperTails = new THREE.InstancedMesh(tailGeo, tailMat, lipidCount);
+            const lowerTails = new THREE.InstancedMesh(tailGeo, tailMat, lipidCount);
+
+            membraneGroup.add(upperHeads, lowerHeads, upperTails, lowerTails);
+
+            const dummy = new THREE.Object3D();
+            function updateMembraneWave(time, depolarizationFactor) {
+                // Subtle gold/cyan shift on membrane heads during action potential
+                headMat.emissive.setHex(0x0f172a).lerp(new THREE.Color(0x92400e), depolarizationFactor * 0.65);
+
+                for (let i = 0; i < lipidCount; i++) {
+                    const c = lipidCoords[i];
+                    const waveY = Math.sin(time * 1.6 + c.x * 0.35 + c.z * 0.35) * 0.16;
+
+                    // Upper Leaflet Head
+                    dummy.position.set(c.x, 1.55 + waveY, c.z);
+                    dummy.rotation.set(0, 0, 0);
+                    dummy.updateMatrix();
+                    upperHeads.setMatrixAt(i, dummy.matrix);
+
+                    // Lower Leaflet Head
+                    dummy.position.set(c.x, -1.55 + waveY, c.z);
+                    dummy.updateMatrix();
+                    lowerHeads.setMatrixAt(i, dummy.matrix);
+
+                    // Upper Tail
+                    dummy.position.set(c.x, 0.78 + waveY, c.z);
+                    dummy.rotation.set(Math.sin(time + c.phase) * 0.08, 0, Math.cos(time + c.phase) * 0.08);
+                    dummy.updateMatrix();
+                    upperTails.setMatrixAt(i, dummy.matrix);
+
+                    // Lower Tail
+                    dummy.position.set(c.x, -0.78 + waveY, c.z);
+                    dummy.updateMatrix();
+                    lowerTails.setMatrixAt(i, dummy.matrix);
+                }
+                upperHeads.instanceMatrix.needsUpdate = true;
+                lowerHeads.instanceMatrix.needsUpdate = true;
+                upperTails.instanceMatrix.needsUpdate = true;
+                lowerTails.instanceMatrix.needsUpdate = true;
+            }
+
+            // ============================================================================
+            // 5. BUILD CHANNELRHODOPSIN-2 (ChR2) 7-TRANSMEMBRANE HELIX PROTEINS
+            // ============================================================================
+            const chr2Proteins = [];
+
+            const helixGeo = new THREE.CylinderGeometry(0.32, 0.32, 4.2, 18);
+            const capGeo = new THREE.SphereGeometry(0.32, 14, 14);
+            const retinalGeo = new THREE.OctahedronGeometry(0.42, 1);
+
+            channelLocations.forEach((loc) => {
+                const proteinGroup = new THREE.Group();
+                proteinGroup.position.set(loc.x, 0, loc.z);
+                proteinGroup.scale.setScalar(loc.scale);
+                scene.add(proteinGroup);
+
+                const helixMat = new THREE.MeshPhysicalMaterial({
+                    color: 0x0284c7,
+                    emissive: 0x0369a1,
+                    emissiveIntensity: 0.35,
+                    roughness: 0.2,
+                    metalness: 0.15,
+                    transparent: true,
+                    opacity: 0.92,
+                    clearcoat: 0.8
+                });
+
+                const helices = [];
+                const numHelices = 7; // 7-transmembrane alpha-helices (TM1 - TM7)
+                for (let h = 0; h < numHelices; h++) {
+                    const angle = (h / numHelices) * Math.PI * 2;
+                    const pivot = new THREE.Group();
+                    pivot.userData = { angle };
+
+                    const mesh = new THREE.Mesh(helixGeo, helixMat);
+                    const topCap = new THREE.Mesh(capGeo, helixMat);
+                    topCap.position.y = 2.1;
+                    const botCap = new THREE.Mesh(capGeo, helixMat);
+                    botCap.position.y = -2.1;
+                    mesh.add(topCap, botCap);
+
+                    pivot.add(mesh);
+                    proteinGroup.add(pivot);
+                    helices.push({ pivot, mesh, angle });
+                }
+
+                // All-Trans-Retinal Chromophore at the center of the ChR2 channel
+                const retinalMat = new THREE.MeshStandardMaterial({
+                    color: 0xfbbf24,
+                    emissive: 0xf59e0b,
+                    emissiveIntensity: 0.9,
+                    roughness: 0.1
+                });
+                const retinalMesh = new THREE.Mesh(retinalGeo, retinalMat);
+                retinalMesh.scale.set(1.4, 0.7, 0.7);
+                proteinGroup.add(retinalMesh);
+
+                // Retinal Glow Sprite
+                const retinalSpriteMat = new THREE.SpriteMaterial({
+                    map: goldGlowTex,
+                    color: 0xfbbf24,
+                    transparent: true,
+                    opacity: 0.75,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+                const retinalSprite = new THREE.Sprite(retinalSpriteMat);
+                retinalSprite.scale.set(2.4, 2.4, 1);
+                retinalMesh.add(retinalSprite);
+
+                // Inner Water/Ion Pore Glow Column (visible when channel opens)
+                const poreGeo = new THREE.CylinderGeometry(0.95, 0.95, 4.3, 20, 1, true);
+                const poreMat = new THREE.MeshBasicMaterial({
+                    color: 0x00f2fe,
+                    transparent: true,
+                    opacity: 0.0,
+                    side: THREE.DoubleSide,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                });
+                const poreMesh = new THREE.Mesh(poreGeo, poreMat);
+                proteinGroup.add(poreMesh);
+
+                chr2Proteins.push({
+                    group: proteinGroup,
+                    helices,
+                    helixMat,
+                    retinalMesh,
+                    retinalMat,
+                    retinalSpriteMat,
+                    poreMesh,
+                    poreMat,
+                    loc
+                });
+            });
+
+            // ============================================================================
+            // 6. OPTICAL FIBER & VOLUMETRIC 470nm BLUE LASER BEAM
+            // ============================================================================
+            const fiberGroup = new THREE.Group();
+            // Position above the primary ChR2 protein (-1.8, 0, 0.4)
+            fiberGroup.position.set(-1.8, 12.2, 0.4);
+            scene.add(fiberGroup);
+
+            // Fiber Optic Cladding & Core
+            const claddingGeo = new THREE.CylinderGeometry(1.15, 0.85, 9, 28);
+            const claddingMat = new THREE.MeshPhysicalMaterial({
+                color: 0x94a3b8,
+                metalness: 0.65,
+                roughness: 0.25,
+                clearcoat: 0.5
+            });
+            const claddingMesh = new THREE.Mesh(claddingGeo, claddingMat);
+            claddingMesh.position.y = 4.5;
+            fiberGroup.add(claddingMesh);
+
+            const fiberTipGeo = new THREE.CylinderGeometry(0.82, 0.75, 0.6, 28);
+            const fiberTipMat = new THREE.MeshBasicMaterial({ color: 0x38bdf8 });
+            const fiberTipMesh = new THREE.Mesh(fiberTipGeo, fiberTipMat);
+            fiberTipMesh.position.y = 0;
+            fiberGroup.add(fiberTipMesh);
+
+            // Volumetric Blue Laser Cone (470nm)
+            const laserConeGeo = new THREE.ConeGeometry(5.2, 15.5, 36, 1, true);
+            // Shift cone geometry so apex is near top (y=0) and base expands downward
+            laserConeGeo.translate(0, -7.75, 0);
+            const laserConeMat = new THREE.MeshBasicMaterial({
+                color: 0x00d8ff,
+                transparent: true,
+                opacity: 0.0,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            const laserCone = new THREE.Mesh(laserConeGeo, laserConeMat);
+            fiberGroup.add(laserCone);
+
+            // Inner Core Intense Laser Beam
+            const innerConeGeo = new THREE.ConeGeometry(2.4, 15.5, 32, 1, true);
+            innerConeGeo.translate(0, -7.75, 0);
+            const innerConeMat = new THREE.MeshBasicMaterial({
+                color: 0x7dd3fc,
+                transparent: true,
+                opacity: 0.0,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            const innerLaserCone = new THREE.Mesh(innerConeGeo, innerConeMat);
+            fiberGroup.add(innerLaserCone);
+
+            // Descending Photon Wave Rings inside the laser beam
+            const photonRings = [];
+            const ringGeo = new THREE.RingGeometry(0.4, 0.62, 32);
+            ringGeo.rotateX(Math.PI / 2);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.0,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+            for (let r = 0; r < 6; r++) {
+                const ring = new THREE.Mesh(ringGeo, ringMat.clone());
+                fiberGroup.add(ring);
+                photonRings.push({ mesh: ring, offset: r / 6 });
+            }
+
+            // ============================================================================
+            // 7. FLOATING POSITIVE IONS (Na+ & Ca2+) & INFLUX STREAMING SYSTEM
+            // ============================================================================
+            const NUM_IONS = 95;
+            const ions = [];
+            const ionGeo = new THREE.SphereGeometry(0.22, 10, 10);
+            const naMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
+            const caMat = new THREE.MeshBasicMaterial({ color: 0xfde047 });
+
+            const ionGroup = new THREE.Group();
+            scene.add(ionGroup);
+
+            for (let i = 0; i < NUM_IONS; i++) {
+                const isCalcium = i % 4 === 0;
+                const mesh = new THREE.Mesh(ionGeo, isCalcium ? caMat : naMat);
+
+                // Add bioluminescent glow halo sprite to every ion
+                const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: isCalcium ? goldGlowTex : cyanGlowTex,
+                    color: isCalcium ? 0xfef08a : 0x22d3ee,
+                    transparent: true,
+                    opacity: 0.85,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                }));
+                sprite.scale.set(1.35, 1.35, 1);
+                mesh.add(sprite);
+
+                // Assign half of the ions to stream through the 3 ChR2 channels when open
+                const targetChannel = channelLocations[i % channelLocations.length];
+                const angle = Math.random() * Math.PI * 2;
+                const radius = 0.5 + Math.random() * 11.5;
+
+                const startX = (Math.random() - 0.5) * 24;
+                const startY = 3.2 + Math.random() * 6.5;
+                const startZ = (Math.random() - 0.5) * 14;
+
+                mesh.position.set(startX, startY, startZ);
+                ionGroup.add(mesh);
+
+                ions.push({
+                    mesh,
+                    sprite,
+                    isCalcium,
+                    targetChannel,
+                    streamProgress: Math.random(),
+                    speed: 0.55 + Math.random() * 0.55,
+                    basePos: new THREE.Vector3(startX, startY, startZ),
+                    phaseOffset: Math.random() * Math.PI * 2,
+                    canStream: i < 65 // 65 ions actively rush through the open pores
+                });
+            }
+
+            // ============================================================================
+            // 8. BACKGROUND AXON, DENDRITES & 3D NEURAL NETWORK CIRCUIT
+            // ============================================================================
+            const networkGroup = new THREE.Group();
+            scene.add(networkGroup);
+
+            // Create 5 major Axon/Synaptic pathways radiating from below the membrane into deep space
+            const axonPaths = [
+                new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(-1.8, -3.5, 0.4),
+                    new THREE.Vector3(3.0, -5.2, -3.5),
+                    new THREE.Vector3(10.5, -2.0, -9.0),
+                    new THREE.Vector3(19.0, 2.5, -15.0),
+                    new THREE.Vector3(28.0, 6.0, -22.0)
+                ]),
+                new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(5.2, -3.5, -2.2),
+                    new THREE.Vector3(9.5, -6.0, -6.5),
+                    new THREE.Vector3(16.0, -7.5, -13.0),
+                    new THREE.Vector3(24.0, -4.0, -20.0)
+                ]),
+                new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(-7.5, -3.5, -1.8),
+                    new THREE.Vector3(-12.5, -4.8, -7.0),
+                    new THREE.Vector3(-19.0, -1.0, -14.0),
+                    new THREE.Vector3(-26.0, 4.5, -21.0)
+                ]),
+                new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(-1.8, -3.5, 0.4),
+                    new THREE.Vector3(-4.0, -6.5, -5.5),
+                    new THREE.Vector3(-8.5, -8.5, -13.0),
+                    new THREE.Vector3(-14.0, -10.0, -22.0)
+                ]),
+                new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(10.5, -2.0, -9.0),
+                    new THREE.Vector3(12.0, 4.5, -14.0),
+                    new THREE.Vector3(15.5, 10.5, -20.0)
+                ])
+            ];
+
+            const axonMat = new THREE.MeshStandardMaterial({
+                color: 0x1e293b,
+                emissive: 0x0f172a,
+                roughness: 0.4,
+                metalness: 0.2
+            });
+
+            const actionPotentialPulses = [];
+            const remoteSomata = [];
+
+            axonPaths.forEach((curve, idx) => {
+                const tubeGeo = new THREE.TubeGeometry(curve, 48, idx === 0 ? 0.42 : 0.26, 12, false);
+                const tubeMesh = new THREE.Mesh(tubeGeo, axonMat.clone());
+                networkGroup.add(tubeMesh);
+
+                // Place glowing distant neuron soma at the end of each axon branch
+                const endPt = curve.getPoint(1.0);
+                const somaGeo = new THREE.IcosahedronGeometry(idx === 0 ? 1.5 : 1.1, 2);
+                const somaMat = new THREE.MeshStandardMaterial({
+                    color: 0x334155,
+                    emissive: 0x0ea5e9,
+                    emissiveIntensity: 0.2,
+                    roughness: 0.3
+                });
+                const somaMesh = new THREE.Mesh(somaGeo, somaMat);
+                somaMesh.position.copy(endPt);
+
+                const somaHalo = new THREE.Sprite(new THREE.SpriteMaterial({
+                    map: goldGlowTex,
+                    color: 0xfbbf24,
+                    transparent: true,
+                    opacity: 0.0,
+                    blending: THREE.AdditiveBlending,
+                    depthWrite: false
+                }));
+                somaHalo.scale.set(7.5, 7.5, 1);
+                somaMesh.add(somaHalo);
+
+                networkGroup.add(somaMesh);
+                remoteSomata.push({ mesh: somaMesh, mat: somaMat, halo: somaHalo });
+
+                // Create traveling electrical Action Potential light orbs along each axon curve
+                for (let p = 0; p < 3; p++) {
+                    const pulseSprite = new THREE.Sprite(new THREE.SpriteMaterial({
+                        map: goldGlowTex,
+                        color: 0xfde047,
+                        transparent: true,
+                        opacity: 0.0,
+                        blending: THREE.AdditiveBlending,
+                        depthWrite: false
+                    }));
+                    pulseSprite.scale.set(3.2, 3.2, 1);
+                    networkGroup.add(pulseSprite);
+                    actionPotentialPulses.push({
+                        sprite: pulseSprite,
+                        curve,
+                        tubeMat: tubeMesh.material,
+                        offset: p * 0.28
+                    });
+                }
+            });
+
+            // ============================================================================
+            // 9. 3D FLOATING HUD LABELS PROJECTION
+            // ============================================================================
+            const hudLabels = [
+                {
+                    el: document.getElementById('label-fiber'),
+                    worldPos: new THREE.Vector3(-1.8, 10.2, 0.4),
+                    highlightPhases: [1]
+                },
+                {
+                    el: document.getElementById('label-chr2'),
+                    worldPos: new THREE.Vector3(-1.8, 2.7, 0.4),
+                    highlightPhases: [0, 2]
+                },
+                {
+                    el: document.getElementById('label-retinal'),
+                    worldPos: new THREE.Vector3(-1.8, 0.0, 2.1),
+                    highlightPhases: [1]
+                },
+                {
+                    el: document.getElementById('label-ions'),
+                    worldPos: new THREE.Vector3(2.8, 4.8, 1.0),
+                    highlightPhases: [2]
+                },
+                {
+                    el: document.getElementById('label-membrane'),
+                    worldPos: new THREE.Vector3(-8.8, 1.6, 3.5),
+                    highlightPhases: [0]
+                },
+                {
+                    el: document.getElementById('label-axon'),
+                    worldPos: new THREE.Vector3(10.5, -2.0, -9.0),
+                    highlightPhases: [3]
+                }
+            ];
+
+            const projVec = new THREE.Vector3();
+            function updateHUDLabels(activePhaseId) {
+                const containerEl = document.getElementById('hud-labels-container');
+                if (!showLabels) {
+                    containerEl.style.opacity = '0';
+                    return;
+                }
+                containerEl.style.opacity = '1';
+
+                const halfW = window.innerWidth / 2;
+                const halfH = window.innerHeight / 2;
+
+                hudLabels.forEach((item) => {
+                    projVec.copy(item.worldPos);
+                    projVec.project(camera);
+
+                    // Hide if behind camera
+                    if (projVec.z > 1) {
+                        item.el.style.opacity = '0';
+                        return;
+                    }
+
+                    const x = (projVec.x * halfW) + halfW;
+                    const y = -(projVec.y * halfH) + halfH;
+
+                    item.el.style.transform = `translate(-50%, -50%) translate3d(${x}px, ${y}px, 0)`;
+
+                    // Highlight active phase labels
+                    const isFocused = item.highlightPhases.includes(activePhaseId);
+                    item.el.style.opacity = isFocused ? '1' : '0.68';
+                    item.el.classList.toggle('active-focus', isFocused && activePhaseId !== 3);
+                    item.el.classList.toggle('active-fire', isFocused && activePhaseId === 3);
+                });
+            }
+
+            // ============================================================================
+            // 10. UI CONTROLS, STEP BUTTONS, CAMERA ORBIT & MODAL OVERLAY
+            // ============================================================================
+            const narrativeBadge = document.getElementById('narrative-badge');
+            const narrativeText = document.getElementById('narrative-text');
+            const activityStatusText = document.getElementById('activity-status-text');
+            const energyBarFill = document.getElementById('energy-bar-fill');
+            const channelStatePill = document.getElementById('channel-state-pill');
+            const subChr2 = document.getElementById('sub-chr2');
+            const dotChr2 = document.getElementById('dot-chr2');
+            const subIons = document.getElementById('sub-ions');
+            const phaseButtons = document.querySelectorAll('.phase-step-btn');
+
+            function updatePhaseUI(phaseIdx) {
+                const phase = PHASES[phaseIdx];
+                narrativeBadge.textContent = phase.badge;
+                narrativeBadge.className = `text-xs sm:text-sm font-display font-bold tracking-wide ${phase.badgeColor}`;
+                narrativeText.textContent = phase.text;
+
+                phaseButtons.forEach((btn, idx) => {
+                    const dot = btn.querySelector('.step-dot');
+                    if (idx === phaseIdx) {
+                        btn.classList.add('border-sky-400', 'bg-sky-950/50');
+                        btn.classList.remove('border-slate-700/70', 'bg-slate-900/70');
+                        dot.className = 'w-2 h-2 rounded-full bg-sky-400 animate-ping step-dot';
+                    } else {
+                        btn.classList.remove('border-sky-400', 'bg-sky-950/50');
+                        btn.classList.add('border-slate-700/70', 'bg-slate-900/70');
+                        dot.className = 'w-2 h-2 rounded-full bg-slate-600 step-dot';
+                    }
+                });
+            }
+
+            // Jump to specific step when clicking bottom step buttons
+            phaseButtons.forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const targetPhase = parseInt(btn.getAttribute('data-phase'), 10);
+                    simTime = PHASES[targetPhase].start + 0.05;
+                    updatePhaseUI(targetPhase);
+                });
+            });
+
+            // "Shine the Blue Light!" Button -> Jumps right to Step 2
+            document.getElementById('btn-pulse-now').addEventListener('click', () => {
+                simTime = PHASES[1].start + 0.1;
+                isPaused = false;
+                document.getElementById('text-pause').textContent = 'Pause Story';
+                document.getElementById('icon-pause').textContent = '⏸️';
+            });
+
+            // Pause / Resume Story Button
+            document.getElementById('btn-pause-cycle').addEventListener('click', () => {
+                isPaused = !isPaused;
+                document.getElementById('text-pause').textContent = isPaused ? 'Play Story' : 'Pause Story';
+                document.getElementById('icon-pause').textContent = isPaused ? '▶️' : '⏸️';
+            });
+
+            // Toggle 3D Floating Labels
+            document.getElementById('btn-toggle-labels').addEventListener('click', () => {
+                showLabels = !showLabels;
+                const statusEl = document.getElementById('label-status-text');
+                statusEl.textContent = showLabels ? 'ON' : 'OFF';
+                statusEl.className = showLabels ? 'text-sky-400 font-semibold' : 'text-slate-400 font-semibold';
+            });
+
+            // Modal Open / Close Logic
+            const modal = document.getElementById('explanation-modal');
+            function openModal() {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            document.getElementById('btn-open-modal').addEventListener('click', openModal);
+            document.getElementById('btn-close-modal').addEventListener('click', closeModal);
+            document.getElementById('btn-close-modal-bottom').addEventListener('click', closeModal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+            });
+
+            // Subtle Mouse / Touch Camera Orbit Controls
+            container.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                prevMouse = { x: e.clientX, y: e.clientY };
+                lastUserInteractionTime = performance.now();
+            });
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                const dx = e.clientX - prevMouse.x;
+                const dy = e.clientY - prevMouse.y;
+                prevMouse = { x: e.clientX, y: e.clientY };
+                userOrbitAngles.theta -= dx * 0.006;
+                userOrbitAngles.phi = Math.max(-0.5, Math.min(0.6, userOrbitAngles.phi + dy * 0.005));
+                lastUserInteractionTime = performance.now();
+            });
+            window.addEventListener('mouseup', () => { isDragging = false; });
+
+            container.addEventListener('touchstart', (e) => {
+                if (e.touches.length === 1) {
+                    isDragging = true;
+                    prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                    lastUserInteractionTime = performance.now();
+                }
+            }, { passive: true });
+            window.addEventListener('touchmove', (e) => {
+                if (!isDragging || e.touches.length !== 1) return;
+                const dx = e.touches[0].clientX - prevMouse.x;
+                const dy = e.touches[0].clientY - prevMouse.y;
+                prevMouse = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+                userOrbitAngles.theta -= dx * 0.006;
+                userOrbitAngles.phi = Math.max(-0.5, Math.min(0.6, userOrbitAngles.phi + dy * 0.005));
+                lastUserInteractionTime = performance.now();
+            }, { passive: true });
+            window.addEventListener('touchend', () => { isDragging = false; });
+
+            container.addEventListener('wheel', (e) => {
+                userZoomOffset = Math.max(-10, Math.min(14, userZoomOffset + e.deltaY * 0.015));
+                lastUserInteractionTime = performance.now();
+            }, { passive: true });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            // ============================================================================
+            // 11. MASTER ANIMATION LOOP & VISUAL CHOREOGRAPHY
+            // ============================================================================
+            let lastFrameTime = performance.now();
+            const currentLookAt = new THREE.Vector3(0, 0.5, 0);
+            const desiredCamPos = new THREE.Vector3();
+
+            // Initialize UI with Step 0
+            updatePhaseUI(0);
+
+            function animate(now) {
+                requestAnimationFrame(animate);
+
+                const dt = Math.min((now - lastFrameTime) / 1000, 0.1);
+                lastFrameTime = now;
+
+                if (!isPaused) {
+                    simTime = (simTime + dt) % CYCLE_DURATION;
+                }
+
+                // Determine active narrative step (0..3)
+                let activePhase = 0;
+                for (let i = 0; i < PHASES.length; i++) {
+                    if (simTime >= PHASES[i].start && simTime < PHASES[i].end) {
+                        activePhase = i;
+                        break;
+                    }
+                }
+                if (activePhase !== currentPhaseIndex) {
+                    currentPhaseIndex = activePhase;
+                    updatePhaseUI(currentPhaseIndex);
+                }
+
+                // ------------------------------------------------------------------------
+                // Compute Friendly Animation Intensities (0.0 -> 1.0) from simTime
+                // ------------------------------------------------------------------------
+                // 1) Blue Light Beam Intensity (Active during Step 2 & Step 3: 4.5s -> 13.2s)
+                let laserIntensity = 0.0;
+                if (simTime >= 4.5 && simTime < 13.2) {
+                    const fadeIn = Math.min(1.0, (simTime - 4.5) / 0.6);
+                    const fadeOut = Math.min(1.0, (13.2 - simTime) / 0.8);
+                    laserIntensity = Math.min(fadeIn, fadeOut);
+                }
+
+                // 2) Light-Activated Door Openness (Opens at 6.8s, stays open through Step 3, closes at 14.8s)
+                let channelOpenness = 0.0;
+                if (simTime >= 6.8 && simTime < 14.8) {
+                    const openRamp = Math.min(1.0, (simTime - 6.8) / 1.4);
+                    const closeRamp = Math.min(1.0, (14.8 - simTime) / 1.2);
+                    channelOpenness = Math.min(openRamp, closeRamp);
+                }
+
+                // 3) Brain Cell Wake-Up & Firing Intensity (Step 4: 12.8s -> 17.6s)
+                let apIntensity = 0.0;
+                if (simTime >= 12.8 && simTime < 17.6) {
+                    const fireIn = Math.min(1.0, (simTime - 12.8) / 0.7);
+                    const fireOut = Math.min(1.0, (17.6 - simTime) / 1.2);
+                    apIntensity = Math.min(fireIn, fireOut);
+                }
+
+                // 4) Calculate Friendly Brain Cell Energy Percentage (12% to 100%)
+                let energyPercent = 12;
+                if (simTime < 4.5) {
+                    energyPercent = 12;
+                } else if (simTime >= 4.5 && simTime < 6.8) {
+                    energyPercent = 25;
+                } else if (simTime >= 6.8 && simTime < 12.8) {
+                    const p = (simTime - 6.8) / 6.0;
+                    energyPercent = Math.round(25 + p * 55);
+                } else if (simTime >= 12.8 && simTime < 16.5) {
+                    energyPercent = 100;
+                } else {
+                    energyPercent = 20;
+                }
+                energyBarFill.style.width = `${energyPercent}%`;
+
+                // Update Friendly Brain Cell Activity Meter & Status Pills
+                if (apIntensity > 0.25) {
+                    activityStatusText.innerHTML = `<span>⚡</span><span>Glowing &amp; Active!</span>`;
+                    activityStatusText.className = "font-display text-base sm:text-lg font-bold text-amber-300 flex items-center gap-1.5 mt-0.5";
+                } else if (channelOpenness > 0.2 || laserIntensity > 0.2) {
+                    activityStatusText.innerHTML = `<span>✨</span><span>Waking Up...</span>`;
+                    activityStatusText.className = "font-display text-base sm:text-lg font-bold text-cyan-300 flex items-center gap-1.5 mt-0.5";
+                } else {
+                    activityStatusText.innerHTML = `<span>😴</span><span>Sleeping / Off</span>`;
+                    activityStatusText.className = "font-display text-base sm:text-lg font-bold text-sky-400 flex items-center gap-1.5 mt-0.5";
+                }
+
+                if (channelOpenness > 0.35) {
+                    channelStatePill.innerHTML = `<span>💡 Light ON • Doors OPEN!</span>`;
+                    channelStatePill.className = "inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-xs font-bold bg-cyan-500/25 text-cyan-200 border border-cyan-400/50";
+                    subChr2.textContent = "Door is OPEN — Sparks flowing in!";
+                    dotChr2.className = "w-2.5 h-2.5 rounded-full bg-cyan-300 animate-ping";
+                    subIons.textContent = "Rushing inside the brain cell!";
+                } else if (laserIntensity > 0.2) {
+                    channelStatePill.innerHTML = `<span>💡 Blue Light Shining...</span>`;
+                    channelStatePill.className = "inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-xs font-bold bg-sky-500/25 text-sky-200 border border-sky-400/50";
+                    subChr2.textContent = "Unlocking the door...";
+                    dotChr2.className = "w-2.5 h-2.5 rounded-full bg-sky-300";
+                    subIons.textContent = "Getting ready to flow inside";
+                } else {
+                    channelStatePill.innerHTML = `<span>🌑 Light OFF • Doors Closed</span>`;
+                    channelStatePill.className = "inline-flex items-center gap-1.5 mt-1 px-2.5 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700";
+                    subChr2.textContent = "Borrowed from green pond algae (Closed)";
+                    dotChr2.className = "w-2.5 h-2.5 rounded-full bg-sky-400";
+                    subIons.textContent = "Waiting outside the cell";
+                }
+
+                // ------------------------------------------------------------------------
+                // Animate Gentle Blue Light Beam & Wave Rings
+                // ------------------------------------------------------------------------
+                const pulseFlicker = 0.92 + 0.08 * Math.sin(now * 0.025);
+                laserConeMat.opacity = laserIntensity * 0.28 * pulseFlicker;
+                innerConeMat.opacity = laserIntensity * 0.52 * pulseFlicker;
+                laserLight.intensity = laserIntensity * 4.5 * pulseFlicker;
+                fiberTipMat.color.setHex(laserIntensity > 0.1 ? 0x00f2fe : 0x1e293b);
+
+                photonRings.forEach((ringObj) => {
+                    if (laserIntensity > 0.05) {
+                        const progress = ((now * 0.0012 + ringObj.offset) % 1.0);
+                        ringObj.mesh.position.y = -progress * 13.5;
+                        const radiusScale = 1.0 + progress * 5.5;
+                        ringObj.mesh.scale.set(radiusScale, 1, radiusScale);
+                        ringObj.mesh.material.opacity = (1.0 - progress) * laserIntensity * 0.75;
+                    } else {
+                        ringObj.mesh.material.opacity = 0;
+                    }
+                });
+
+                // ------------------------------------------------------------------------
+                // Animate Channelrhodopsin-2 Helices, Retinal Isomerization & Pore Glow
+                // ------------------------------------------------------------------------
+                chr2Proteins.forEach((prot) => {
+                    // Retinal rotates & flashes bright cyan/white when hit by 470nm photons
+                    prot.retinalMesh.rotation.y = now * 0.002 + laserIntensity * 2.2;
+                    prot.retinalMesh.rotation.z = channelOpenness * 0.65;
+                    prot.retinalSpriteMat.opacity = 0.6 + laserIntensity * 0.4;
+                    prot.retinalSpriteMat.color.setHex(laserIntensity > 0.3 ? 0x38bdf8 : 0xfbbf24);
+
+                    // Pore glow column
+                    prot.poreMat.opacity = channelOpenness * 0.42;
+                    prot.helixMat.emissiveIntensity = 0.3 + laserIntensity * 0.45 + channelOpenness * 0.5;
+
+                    // 7 Transmembrane Helices dilate outward and tilt open when channelOpenness > 0
+                    const baseRadius = 1.08;
+                    const openRadius = baseRadius + channelOpenness * 0.62;
+                    prot.helices.forEach((h) => {
+                        const r = openRadius;
+                        h.mesh.position.set(Math.cos(h.angle) * r, 0, Math.sin(h.angle) * r);
+                        // Tilt helices outward to visually widen the gate
+                        h.mesh.rotation.z = -Math.cos(h.angle) * channelOpenness * 0.18;
+                        h.mesh.rotation.x = Math.sin(h.angle) * channelOpenness * 0.18;
+                    });
+                });
+
+                // ------------------------------------------------------------------------
+                // Animate Positive Ions (Na+ and Ca2+)
+                // ------------------------------------------------------------------------
+                ions.forEach((ion) => {
+                    if (channelOpenness > 0.15 && ion.canStream) {
+                        // Stream rapidly from above membrane through the open ChR2 pore into intracellular space
+                        ion.streamProgress = (ion.streamProgress + dt * ion.speed * (0.4 + channelOpenness * 1.1)) % 1.0;
+                        const p = ion.streamProgress;
+
+                        // Y path from +6.5 (extracellular) through 0.0 (ChR2 pore) to -6.5 (intracellular)
+                        const y = 6.5 - p * 13.0;
+                        // Funnel pinch: narrow tightly as ion passes through y = -2.2 .. +2.2
+                        const distFromPoreCenter = Math.abs(y) / 6.5;
+                        const spread = 0.25 + Math.pow(distFromPoreCenter, 1.7) * 3.8;
+
+                        const swirlAngle = p * Math.PI * 4 + ion.phaseOffset;
+                        const x = ion.targetChannel.x + Math.cos(swirlAngle) * spread;
+                        const z = ion.targetChannel.z + Math.sin(swirlAngle) * spread;
+
+                        ion.mesh.position.lerp(new THREE.Vector3(x, y, z), 0.25);
+                        ion.sprite.scale.setScalar(1.35 + (1.0 - distFromPoreCenter) * 0.8);
+                    } else {
+                        // Gentle Brownian floating in the extracellular space above the membrane
+                        const floatX = ion.basePos.x + Math.sin(now * 0.0012 + ion.phaseOffset) * 0.65;
+                        const floatY = ion.basePos.y + Math.cos(now * 0.0015 + ion.phaseOffset) * 0.45;
+                        const floatZ = ion.basePos.z + Math.sin(now * 0.001 + ion.phaseOffset * 2) * 0.65;
+                        ion.mesh.position.lerp(new THREE.Vector3(floatX, floatY, floatZ), 0.06);
+                        ion.sprite.scale.setScalar(1.3);
+                    }
+                });
+
+                // ------------------------------------------------------------------------
+                // Animate Membrane Bilayer Wave & Phase 4 Action Potential Neural Firing
+                // ------------------------------------------------------------------------
+                updateMembraneWave(now * 0.001, apIntensity);
+                depolarizationLight.intensity = apIntensity * 5.0;
+
+                actionPotentialPulses.forEach((pulse) => {
+                    if (apIntensity > 0.05) {
+                        const t = ((now * 0.00085 + pulse.offset) % 1.0);
+                        const pt = pulse.curve.getPoint(t);
+                        pulse.sprite.position.copy(pt);
+                        pulse.sprite.material.opacity = Math.sin(t * Math.PI) * apIntensity * 0.95;
+                        pulse.tubeMat.emissive.setHex(0x0f172a).lerp(new THREE.Color(0xd97706), apIntensity * 0.55);
+                    } else {
+                        pulse.sprite.material.opacity = 0;
+                        pulse.tubeMat.emissive.setHex(0x0f172a);
+                    }
+                });
+
+                remoteSomata.forEach((soma, idx) => {
+                    const flash = apIntensity * (0.6 + 0.4 * Math.sin(now * 0.012 + idx));
+                    soma.mat.emissiveIntensity = 0.2 + flash * 1.5;
+                    soma.halo.material.opacity = flash * 0.85;
+                });
+
+                // ------------------------------------------------------------------------
+                // Automatic Director Camera Choreography + Smooth User Orbit Blending
+                // ------------------------------------------------------------------------
+                const phaseSpec = PHASES[currentPhaseIndex];
+                const timeSinceUserTouch = (now - lastUserInteractionTime) / 1000;
+
+                // Slowly decay user orbit offsets after 6 seconds of idle so it stays self-explanatory
+                if (!isDragging && timeSinceUserTouch > 6.0) {
+                    userOrbitAngles.theta *= 0.985;
+                    userOrbitAngles.phi *= 0.985;
+                    userZoomOffset *= 0.985;
+                }
+
+                // Base auto-director position with gentle sinusoidal drift
+                desiredCamPos.copy(phaseSpec.camPos);
+                desiredCamPos.x += Math.sin(now * 0.0004) * 1.8;
+                desiredCamPos.y += Math.cos(now * 0.0003) * 0.8;
+
+                // Apply user spherical orbit offset if any
+                const offsetVec = desiredCamPos.clone().sub(phaseSpec.camTarget);
+                const spherical = new THREE.Spherical().setFromVector3(offsetVec);
+                spherical.theta += userOrbitAngles.theta;
+                spherical.phi = Math.max(0.2, Math.min(Math.PI - 0.2, spherical.phi - userOrbitAngles.phi));
+                spherical.radius = Math.max(10, Math.min(55, spherical.radius + userZoomOffset));
+                offsetVec.setFromSpherical(spherical);
+
+                const finalCamPos = phaseSpec.camTarget.clone().add(offsetVec);
+                camera.position.lerp(finalCamPos, 0.035);
+                currentLookAt.lerp(phaseSpec.camTarget, 0.045);
+                camera.lookAt(currentLookAt);
+
+                // Project 3D Floating HUD labels to 2D screen coordinates
+                updateHUDLabels(currentPhaseIndex);
+
+                renderer.render(scene, camera);
+            }
+
+            requestAnimationFrame(animate);
+        };
+    </script>
+</body>
+</html>
