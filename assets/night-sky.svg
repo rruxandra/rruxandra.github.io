@@ -1,0 +1,107 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0a0e24" />
+      <stop offset="65%" stop-color="#192347" />
+      <stop offset="100%" stop-color="#38446b" />
+    </linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#131b36" />
+      <stop offset="100%" stop-color="#050814" />
+    </linearGradient>
+    <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#fffce6" stop-opacity="0.9" />
+      <stop offset="30%" stop-color="#ffe89e" stop-opacity="0.3" />
+      <stop offset="100%" stop-color="#ffe89e" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+
+  <!-- Background Night Sky -->
+  <rect width="800" height="360" fill="url(#sky)" />
+
+  <!-- Moon and Glow -->
+  <circle cx="650" cy="110" r="85" fill="url(#moonGlow)" />
+  <circle cx="650" cy="110" r="24" fill="#fffdf2" />
+
+  <!-- Starfield -->
+  <g fill="#ffffff" opacity="0.85">
+    <circle cx="20" cy="83" r="1.3" />
+    <circle cx="33" cy="73" r="1.2" />
+    <circle cx="46" cy="71" r="1.5" />
+    <circle cx="59" cy="78" r="1.1" />
+    <circle cx="72" cy="65" r="1.4" />
+    <circle cx="85" cy="76" r="1.2" />
+    <circle cx="98" cy="32" r="1.6" />
+    <circle cx="111" cy="68" r="1.1" />
+    <circle cx="124" cy="69" r="1.3" />
+    <circle cx="137" cy="84" r="1.5" />
+    <circle cx="150" cy="69" r="1.2" />
+    <circle cx="163" cy="67" r="1.4" />
+    <circle cx="176" cy="84" r="1.1" />
+    <circle cx="189" cy="69" r="1.3" />
+    <circle cx="202" cy="68" r="1.5" />
+    <circle cx="215" cy="63" r="1.2" />
+    <circle cx="228" cy="32" r="1.4" />
+    <circle cx="241" cy="77" r="1.1" />
+    <circle cx="254" cy="97" r="1.6" />
+    <circle cx="267" cy="105" r="1.2" />
+    <circle cx="280" cy="108" r="1.3" />
+    <circle cx="293" cy="32" r="1.5" />
+    <circle cx="306" cy="97" r="1.1" />
+    <circle cx="319" cy="116" r="1.4" />
+    <circle cx="332" cy="58" r="1.2" />
+    <circle cx="345" cy="32" r="1.3" />
+    <circle cx="358" cy="108" r="1.5" />
+    <circle cx="371" cy="105" r="1.1" />
+    <circle cx="384" cy="114" r="1.4" />
+    <circle cx="397" cy="46" r="1.2" />
+    <circle cx="410" cy="114" r="1.6" />
+    <circle cx="423" cy="117" r="1.1" />
+    <circle cx="436" cy="120" r="1.3" />
+    <circle cx="449" cy="64" r="1.5" />
+    <circle cx="462" cy="103" r="1.2" />
+    <circle cx="475" cy="109" r="1.4" />
+    <circle cx="488" cy="97" r="1.1" />
+    <circle cx="501" cy="105" r="1.3" />
+    <circle cx="514" cy="108" r="1.5" />
+    <circle cx="527" cy="46" r="1.2" />
+    <circle cx="540" cy="99" r="1.4" />
+    <circle cx="553" cy="111" r="1.1" />
+    <circle cx="566" cy="109" r="1.6" />
+    <circle cx="579" cy="32" r="1.2" />
+    <circle cx="592" cy="83" r="1.3" />
+    <circle cx="605" cy="117" r="1.5" />
+    <circle cx="618" cy="98" r="1.1" />
+    <circle cx="631" cy="106" r="1.4" />
+    <circle cx="644" cy="101" r="1.2" />
+    <circle cx="657" cy="99" r="1.3" />
+    <circle cx="670" cy="116" r="1.5" />
+    <circle cx="683" cy="58" r="1.1" />
+    <circle cx="696" cy="32" r="1.4" />
+    <circle cx="709" cy="65" r="1.2" />
+    <circle cx="722" cy="67" r="1.6" />
+    <circle cx="735" cy="75" r="1.1" />
+  </g>
+
+  <!-- Distant Mountains -->
+  <polygon points="0,360 0,260 110,190 230,275 370,165 510,255 640,185 760,245 800,220 800,360" fill="#161f3d" />
+  <polygon points="0,360 0,295 160,230 290,305 450,210 600,295 720,240 800,275 800,360" fill="#0e152b" />
+
+  <!-- Foreground Pine Silhouette -->
+  <path d="M0,360 L0,330 L40,315 L90,335 L150,310 L220,340 L310,320 L400,345 L510,325 L620,345 L710,330 L800,345 L800,360 Z" fill="#080c1a" />
+
+  <!-- Calm Lake -->
+  <rect y="360" width="800" height="140" fill="url(#water)" />
+
+  <!-- Water Ripples / Moon Reflection -->
+  <g fill="#fffdf2" opacity="0.35">
+    <rect x="625" y="370" width="50" height="2" rx="1" />
+    <rect x="630" y="378" width="40" height="2" rx="1" />
+    <rect x="620" y="387" width="60" height="3" rx="1.5" />
+    <rect x="635" y="398" width="30" height="2" rx="1" />
+    <rect x="628" y="408" width="44" height="2" rx="1" />
+    <rect x="638" y="420" width="24" height="1.5" rx="0.75" />
+    <rect x="633" y="432" width="34" height="1.5" rx="0.75" />
+    <rect x="642" y="445" width="16" height="1" rx="0.5" />
+  </g>
+</svg>

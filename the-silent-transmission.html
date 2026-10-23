@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Silent Transmission — On background noise and things left in plain sight</title>
+<link rel="stylesheet" href="assets/article-fonts.css">
+<style>
+  :root {
+    --bg:        #080a14;
+    --ink:       #e8ecf6;
+    --ink-dim:   #7d869e;
+    --accent:    #ffe279;
+    --cyan:      #5de3d9;
+    --rule:      rgba(255, 255, 255, 0.08);
+    --mono:      'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+    --serif:     'Fraunces', Georgia, serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--serif);
+    font-variation-settings: 'opsz' 14, 'SOFT' 40, 'WONK' 0;
+    font-weight: 350;
+    line-height: 1.6;
+    letter-spacing: 0.01em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+    min-height: 100vh;
+  }
+
+  /* ── Film grain ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 99;
+    pointer-events: none; opacity: 0.035; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── Vignette ── */
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(4, 5, 10, 0.75) 100%);
+  }
+
+  /* ── Navigation ── */
+  .nav {
+    position: fixed; top: 24px; left: 24px; z-index: 50;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .back {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    color: var(--ink-dim);
+    background: rgba(13, 17, 34, 0.85);
+    padding: 6px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+    text-decoration: none;
+    backdrop-filter: blur(8px);
+    transition: color 0.2s, border-color 0.2s;
+  }
+  .back:hover { color: #ffffff; border-color: rgba(255, 255, 255, 0.25); }
+
+  .meta-date {
+    position: fixed; top: 24px; right: 28px; z-index: 50;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+  }
+
+  /* ── Main layout ── */
+  main {
+    position: relative; z-index: 10;
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 120px 24px 90px;
+  }
+
+  header {
+    margin-bottom: 2.2rem;
+  }
+
+  h1 {
+    font-size: clamp(2.4rem, 5.5vw, 3.4rem);
+    font-weight: 500;
+    line-height: 1.15;
+    color: #ffffff;
+    margin: 0 0 0.8rem 0;
+    letter-spacing: -0.02em;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .subtitle {
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    color: var(--ink-dim);
+    line-height: 1.5;
+  }
+
+  /* ── Image frame ── */
+  .figure-wrap {
+    margin: 0 0 2.5rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    box-shadow: 0 24px 70px -20px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    background: #000;
+  }
+
+  .figure-wrap svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  footer {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  footer a { color: inherit; text-decoration: none; transition: color 0.2s; }
+  footer a:hover { color: var(--cyan); }
+
+  @media (max-width: 640px) {
+    .nav { left: 16px; top: 16px; }
+    .meta-date { display: none; }
+    main { padding: 95px 18px 70px; }
+    h1 { font-size: 2rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="vignette"></div>
+<div class="grain"></div>
+
+<div class="nav">
+  <a class="back" href="index.html">← Log</a>
+</div>
+<div class="meta-date">2026.10.23</div>
+
+<main>
+  <header>
+    <h1>The Silent <em>Transmission</em></h1>
+    <p class="subtitle">On background noise and things left in plain sight.</p>
+  </header>
+
+  <div class="figure-wrap">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" width="100%" height="100%">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#0a0e24" />
+          <stop offset="65%" stop-color="#192347" />
+          <stop offset="100%" stop-color="#38446b" />
+        </linearGradient>
+        <linearGradient id="water" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#131b36" />
+          <stop offset="100%" stop-color="#050814" />
+        </linearGradient>
+        <radialGradient id="moonGlow" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#fffce6" stop-opacity="0.9" />
+          <stop offset="30%" stop-color="#ffe89e" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#ffe89e" stop-opacity="0" />
+        </radialGradient>
+      </defs>
+
+      <!-- Background Night Sky -->
+      <rect width="800" height="360" fill="url(#sky)" />
+
+      <!-- Moon and Glow -->
+      <circle cx="650" cy="110" r="85" fill="url(#moonGlow)" />
+      <circle cx="650" cy="110" r="24" fill="#fffdf2" />
+
+      <!-- Starfield -->
+      <g fill="#ffffff" opacity="0.85">
+        <circle cx="20" cy="83" r="1.3" />
+        <circle cx="33" cy="73" r="1.2" />
+        <circle cx="46" cy="71" r="1.5" />
+        <circle cx="59" cy="78" r="1.1" />
+        <circle cx="72" cy="65" r="1.4" />
+        <circle cx="85" cy="76" r="1.2" />
+        <circle cx="98" cy="32" r="1.6" />
+        <circle cx="111" cy="68" r="1.1" />
+        <circle cx="124" cy="69" r="1.3" />
+        <circle cx="137" cy="84" r="1.5" />
+        <circle cx="150" cy="69" r="1.2" />
+        <circle cx="163" cy="67" r="1.4" />
+        <circle cx="176" cy="84" r="1.1" />
+        <circle cx="189" cy="69" r="1.3" />
+        <circle cx="202" cy="68" r="1.5" />
+        <circle cx="215" cy="63" r="1.2" />
+        <circle cx="228" cy="32" r="1.4" />
+        <circle cx="241" cy="77" r="1.1" />
+        <circle cx="254" cy="97" r="1.6" />
+        <circle cx="267" cy="105" r="1.2" />
+        <circle cx="280" cy="108" r="1.3" />
+        <circle cx="293" cy="32" r="1.5" />
+        <circle cx="306" cy="97" r="1.1" />
+        <circle cx="319" cy="116" r="1.4" />
+        <circle cx="332" cy="58" r="1.2" />
+        <circle cx="345" cy="32" r="1.3" />
+        <circle cx="358" cy="108" r="1.5" />
+        <circle cx="371" cy="105" r="1.1" />
+        <circle cx="384" cy="114" r="1.4" />
+        <circle cx="397" cy="46" r="1.2" />
+        <circle cx="410" cy="114" r="1.6" />
+        <circle cx="423" cy="117" r="1.1" />
+        <circle cx="436" cy="120" r="1.3" />
+        <circle cx="449" cy="64" r="1.5" />
+        <circle cx="462" cy="103" r="1.2" />
+        <circle cx="475" cy="109" r="1.4" />
+        <circle cx="488" cy="97" r="1.1" />
+        <circle cx="501" cy="105" r="1.3" />
+        <circle cx="514" cy="108" r="1.5" />
+        <circle cx="527" cy="46" r="1.2" />
+        <circle cx="540" cy="99" r="1.4" />
+        <circle cx="553" cy="111" r="1.1" />
+        <circle cx="566" cy="109" r="1.6" />
+        <circle cx="579" cy="32" r="1.2" />
+        <circle cx="592" cy="83" r="1.3" />
+        <circle cx="605" cy="117" r="1.5" />
+        <circle cx="618" cy="98" r="1.1" />
+        <circle cx="631" cy="106" r="1.4" />
+        <circle cx="644" cy="101" r="1.2" />
+        <circle cx="657" cy="99" r="1.3" />
+        <circle cx="670" cy="116" r="1.5" />
+        <circle cx="683" cy="58" r="1.1" />
+        <circle cx="696" cy="32" r="1.4" />
+        <circle cx="709" cy="65" r="1.2" />
+        <circle cx="722" cy="67" r="1.6" />
+        <circle cx="735" cy="75" r="1.1" />
+      </g>
+
+      <!-- Distant Mountains -->
+      <polygon points="0,360 0,260 110,190 230,275 370,165 510,255 640,185 760,245 800,220 800,360" fill="#161f3d" />
+      <polygon points="0,360 0,295 160,230 290,305 450,210 600,295 720,240 800,275 800,360" fill="#0e152b" />
+
+      <!-- Foreground Pine Silhouette -->
+      <path d="M0,360 L0,330 L40,315 L90,335 L150,310 L220,340 L310,320 L400,345 L510,325 L620,345 L710,330 L800,345 L800,360 Z" fill="#080c1a" />
+
+      <!-- Calm Lake -->
+      <rect y="360" width="800" height="140" fill="url(#water)" />
+
+      <!-- Water Ripples / Moon Reflection -->
+      <g fill="#fffdf2" opacity="0.35">
+        <rect x="625" y="370" width="50" height="2" rx="1" />
+        <rect x="630" y="378" width="40" height="2" rx="1" />
+        <rect x="620" y="387" width="60" height="3" rx="1.5" />
+        <rect x="635" y="398" width="30" height="2" rx="1" />
+        <rect x="628" y="408" width="44" height="2" rx="1" />
+        <rect x="638" y="420" width="24" height="1.5" rx="0.75" />
+        <rect x="633" y="432" width="34" height="1.5" rx="0.75" />
+        <rect x="642" y="445" width="16" height="1" rx="0.5" />
+      </g>
+    </svg>
+  </div>
+
+  <footer>
+    <span>No. 29</span>
+    <a href="index.html">Signal Log</a>
+  </footer>
+</main>
+
+</body>
+</html>
