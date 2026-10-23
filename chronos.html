@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CHRONOS // Lifespan Bio-Optimization Engine · Signal</title>
+
+    <!-- Local Typography & Layout Styles -->
+    <link rel="stylesheet" href="assets/opto-fonts.css">
+    <!-- Phosphor Icons (Local) -->
+    <link rel="stylesheet" href="assets/phosphor.css">
+    <!-- Three.js Core (Local) -->
+    <script src="assets/three.min.js"></script>
+    
+    <style>
+/* Compiled Tailwind CSS Utilities */
+*,:after,:before{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgba(59,130,246,.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/*! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com*/*,:after,:before{border:0 solid #e5e7eb;box-sizing:border-box}:after,:before{--tw-content:""}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;font-family:Inter,sans-serif;font-feature-settings:normal;font-variation-settings:normal;-moz-tab-size:4;-o-tab-size:4;tab-size:4;-webkit-tap-highlight-color:transparent}body{line-height:inherit;margin:0}hr{border-top-width:1px;color:inherit;height:0}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:JetBrains Mono,monospace;font-feature-settings:normal;font-size:1em;font-variation-settings:normal}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{border-collapse:collapse;border-color:inherit;text-indent:0}button,input,optgroup,select,textarea{color:inherit;font-family:inherit;font-feature-settings:inherit;font-size:100%;font-variation-settings:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0}fieldset,legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::-moz-placeholder,textarea::-moz-placeholder{color:#9ca3af;opacity:1}input::placeholder,textarea::placeholder{color:#9ca3af;opacity:1}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{height:auto;max-width:100%}[hidden]:where(:not([hidden=until-found])){display:none}.container{width:100%}@media (min-width:640px){.container{max-width:640px}}@media (min-width:768px){.container{max-width:768px}}@media (min-width:1024px){.container{max-width:1024px}}@media (min-width:1280px){.container{max-width:1280px}}@media (min-width:1536px){.container{max-width:1536px}}.pointer-events-none{pointer-events:none}.pointer-events-auto{pointer-events:auto}.visible{visibility:visible}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.inset-x-0{left:0;right:0}.bottom-0{bottom:0}.z-10{z-index:10}.z-20{z-index:20}.z-50{z-index:50}.mx-auto{margin-left:auto;margin-right:auto}.mb-0\.5{margin-bottom:.125rem}.mb-1{margin-bottom:.25rem}.mb-1\.5{margin-bottom:.375rem}.mb-2\.5{margin-bottom:.625rem}.mb-3{margin-bottom:.75rem}.mb-3\.5{margin-bottom:.875rem}.mb-4{margin-bottom:1rem}.mb-5{margin-bottom:1.25rem}.mt-0\.5{margin-top:.125rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-1\.5{height:.375rem}.h-10{height:2.5rem}.h-2{height:.5rem}.h-2\.5{height:.625rem}.h-9{height:2.25rem}.h-\[calc\(100vh-195px\)\]{height:calc(100vh - 195px)}.h-auto{height:auto}.h-full{height:100%}.max-h-full{max-height:100%}.w-1\.5{width:.375rem}.w-10{width:2.5rem}.w-2{width:.5rem}.w-2\.5{width:.625rem}.w-9{width:2.25rem}.w-full{width:100%}.max-w-4xl{max-width:56rem}.max-w-5xl{max-width:64rem}.flex-1{flex:1 1 0%}.shrink-0{flex-shrink:0}.transform{transform:translate(var(--tw-translate-x),var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.cursor-pointer{cursor:pointer}.resize{resize:both}.grid-cols-1{grid-template-columns:repeat(1,minmax(0,1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-center{align-items:center}.items-baseline{align-items:baseline}.items-stretch{align-items:stretch}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-0\.5{gap:.125rem}.gap-1{gap:.25rem}.gap-1\.5{gap:.375rem}.gap-2{gap:.5rem}.gap-2\.5{gap:.625rem}.gap-3{gap:.75rem}.gap-3\.5{gap:.875rem}.gap-4{gap:1rem}.space-y-2\.5>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-bottom:calc(.625rem*var(--tw-space-y-reverse));margin-top:calc(.625rem*(1 - var(--tw-space-y-reverse)))}.space-y-3>:not([hidden])~:not([hidden]){--tw-space-y-reverse:0;margin-bottom:calc(.75rem*var(--tw-space-y-reverse));margin-top:calc(.75rem*(1 - var(--tw-space-y-reverse)))}.overflow-hidden{overflow:hidden}.overflow-visible{overflow:visible}.overflow-x-auto{overflow-x:auto}.overflow-y-auto{overflow-y:auto}.whitespace-nowrap{white-space:nowrap}.rounded{border-radius:.25rem}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-\[11px\]{border-radius:11px}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:.5rem}.rounded-md{border-radius:.375rem}.rounded-xl{border-radius:.75rem}.border{border-width:1px}.border-b{border-bottom-width:1px}.border-t{border-top-width:1px}.border-amber-500\/40{border-color:rgba(245,158,11,.4)}.border-cyan-400\/60{border-color:rgba(34,211,238,.6)}.border-cyan-500\/30{border-color:rgba(6,182,212,.3)}.border-emerald-500\/30{border-color:rgba(16,185,129,.3)}.border-rose-500\/30{border-color:rgba(244,63,94,.3)}.border-white\/10{border-color:hsla(0,0%,100%,.1)}.border-white\/15{border-color:hsla(0,0%,100%,.15)}.border-white\/5{border-color:hsla(0,0%,100%,.05)}.bg-\[\#00f2fe\]{--tw-bg-opacity:1;background-color:rgb(0 242 254/var(--tw-bg-opacity,1))}.bg-\[\#060a17\]{--tw-bg-opacity:1;background-color:rgb(6 10 23/var(--tw-bg-opacity,1))}.bg-\[\#060b16\]{--tw-bg-opacity:1;background-color:rgb(6 11 22/var(--tw-bg-opacity,1))}.bg-\[\#0ba360\]{--tw-bg-opacity:1;background-color:rgb(11 163 96/var(--tw-bg-opacity,1))}.bg-\[\#b224ef\]{--tw-bg-opacity:1;background-color:rgb(178 36 239/var(--tw-bg-opacity,1))}.bg-\[\#f6d365\]{--tw-bg-opacity:1;background-color:rgb(246 211 101/var(--tw-bg-opacity,1))}.bg-\[\#ff0844\]{--tw-bg-opacity:1;background-color:rgb(255 8 68/var(--tw-bg-opacity,1))}.bg-amber-500\/20{background-color:rgba(245,158,11,.2)}.bg-black\/80{background-color:rgba(0,0,0,.8)}.bg-cyan-500\/15{background-color:rgba(6,182,212,.15)}.bg-cyan-500\/25{background-color:rgba(6,182,212,.25)}.bg-emerald-500\/15{background-color:rgba(16,185,129,.15)}.bg-rose-950\/40{background-color:rgba(76,5,25,.4)}.bg-slate-900\/70{background-color:rgba(15,23,42,.7)}.bg-slate-900\/75{background-color:rgba(15,23,42,.75)}.bg-slate-900\/80{background-color:rgba(15,23,42,.8)}.bg-slate-900\/90{background-color:rgba(15,23,42,.9)}.bg-slate-950\/85{background-color:rgba(2,6,23,.85)}.bg-white\/10{background-color:hsla(0,0%,100%,.1)}.bg-white\/5{background-color:hsla(0,0%,100%,.05)}.bg-gradient-to-br{background-image:linear-gradient(to bottom right,var(--tw-gradient-stops))}.bg-gradient-to-r{background-image:linear-gradient(to right,var(--tw-gradient-stops))}.from-amber-500{--tw-gradient-from:#f59e0b var(--tw-gradient-from-position);--tw-gradient-to:rgba(245,158,11,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-cyan-400{--tw-gradient-from:#22d3ee var(--tw-gradient-from-position);--tw-gradient-to:rgba(34,211,238,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-cyan-500{--tw-gradient-from:#06b6d4 var(--tw-gradient-from-position);--tw-gradient-to:rgba(6,182,212,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-emerald-600{--tw-gradient-from:#059669 var(--tw-gradient-from-position);--tw-gradient-to:rgba(5,150,105,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-emerald-950\/80{--tw-gradient-from:rgba(2,44,34,.8) var(--tw-gradient-from-position);--tw-gradient-to:rgba(2,44,34,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-purple-600{--tw-gradient-from:#9333ea var(--tw-gradient-from-position);--tw-gradient-to:rgba(147,51,234,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.from-rose-600{--tw-gradient-from:#e11d48 var(--tw-gradient-from-position);--tw-gradient-to:rgba(225,29,72,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),var(--tw-gradient-to)}.via-purple-500{--tw-gradient-to:rgba(168,85,247,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),#a855f7 var(--tw-gradient-via-position),var(--tw-gradient-to)}.via-slate-900\/80{--tw-gradient-to:rgba(15,23,42,0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from),rgba(15,23,42,.8) var(--tw-gradient-via-position),var(--tw-gradient-to)}.to-\[\#00f2fe\]{--tw-gradient-to:#00f2fe var(--tw-gradient-to-position)}.to-\[\#0ba360\]{--tw-gradient-to:#0ba360 var(--tw-gradient-to-position)}.to-\[\#b224ef\]{--tw-gradient-to:#b224ef var(--tw-gradient-to-position)}.to-\[\#f6d365\]{--tw-gradient-to:#f6d365 var(--tw-gradient-to-position)}.to-\[\#ff0844\]{--tw-gradient-to:#ff0844 var(--tw-gradient-to-position)}.to-amber-400{--tw-gradient-to:#fbbf24 var(--tw-gradient-to-position)}.to-purple-950\/80{--tw-gradient-to:rgba(59,7,100,.8) var(--tw-gradient-to-position)}.p-1\.5{padding:.375rem}.p-3{padding:.75rem}.p-3\.5{padding:.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-\[1px\]{padding:1px}.px-1\.5{padding-left:.375rem;padding-right:.375rem}.px-2{padding-left:.5rem;padding-right:.5rem}.px-2\.5{padding-left:.625rem;padding-right:.625rem}.px-3{padding-left:.75rem;padding-right:.75rem}.px-4{padding-left:1rem;padding-right:1rem}.py-0\.5{padding-bottom:.125rem;padding-top:.125rem}.py-1{padding-bottom:.25rem;padding-top:.25rem}.py-1\.5{padding-bottom:.375rem;padding-top:.375rem}.py-2{padding-bottom:.5rem;padding-top:.5rem}.py-2\.5{padding-bottom:.625rem;padding-top:.625rem}.py-3{padding-bottom:.75rem;padding-top:.75rem}.pb-1{padding-bottom:.25rem}.pb-3{padding-bottom:.75rem}.pb-3\.5{padding-bottom:.875rem}.pb-4{padding-bottom:1rem}.pt-3{padding-top:.75rem}.text-right{text-align:right}.font-display{font-family:Space Grotesk,sans-serif}.font-mono{font-family:JetBrains Mono,monospace}.font-sans{font-family:Inter,sans-serif}.text-2xl{font-size:1.5rem;line-height:2rem}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:.75rem;line-height:1rem}.font-bold{font-weight:700}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.leading-relaxed{line-height:1.625}.leading-snug{line-height:1.375}.leading-tight{line-height:1.25}.tracking-tight{letter-spacing:-.025em}.tracking-wider{letter-spacing:.05em}.tracking-widest{letter-spacing:.1em}.text-\[\#00f2fe\]{--tw-text-opacity:1;color:rgb(0 242 254/var(--tw-text-opacity,1))}.text-\[\#0ba360\]{--tw-text-opacity:1;color:rgb(11 163 96/var(--tw-text-opacity,1))}.text-\[\#b224ef\]{--tw-text-opacity:1;color:rgb(178 36 239/var(--tw-text-opacity,1))}.text-\[\#f6d365\]{--tw-text-opacity:1;color:rgb(246 211 101/var(--tw-text-opacity,1))}.text-\[\#ff0844\]{--tw-text-opacity:1;color:rgb(255 8 68/var(--tw-text-opacity,1))}.text-amber-300{--tw-text-opacity:1;color:rgb(252 211 77/var(--tw-text-opacity,1))}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36/var(--tw-text-opacity,1))}.text-cyan-300{--tw-text-opacity:1;color:rgb(103 232 249/var(--tw-text-opacity,1))}.text-cyan-400{--tw-text-opacity:1;color:rgb(34 211 238/var(--tw-text-opacity,1))}.text-emerald-300{--tw-text-opacity:1;color:rgb(110 231 183/var(--tw-text-opacity,1))}.text-emerald-400{--tw-text-opacity:1;color:rgb(52 211 153/var(--tw-text-opacity,1))}.text-purple-400{--tw-text-opacity:1;color:rgb(192 132 252/var(--tw-text-opacity,1))}.text-rose-300{--tw-text-opacity:1;color:rgb(253 164 175/var(--tw-text-opacity,1))}.text-rose-400{--tw-text-opacity:1;color:rgb(251 113 133/var(--tw-text-opacity,1))}.text-slate-200{--tw-text-opacity:1;color:rgb(226 232 240/var(--tw-text-opacity,1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225/var(--tw-text-opacity,1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184/var(--tw-text-opacity,1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255/var(--tw-text-opacity,1))}.text-yellow-200{--tw-text-opacity:1;color:rgb(254 240 138/var(--tw-text-opacity,1))}.antialiased{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgba(0,0,0,.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color)}.shadow-2xl,.shadow-\[0_0_12px_rgba\(0\2c 242\2c 254\2c 0\.3\)\]{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-\[0_0_12px_rgba\(0\2c 242\2c 254\2c 0\.3\)\]{--tw-shadow:0 0 12px rgba(0,242,254,.3);--tw-shadow-colored:0 0 12px var(--tw-shadow-color)}.shadow-\[0_0_8px_\#00f2fe\]{--tw-shadow:0 0 8px #00f2fe;--tw-shadow-colored:0 0 8px var(--tw-shadow-color)}.shadow-\[0_0_8px_\#00f2fe\],.shadow-\[0_0_8px_\#0ba360\]{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-\[0_0_8px_\#0ba360\]{--tw-shadow:0 0 8px #0ba360;--tw-shadow-colored:0 0 8px var(--tw-shadow-color)}.shadow-\[0_0_8px_\#b224ef\]{--tw-shadow:0 0 8px #b224ef;--tw-shadow-colored:0 0 8px var(--tw-shadow-color)}.shadow-\[0_0_8px_\#b224ef\],.shadow-\[0_0_8px_\#f6d365\]{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-\[0_0_8px_\#f6d365\]{--tw-shadow:0 0 8px #f6d365;--tw-shadow-colored:0 0 8px var(--tw-shadow-color)}.shadow-\[0_0_8px_\#ff0844\]{--tw-shadow:0 0 8px #ff0844;--tw-shadow-colored:0 0 8px var(--tw-shadow-color)}.shadow-\[0_0_8px_\#ff0844\],.shadow-lg{box-shadow:var(--tw-ring-offset-shadow,0 0 #0000),var(--tw-ring-shadow,0 0 #0000),var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgba(0,0,0,.1),0 4px 6px -4px rgba(0,0,0,.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color),0 4px 6px -4px var(--tw-shadow-color)}.shadow-cyan-500\/20{--tw-shadow-color:rgba(6,182,212,.2);--tw-shadow:var(--tw-shadow-colored)}.outline{outline-style:solid}.blur{--tw-blur:blur(8px);filter:var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow)}.backdrop-blur-md{--tw-backdrop-blur:blur(12px)}.backdrop-blur-md,.backdrop-filter{-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-duration:.15s;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,-webkit-backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter;transition-property:color,background-color,border-color,text-decoration-color,fill,stroke,opacity,box-shadow,transform,filter,backdrop-filter,-webkit-backdrop-filter;transition-timing-function:cubic-bezier(.4,0,.2,1)}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(.4,0,.2,1)}.duration-150,.transition-all{transition-duration:.15s}.duration-300{transition-duration:.3s}.selection\:bg-cyan-500 ::-moz-selection{--tw-bg-opacity:1;background-color:rgb(6 182 212/var(--tw-bg-opacity,1))}.selection\:bg-cyan-500 ::selection{--tw-bg-opacity:1;background-color:rgb(6 182 212/var(--tw-bg-opacity,1))}.selection\:text-black ::-moz-selection{--tw-text-opacity:1;color:rgb(0 0 0/var(--tw-text-opacity,1))}.selection\:text-black ::selection{--tw-text-opacity:1;color:rgb(0 0 0/var(--tw-text-opacity,1))}.selection\:bg-cyan-500::-moz-selection{--tw-bg-opacity:1;background-color:rgb(6 182 212/var(--tw-bg-opacity,1))}.selection\:bg-cyan-500::selection{--tw-bg-opacity:1;background-color:rgb(6 182 212/var(--tw-bg-opacity,1))}.selection\:text-black::-moz-selection{--tw-text-opacity:1;color:rgb(0 0 0/var(--tw-text-opacity,1))}.selection\:text-black::selection{--tw-text-opacity:1;color:rgb(0 0 0/var(--tw-text-opacity,1))}.hover\:bg-emerald-500\/25:hover{background-color:rgba(16,185,129,.25)}.hover\:bg-slate-900\/95:hover{background-color:rgba(15,23,42,.95)}.hover\:bg-white\/10:hover{background-color:hsla(0,0%,100%,.1)}.hover\:bg-white\/15:hover{background-color:hsla(0,0%,100%,.15)}.hover\:bg-white\/20:hover{background-color:hsla(0,0%,100%,.2)}@media (min-width:640px){.sm\:inline-block{display:inline-block}.sm\:inline{display:inline}}@media (min-width:768px){.md\:inline{display:inline}.md\:flex{display:flex}.md\:hidden{display:none}.md\:h-\[calc\(100vh-185px\)\]{height:calc(100vh - 185px)}.md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}.md\:gap-1\.5{gap:.375rem}.md\:p-5{padding:1.25rem}.md\:p-7{padding:1.75rem}.md\:px-6{padding-left:1.5rem;padding-right:1.5rem}.md\:py-3\.5{padding-bottom:.875rem;padding-top:.875rem}.md\:py-4{padding-top:1rem}.md\:pb-4,.md\:py-4{padding-bottom:1rem}.md\:text-2xl{font-size:1.5rem;line-height:2rem}.md\:text-\[13px\]{font-size:13px}.md\:text-lg{font-size:1.125rem;line-height:1.75rem}.md\:text-sm{font-size:.875rem;line-height:1.25rem}}@media (min-width:1024px){.lg\:w-\[390px\]{width:390px}.lg\:w-\[400px\]{width:400px}.lg\:flex-row{flex-direction:row}}@media (min-width:1280px){.xl\:flex{display:flex}.xl\:w-\[420px\]{width:420px}.xl\:w-\[440px\]{width:440px}}
+
+* {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #050811;
+            color: #f8fafc;
+        }
+        #canvas-container {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        .glass-panel {
+            background: rgba(10, 15, 29, 0.72);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+        .glass-pill {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        
+        /* Custom Range Slider */
+        input[type=range].age-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            background: linear-gradient(90deg, #00f2fe 0%, #ff0844 25%, #b224ef 45%, #0ba360 70%, #f6d365 100%);
+            border-radius: 999px;
+            outline: none;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.25);
+        }
+        input[type=range].age-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #ffffff;
+            border: 3px solid #050811;
+            box-shadow: 0 0 16px rgba(255, 255, 255, 0.9), 0 0 6px #00f2fe;
+            cursor: grab;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        input[type=range].age-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.18);
+            box-shadow: 0 0 24px rgba(255, 255, 255, 1), 0 0 12px #00f2fe;
+        }
+        input[type=range].age-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.08);
+        }
+
+        /* Custom Scrollbar for inner panels */
+        .custom-scroll::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.18);
+            border-radius: 8px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.35);
+        }
+
+        /* Subtle glow animations */
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.7; }
+            50% { opacity: 1; }
+        }
+        .animate-glow {
+            animation: pulseGlow 3s infinite ease-in-out;
+        }
+
+        /* Floating 3D HTML Labels */
+        .label-3d {
+            position: absolute;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: opacity 0.2s ease;
+            z-index: 2;
+        }
+    </style>
+</head>
+<body class="relative font-sans antialiased selection:bg-cyan-500 selection:text-black">
+
+    <!-- 3D WebGL Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Floating 3D Labels Container -->
+    <div id="labels-container" class="absolute inset-0 pointer-events-none overflow-hidden z-10"></div>
+
+    <!-- Top Navigation & Telemetry Header -->
+    <header class="relative z-20 flex flex-wrap items-center justify-between gap-3 px-4 py-3 md:px-6 md:py-4 pointer-events-none">
+        <!-- Brand & Title -->
+        <div class="glass-panel px-4 py-2.5 rounded-2xl pointer-events-auto flex items-center gap-3.5">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-purple-500 to-amber-400 p-[1px] shadow-lg shadow-cyan-500/20">
+                <div class="w-full h-full bg-[#060a17] rounded-[11px] flex items-center justify-center">
+                    <i class="ph-fill ph-dna text-xl text-cyan-400"></i>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <span class="font-mono text-[10px] uppercase tracking-widest px-2 py-0.5 rounded bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">Chronos v3.4</span>
+                    <span class="hidden sm:inline-block text-xs text-slate-400 font-mono">ENDOCRINE × NEURO × BIG-5</span>
+                </div>
+                <h1 class="font-display font-bold text-base md:text-lg tracking-tight text-white">Lifespan Bio-Optimization Engine</h1>
+            </div>
+        </div>
+
+        <!-- Curve Legend / Filter Toggles -->
+        <div id="curve-toggles" class="glass-panel px-3 py-2 rounded-2xl pointer-events-auto hidden xl:flex items-center gap-1.5">
+            <!-- Dynamically populated curve toggle buttons -->
+        </div>
+
+        <!-- Action Controls -->
+        <div class="glass-panel px-3 py-2 rounded-2xl pointer-events-auto flex items-center gap-2">
+            <a href="index.html" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all" title="Return to Signal Log">
+                <i class="ph ph-arrow-left text-sm"></i>
+                <span class="hidden sm:inline">Log</span>
+            </a>
+            <button id="btn-autoplay" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all">
+                <i id="icon-autoplay" class="ph-fill ph-play text-sm"></i>
+                <span id="text-autoplay">Life Tour</span>
+            </button>
+            <button id="btn-chart-modal" class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-200 border border-white/10 transition-all">
+                <i class="ph ph-chart-line-up text-sm text-cyan-400"></i>
+                <span class="hidden sm:inline">2D Matrix</span>
+            </button>
+            <button id="btn-camera-reset" class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all" title="Reset Camera Angle">
+                <i class="ph ph-cube-focus text-sm"></i>
+                <span id="camera-mode-label" class="hidden md:inline">Follow Cam</span>
+            </button>
+            <button id="btn-toggle-ui" class="p-1.5 rounded-xl text-xs font-medium bg-white/5 hover:bg-white/10 text-slate-300 border border-white/10 transition-all md:hidden" title="Toggle Panels">
+                <i class="ph ph-sliders-horizontal text-sm"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Interactive Workspace Overlay -->
+    <main id="main-ui-grid" class="relative z-20 flex flex-col lg:flex-row justify-between items-stretch px-4 md:px-6 gap-4 pointer-events-none h-[calc(100vh-195px)] md:h-[calc(100vh-185px)]">
+        
+        <!-- LEFT PANEL: Real-Time Telemetry & Biological Reality -->
+        <section id="left-panel" class="glass-panel w-full lg:w-[390px] xl:w-[420px] rounded-2xl p-4 md:p-5 pointer-events-auto flex flex-col justify-between overflow-y-auto custom-scroll max-h-full transition-all duration-300">
+            <div>
+                <!-- Current Age & Phase Banner -->
+                <div class="flex items-center justify-between border-b border-white/10 pb-3.5 mb-4">
+                    <div>
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-slate-400 block">Biological & Cognitive State</span>
+                        <h2 id="phase-title" class="font-display font-bold text-xl text-white leading-tight mt-0.5">Peak Plasticity & Drive</h2>
+                    </div>
+                    <div class="text-right bg-white/5 border border-white/10 rounded-xl px-3 py-1.5">
+                        <span class="text-[10px] font-mono uppercase text-slate-400 block">Chrono Age</span>
+                        <div class="flex items-baseline justify-end gap-0.5">
+                            <span id="age-display-large" class="font-mono font-bold text-2xl text-cyan-400">25</span>
+                            <span class="text-xs font-mono text-slate-400">YRS</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 5-Axis Biometric Bars -->
+                <div class="space-y-3 mb-5">
+                    <div class="flex items-center justify-between text-xs text-slate-400 font-mono mb-1">
+                        <span>BIOMETRIC TRAJECTORY LEVELS</span>
+                        <span>% OF LIFETIME PEAK</span>
+                    </div>
+
+                    <!-- Metric 1: Growth Hormone & Melatonin -->
+                    <div class="group cursor-pointer" onclick="focusSingleCurve('gh')">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="flex items-center gap-1.5 font-medium text-slate-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#00f2fe] shadow-[0_0_8px_#00f2fe]"></span>
+                                Growth Hormone & Recovery
+                            </span>
+                            <span id="val-gh" class="font-mono font-semibold text-[#00f2fe]">85%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-white/5">
+                            <div id="bar-gh" class="h-full bg-gradient-to-r from-cyan-500 to-[#00f2fe] rounded-full transition-all duration-150" style="width: 85%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Metric 2: Dopaminergic Novelty & Reward Sensitivity -->
+                    <div class="group cursor-pointer" onclick="focusSingleCurve('dopamine')">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="flex items-center gap-1.5 font-medium text-slate-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#ff0844] shadow-[0_0_8px_#ff0844]"></span>
+                                Dopamine & Novelty Sensitivity
+                            </span>
+                            <span id="val-dopamine" class="font-mono font-semibold text-[#ff0844]">96%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-white/5">
+                            <div id="bar-dopamine" class="h-full bg-gradient-to-r from-rose-600 to-[#ff0844] rounded-full transition-all duration-150" style="width: 96%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Metric 3: Fluid Intelligence & Neuroplasticity -->
+                    <div class="group cursor-pointer" onclick="focusSingleCurve('fluid')">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="flex items-center gap-1.5 font-medium text-slate-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#b224ef] shadow-[0_0_8px_#b224ef]"></span>
+                                Fluid IQ & Raw Neuroplasticity
+                            </span>
+                            <span id="val-fluid" class="font-mono font-semibold text-[#b224ef]">96%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-white/5">
+                            <div id="bar-fluid" class="h-full bg-gradient-to-r from-purple-600 to-[#b224ef] rounded-full transition-all duration-150" style="width: 96%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Metric 4: Conscientiousness & Habit Power -->
+                    <div class="group cursor-pointer" onclick="focusSingleCurve('consc')">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="flex items-center gap-1.5 font-medium text-slate-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#0ba360] shadow-[0_0_8px_#0ba360]"></span>
+                                Conscientiousness (Habit Power)
+                            </span>
+                            <span id="val-consc" class="font-mono font-semibold text-[#0ba360]">48%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-white/5">
+                            <div id="bar-consc" class="h-full bg-gradient-to-r from-emerald-600 to-[#0ba360] rounded-full transition-all duration-150" style="width: 48%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Metric 5: Crystallized Wisdom & Emotional Stability -->
+                    <div class="group cursor-pointer" onclick="focusSingleCurve('crystal')">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="flex items-center gap-1.5 font-medium text-slate-200">
+                                <span class="w-2.5 h-2.5 rounded-full bg-[#f6d365] shadow-[0_0_8px_#f6d365]"></span>
+                                Crystallized Wisdom & Equanimity
+                            </span>
+                            <span id="val-crystal" class="font-mono font-semibold text-[#f6d365]">44%</span>
+                        </div>
+                        <div class="w-full h-2 bg-slate-900/90 rounded-full overflow-hidden border border-white/5">
+                            <div id="bar-crystal" class="h-full bg-gradient-to-r from-amber-500 to-[#f6d365] rounded-full transition-all duration-150" style="width: 44%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- The Biological & Psychological Reality Box -->
+                <div class="bg-slate-900/70 border border-white/10 rounded-xl p-3.5 mb-3">
+                    <div class="flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-cyan-300 mb-1.5">
+                        <i class="ph-fill ph-brain text-sm"></i>
+                        <span>The Neuro-Endocrine Reality</span>
+                    </div>
+                    <p id="reality-description" class="text-xs md:text-[13px] text-slate-300 leading-relaxed">
+                        Loading reality synthesis...
+                    </p>
+                </div>
+            </div>
+
+            <!-- Key Crossover Insight Callout -->
+            <div id="crossover-alert" class="bg-gradient-to-r from-emerald-950/80 via-slate-900/80 to-purple-950/80 border border-emerald-500/30 rounded-xl p-3 flex items-start gap-2.5">
+                <i class="ph-fill ph-trend-up text-emerald-400 text-lg shrink-0 mt-0.5"></i>
+                <div class="text-xs text-slate-200 leading-snug">
+                    <span class="font-semibold text-emerald-300 block mb-0.5" id="crossover-title">The Great Lifespan Trade-Off:</span>
+                    <span id="crossover-text">As phasic novelty-seeking and effortless neuroplasticity gradually taper with age, rising Conscientiousness makes structured discipline and habit execution dramatically easier.</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- RIGHT PANEL: Actionable Life-Optimization Protocols -->
+        <section id="right-panel" class="glass-panel w-full lg:w-[400px] xl:w-[440px] rounded-2xl p-4 md:p-5 pointer-events-auto flex flex-col justify-between overflow-y-auto custom-scroll max-h-full transition-all duration-300">
+            <div>
+                <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3.5">
+                    <div>
+                        <span class="text-[11px] font-mono uppercase tracking-wider text-emerald-400 block">Actionable Blueprint</span>
+                        <h3 class="font-display font-bold text-lg text-white">How to Optimize Right Now</h3>
+                    </div>
+                    <span id="bracket-badge" class="px-2.5 py-1 rounded-lg text-xs font-mono font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                        AGE 22–29
+                    </span>
+                </div>
+
+                <!-- Dynamic Protocol Cards Container -->
+                <div id="protocol-cards" class="space-y-2.5">
+                    <!-- Populated via JS -->
+                </div>
+            </div>
+
+            <!-- Strategic Trap / Vulnerability Warning -->
+            <div class="mt-4 pt-3 border-t border-white/10">
+                <div class="bg-rose-950/40 border border-rose-500/30 rounded-xl p-3 flex items-start gap-2.5">
+                    <i class="ph-fill ph-warning-octagon text-rose-400 text-lg shrink-0 mt-0.5"></i>
+                    <div class="text-xs">
+                        <span class="font-mono uppercase tracking-wider text-rose-300 font-semibold block mb-0.5">Primary Age-Bracket Trap to Avoid</span>
+                        <p id="age-trap-text" class="text-slate-300 leading-relaxed">
+                            Relying on raw biological resilience to mask chaotic sleep, scattered focus, and lack of systems.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Bottom Interactive Age Scrubber & Decade Selector -->
+    <footer class="fixed bottom-0 inset-x-0 z-20 px-4 pb-3 md:px-6 md:pb-4 pointer-events-none">
+        <div class="glass-panel max-w-5xl mx-auto rounded-2xl p-3 md:px-6 md:py-3.5 pointer-events-auto">
+            <!-- Decade Quick-Jump Pills -->
+            <div class="flex items-center justify-between gap-1.5 mb-2.5 overflow-x-auto pb-1 no-scrollbar">
+                <div class="flex items-center gap-1 md:gap-1.5">
+                    <button onclick="setAgeSmooth(18)" data-decade="15-21" class="decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10">
+                        15–21 <span class="hidden sm:inline text-cyan-300">Ignite</span>
+                    </button>
+                    <button onclick="setAgeSmooth(25)" data-decade="22-29" class="decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10">
+                        20s <span class="hidden sm:inline text-rose-400">Explore</span>
+                    </button>
+                    <button onclick="setAgeSmooth(35)" data-decade="30-39" class="decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10">
+                        30s <span class="hidden sm:inline text-purple-400">Architect</span>
+                    </button>
+                    <button onclick="setAgeSmooth(45)" data-decade="40-49" class="decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10">
+                        40s <span class="hidden sm:inline text-emerald-400">Compound</span>
+                    </button>
+                    <button onclick="setAgeSmooth(55)" data-decade="50-64" class="decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10">
+                        50s <span class="hidden sm:inline text-amber-300">Synthesize</span>
+                    </button>
+                    <button onclick="setAgeSmooth(70)" data-decade="65-85" class="decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10">
+                        65+ <span class="hidden sm:inline text-yellow-200">Mastery</span>
+                    </button>
+                </div>
+
+                <div class="hidden md:flex items-center gap-2 text-[11px] font-mono text-slate-400">
+                    <i class="ph ph-hand-swipe-right text-cyan-400"></i>
+                    <span>Drag 3D scene to orbit • Scrub timeline below</span>
+                </div>
+            </div>
+
+            <!-- Slider Row -->
+            <div class="flex items-center gap-4">
+                <span class="font-mono text-xs text-slate-400 shrink-0">AGE 15</span>
+                <div class="relative flex-1 flex items-center">
+                    <input id="age-slider" type="range" min="15" max="85" step="0.1" value="25" class="age-slider">
+                </div>
+                <span class="font-mono text-xs text-slate-400 shrink-0">AGE 85</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- 2D Comparison Matrix Modal -->
+    <div id="chart-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-filter backdrop-blur-md hidden items-center justify-center p-4">
+        <div class="glass-panel max-w-4xl w-full rounded-3xl p-5 md:p-7 border border-white/15 shadow-2xl">
+            <div class="flex items-center justify-between border-b border-white/10 pb-4 mb-5">
+                <div>
+                    <span class="text-xs font-mono uppercase tracking-widest text-cyan-400">Complete Lifespan Synthesis (Age 15 to 85)</span>
+                    <h2 class="font-display font-bold text-xl md:text-2xl text-white">GH Recovery, Dopamine Novelty, Plasticity & Conscientiousness</h2>
+                </div>
+                <button id="close-chart-modal" class="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-all">
+                    <i class="ph ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Interactive SVG Chart Container -->
+            <div class="bg-[#060b16] border border-white/10 rounded-2xl p-4 mb-5 relative">
+                <svg id="svg-comparison-chart" viewBox="0 0 800 320" class="w-full h-auto overflow-visible"></svg>
+            </div>
+
+            <!-- Key Scientific Takeaways Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                <div class="bg-white/5 border border-white/10 rounded-xl p-3.5">
+                    <div class="font-semibold text-cyan-300 mb-1 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-[#00f2fe]"></span>
+                        1. High Plasticity & Novelty (15–28)
+                    </div>
+                    <p class="text-slate-300 leading-relaxed">
+                        Growth hormone, striatal dopamine receptor sensitivity (novelty-seeking), and raw fluid neuroplasticity peak. However, prefrontal myelination and Big-5 Conscientiousness are at their lowest—meaning high exploration drive, but lower natural self-regulation.
+                    </p>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-3.5">
+                    <div class="font-semibold text-emerald-300 mb-1 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-[#0ba360]"></span>
+                        2. The Great Crossover (30–48)
+                    </div>
+                    <p class="text-slate-300 leading-relaxed">
+                        Around age 32–36, the Conscientiousness curve intersects and surpasses tapering raw novelty sensitivity (~5–8% decline per decade in striatal D2/D3 receptors). Forming long-term habits and routines becomes neurologically easier, though individual variation and lifestyle strongly modulate tonic dopamine.
+                    </p>
+                </div>
+                <div class="bg-white/5 border border-white/10 rounded-xl p-3.5">
+                    <div class="font-semibold text-amber-300 mb-1 flex items-center gap-1.5">
+                        <span class="w-2 h-2 rounded-full bg-[#f6d365]"></span>
+                        3. Crystallized Mastery (50–85)
+                    </div>
+                    <p class="text-slate-300 leading-relaxed">
+                        Crystallized intelligence (mental models, vocabulary, strategic synthesis) and emotional equanimity (lower amygdala reactivity to stress) reach their zenith. Optimization shifts to preserving cellular recovery/sleep while leveraging high wisdom and established habits.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /*************************************************************************
+         * 1. SCIENTIFIC MODEL & LIFESPAN CURVE EQUATIONS (AGES 15 TO 85)
+         *************************************************************************/
+        const CURVE_DEFINITIONS = [
+            {
+                id: 'gh',
+                name: 'Growth Hormone & Melatonin',
+                shortName: 'GH & Recovery',
+                color: '#00f2fe',
+                hex: 0x00f2fe,
+                zOffset: -12,
+                description: 'Governs cellular repair, deep slow-wave sleep architecture, somatotropic tissue recovery, and circadian rhythm amplitude.',
+                // Peaks around age 16-18, steep exponential decay in 20s/30s, gradual taper
+                evaluate: (age) => {
+                    const val = 98 * Math.exp(-0.043 * (age - 15)) + 6 * Math.exp(-Math.pow((age - 17) / 4, 2));
+                    return Math.max(12, Math.min(100, val));
+                }
+            },
+            {
+                id: 'dopamine',
+                name: 'Dopaminergic Novelty & Reward Sensitivity',
+                shortName: 'Dopamine & Novelty',
+                color: '#ff0844',
+                hex: 0xff0844,
+                zOffset: -6,
+                description: 'Striatal D1/D2 receptor density and phasic reward sensitivity. Drives novelty-seeking, exploration, and risk appetite; tapers ~5–8% per decade with substantial individual & lifestyle variation.',
+                // Peaks in late adolescence / early 20s (~19-22), then gradually tapers ~6-8% per decade
+                evaluate: (age) => {
+                    if (age < 21) {
+                        return 88 + 12 * Math.sin(((age - 15) / 6) * (Math.PI / 2));
+                    } else {
+                        const decay = 100 * Math.exp(-0.0145 * (age - 21));
+                        return Math.max(30, Math.min(100, decay));
+                    }
+                }
+            },
+            {
+                id: 'fluid',
+                name: 'Fluid IQ & Raw Neuroplasticity',
+                shortName: 'Neuroplasticity',
+                color: '#b224ef',
+                hex: 0xb224ef,
+                zOffset: 0,
+                description: 'Raw working memory speed, effortless synaptic remodeling, and ability to learn novel abstract skills from scratch without prior mental models.',
+                // Peaks around 24-26, slow decline thereafter
+                evaluate: (age) => {
+                    const peak = 24.5;
+                    if (age <= peak) {
+                        return 82 + 18 * Math.exp(-Math.pow((age - peak) / 7.5, 2));
+                    } else {
+                        return Math.max(32, 100 * Math.exp(-0.0155 * (age - peak)));
+                    }
+                }
+            },
+            {
+                id: 'consc',
+                name: 'Conscientiousness & Habit Power',
+                shortName: 'Conscientiousness',
+                color: '#0ba360',
+                hex: 0x0ba360,
+                zOffset: 6,
+                description: 'Big-Five trait of self-discipline, orderliness, prefrontal impulse control, and system adherence. Makes habit formation effortless with age.',
+                // Low in teens/early 20s, steep rise in late 20s-40s, high plateau in 50s-70s
+                evaluate: (age) => {
+                    const sigmoid = 26 + 68 / (1 + Math.exp(-0.115 * (age - 33)));
+                    const lateTaper = age > 72 ? (age - 72) * 0.35 : 0;
+                    return Math.max(20, Math.min(96, sigmoid - lateTaper));
+                }
+            },
+            {
+                id: 'crystal',
+                name: 'Crystallized Wisdom & Equanimity',
+                shortName: 'Wisdom & Stability',
+                color: '#f6d365',
+                hex: 0xf6d365,
+                zOffset: 12,
+                description: 'Accumulated pattern recognition, strategic synthesis, emotional stability (low neuroticism), and reduced amygdala hijack under stress.',
+                // Steady climb from 15 into late 60s
+                evaluate: (age) => {
+                    const climb = 22 + 73 / (1 + Math.exp(-0.085 * (age - 42)));
+                    const latePlateu = age > 76 ? (age - 76) * 0.25 : 0;
+                    return Math.max(20, Math.min(96, climb - latePlateu));
+                }
+            }
+        ];
+
+        /*************************************************************************
+         * 2. AGE-BRACKET PROTOCOLS & BIOLOGICAL REALITY DATA
+         *************************************************************************/
+        const LIFE_STAGE_PROTOCOLS = [
+            {
+                minAge: 15,
+                maxAge: 21.9,
+                decadeKey: '15-21',
+                rangeLabel: 'AGE 15–21',
+                title: 'Biological Ignition & Rapid Wiring',
+                reality: 'Growth Hormone, Melatonin, phasic dopamine reward sensitivity, and synaptic plasticity are at their lifetime zenith, while the prefrontal cortex (governing impulse control and long-term planning) is still myelinating. Your brain learns at lightning speed, and every experience physically wires your adult neural architecture.',
+                crossoverTitle: 'High Plasticity & Hyper-Reward / Low Prefrontal Brakes:',
+                crossoverText: 'You have maximum biological recovery and high novelty sensitivity, but internal Conscientiousness is naturally low. Use external structure to guide your energy.',
+                trap: 'Doom-scrolling, cheap supernormal dopamine loops (video games, junk food, substances), and sleep deprivation during the exact window when your striatum and prefrontal cortex are calibrating baseline reward circuitry.',
+                protocols: [
+                    {
+                        icon: 'ph-lightning',
+                        color: 'text-cyan-400',
+                        badge: 'NEUROPLASTICITY',
+                        title: 'Acquire Complex Motor & Cognitive Foundations',
+                        desc: 'Learn languages, coding, musical instruments, and complex athletic coordination now. Your brain encodes procedural memory 3x faster than it will at age 45.'
+                    },
+                    {
+                        icon: 'ph-shield-check',
+                        color: 'text-emerald-400',
+                        badge: 'COMPENSATE FOR LOW CONSCIENTIOUSNESS',
+                        title: 'Outsource Discipline to Environment & Coaches',
+                        desc: 'Because internal self-regulation is still developing, join high-accountability teams, martial arts, or rigorous study cohorts that force structure upon you.'
+                    },
+                    {
+                        icon: 'ph-barbell',
+                        color: 'text-rose-400',
+                        badge: 'SOMATOTROPIC PEAK',
+                        title: 'Maximize Bone Density & Myonuclei Bank',
+                        desc: 'Heavy resistance training and sprinting during your Growth Hormone peak creates permanent muscle cell nuclei ("muscle memory") that stay with you for decades.'
+                    }
+                ]
+            },
+            {
+                minAge: 22,
+                maxAge: 29.9,
+                decadeKey: '22-29',
+                rangeLabel: 'AGE 22–29',
+                title: 'Peak Novelty Exploration & Fluid Processing',
+                reality: 'Striatal dopamine sensitivity to novelty and raw fluid intelligence operate near their ceiling (~Age 22–25), though substantial individual variation exists. You possess high cognitive flexibility for unfamiliar environments and rapid problem-solving. Meanwhile, prefrontal myelination completes around 25, starting the upward climb of Conscientiousness.',
+                crossoverTitle: 'High Novelty Drive vs. Emerging Order:',
+                crossoverText: 'Your brain naturally craves exploration and tolerates ambiguity well. Channel this into high-upside skill acquisition while building foundational life systems.',
+                trap: 'Mistaking youthful recovery for invincibility—burning out on chaotic sleep, hijacking your reward system with digital overstimulation, or avoiding difficult long-term commitments.',
+                protocols: [
+                    {
+                        icon: 'ph-compass',
+                        color: 'text-rose-400',
+                        badge: 'DOPAMINERGIC EXPLORATION',
+                        title: 'Channel Novelty Sensitivity into Steep Learning Curves',
+                        desc: 'Tackle frontier problems, cross-disciplinary skills, and high-growth environments. Your high fluid IQ and novelty drive thrive when solving unfamiliar challenges.'
+                    },
+                    {
+                        icon: 'ph-first-aid-kit',
+                        color: 'text-purple-400',
+                        badge: 'PREFRONTAL CONSOLIDATION',
+                        title: 'Build "Keystone Scaffolding" Before Age 30',
+                        desc: 'Install 3 non-negotiable keystone habits (consistent wake time, resistance/aerobic training, deep work blocks) while your prefrontal cortex finishes locking in adult default wiring.'
+                    },
+                    {
+                        icon: 'ph-users-three',
+                        color: 'text-cyan-400',
+                        badge: 'SOCIAL ENVIRONMENT',
+                        title: 'Curate High-Conscientiousness Peer Networks',
+                        desc: 'As conscientiousness rises across your late 20s, surround yourself with peers whose daily habits and intellectual curiosity match where you want to be at 40.'
+                    }
+                ]
+            },
+            {
+                minAge: 30,
+                maxAge: 39.9,
+                decadeKey: '30-39',
+                rangeLabel: 'AGE 30–39',
+                title: 'The Great Crossover: Systems Over Novelty',
+                reality: 'Around age 33–36, a major psychological shift occurs: your rising Conscientiousness curve crosses above your gradually tapering phasic novelty-seeking curve. While growth hormone and deep slow-wave sleep noticeably dip (making all-nighters costly), your prefrontal capacity to execute disciplined, long-term routines surges.',
+                crossoverTitle: 'The Golden Intersection (Age ~34):',
+                crossoverText: 'You still retain strong fluid intelligence and drive, but now possess the surging Conscientiousness needed to build unstoppable daily habits and deep focus.',
+                trap: 'Chasing constant novelty or relying on sporadic bursts of motivation and poor sleep rather than transitioning to automated schedules, purpose-driven tonic dopamine, and recovery hygiene.',
+                protocols: [
+                    {
+                        icon: 'ph-gear-six',
+                        color: 'text-emerald-400',
+                        badge: 'SURGING CONSCIENTIOUSNESS',
+                        title: 'Lock In Compounding Daily Systems & Narrow Focus',
+                        desc: 'Ride the natural wave of rising self-discipline. Shift from broad novelty-seeking to deep, consistent execution on your highest-leverage craft and health routines.'
+                    },
+                    {
+                        icon: 'ph-moon-stars',
+                        color: 'text-cyan-400',
+                        badge: 'GH & MELATONIN PROTECTION',
+                        title: 'Defend Sleep Architecture & Metabolic Baseline',
+                        desc: 'As natural GH and melatonin dip, alcohol, late meals, and blue light wreck recovery. Treat 7.5+ hours of cool, dark sleep and Zone-2 + VO2 Max cardio as sacred.'
+                    },
+                    {
+                        icon: 'ph-brain',
+                        color: 'text-purple-400',
+                        badge: 'NEUROPLASTICITY MAINTENANCE',
+                        title: 'Use Deliberate Friction to Trigger Adult Plasticity',
+                        desc: 'Adult neuroplasticity now requires intentional Acetylcholine & Norepinephrine release: use bouts of intense focus, deliberate movement challenges, and novel learning.'
+                    }
+                ]
+            },
+            {
+                minAge: 40,
+                maxAge: 49.9,
+                decadeKey: '40-49',
+                rangeLabel: 'AGE 40–49',
+                title: 'Peak Execution, Leverage & Pattern Mastery',
+                reality: 'Conscientiousness and Crystallized Intelligence are both operating above 80%. While raw processing speed (Fluid IQ) and striatal D2 receptor density gradually step down (~5–8% per decade, though highly preservable via exercise and purpose), your brain excels at connecting complex mental models and maintaining steady routines without willpower depletion.',
+                crossoverTitle: 'High Discipline + High Pattern Recognition:',
+                crossoverText: 'Habits that felt friction-heavy in your 20s now run on autopilot. Your competitive edge shifts from raw novelty hustle to strategic judgment and consistency.',
+                trap: 'Sarcopenia (muscle loss), creeping metabolic dysfunction from chronic stress, and cognitive rigidity (refusing to update mental models or seek fresh stimuli).',
+                protocols: [
+                    {
+                        icon: 'ph-strategy',
+                        color: 'text-amber-400',
+                        badge: 'CRYSTALLIZED INTELLIGENCE',
+                        title: 'Transition from "Tactical Doer" to "System Architect"',
+                        desc: 'Stop competing with 23-year-olds on raw rote speed. Leverage your superior mental models to direct complex projects, mentor talent, and solve multi-disciplinary problems.'
+                    },
+                    {
+                        icon: 'ph-heartbeat',
+                        color: 'text-rose-400',
+                        badge: 'DOPAMINE & TISSUE PRESERVATION',
+                        title: 'Sustain Tonic Dopamine & Muscle via Resistance + Zone 2',
+                        desc: 'Regular vigorous exercise and purposeful goal pursuit upregulate dopamine receptor availability and counter age-related declines in somatotropic recovery.'
+                    },
+                    {
+                        icon: 'ph-arrows-clockwise',
+                        color: 'text-purple-400',
+                        badge: 'ANTI-RIGIDITY PROTOCOL',
+                        title: 'Schedule "Beginner Mind" Sprints Every Quarter',
+                        desc: 'Because high conscientiousness and lower novelty drive can breed routine rigidity, deliberately immerse yourself in unfamiliar skills or hobbies to force fresh synaptic branching.'
+                    }
+                ]
+            },
+            {
+                minAge: 50,
+                maxAge: 64.9,
+                decadeKey: '50-64',
+                rangeLabel: 'AGE 50–64',
+                title: 'Crystallized Zenith & Emotional Equanimity',
+                reality: 'Crystallized wisdom, holistic pattern synthesis, and Conscientiousness reach their combined lifetime peak. Furthermore, neuroimaging studies show amygdala reactivity to negative stimuli drops significantly—granting superior emotional stability, lower social anxiety, and calm decision-making under pressure.',
+                crossoverTitle: 'Peak Wisdom & Emotional Stability:',
+                crossoverText: 'Your brain sees the entire chessboard quickly and wastes far less energy on impulsive novelty-chasing or emotional volatility.',
+                trap: 'Neglecting fast-twitch muscle fibers, aerobic capacity, and sensory-motor novelty, or withdrawing from intellectually demanding social networks.',
+                protocols: [
+                    {
+                        icon: 'ph-crown',
+                        color: 'text-amber-300',
+                        badge: 'EMOTIONAL STABILITY PEAK',
+                        title: 'Deploy High-Stakes Judgment & Mentorship',
+                        desc: 'Your combination of low emotional reactivity and vast pattern libraries makes you ideal for governance, negotiation, teaching, and high-level synthesis.'
+                    },
+                    {
+                        icon: 'ph-person-simple-run',
+                        color: 'text-cyan-400',
+                        badge: 'STRUCTURAL LONGEVITY',
+                        title: 'Train Power, Balance, Grip Strength & VO2 Max',
+                        desc: 'Fast-twitch Type-II fibers atrophy first with age. Incorporate explosive concentric movements, stability training, and progressive resistance to preserve vitality.'
+                    },
+                    {
+                        icon: 'ph-sparkle',
+                        color: 'text-emerald-400',
+                        badge: 'BDNF & DOPAMINE STIMULATION',
+                        title: 'Combine Movement + Cognitive Load (Dual-Tasking)',
+                        desc: 'Trigger Brain-Derived Neurotrophic Factor (BDNF) and phasic dopamine through activities pairing physical coordination with strategy (e.g., dance, racket sports, trail navigation).'
+                    }
+                ]
+            },
+            {
+                minAge: 65,
+                maxAge: 85.1,
+                decadeKey: '65-85',
+                rangeLabel: 'AGE 65–85',
+                title: 'Mastery, Legacy & Neuro-Preservation',
+                reality: 'Emotional equanimity, gratitude baseline, and lifetime crystallized perspective remain remarkably high. While endogenous growth hormone/melatonin and raw fluid speed are lower, decades of compounded Conscientiousness allow you to maintain pristine daily rhythms that protect healthspan and cognitive reserve.',
+                crossoverTitle: 'Compounded Habits Sustain Vitality:',
+                crossoverText: 'In later decades, your deeply ingrained routines and calm emotional state act as a protective shield for cognitive and cellular longevity.',
+                trap: 'Social isolation, sedentary retirement ("turning off the engine"), and lack of novel sensory-motor challenges—which accelerate cognitive decline faster than chronological age.',
+                protocols: [
+                    {
+                        icon: 'ph-tree-structure',
+                        color: 'text-amber-300',
+                        badge: 'INTERGENERATIONAL SYNERGY',
+                        title: 'Pair Your Crystallized Wisdom with Youthful Fluid Energy',
+                        desc: 'Actively mentor and collaborate with people in their 20s and 30s. Trading your pattern recognition for their raw speed keeps curiosity and reward pathways vibrant.'
+                    },
+                    {
+                        icon: 'ph-scales',
+                        color: 'text-emerald-400',
+                        badge: 'CIRCADIAN & METABOLIC PRECISION',
+                        title: 'Use Early Morning Sunlight & Resistance Micro-Dosing',
+                        desc: 'Counteract lower endogenous melatonin with strong morning lux exposure, daily resistance walks, high-density protein nutrition, and unbreakable sleep-wake rhythms.'
+                    },
+                    {
+                        icon: 'ph-puzzle-piece',
+                        color: 'text-purple-400',
+                        badge: 'SYNAPTIC RESERVE',
+                        title: 'Never Retire Your Prefrontal Cortex or Curiosity',
+                        desc: 'Continuous complex problem-solving, musical or language practice, community leadership, and rich social engagement maintain cognitive reserve well into your 80s.'
+                    }
+                ]
+            }
+        ];
+
+        /*************************************************************************
+         * 3. APPLICATION STATE
+         *************************************************************************/
+        const state = {
+            currentAge: 25.0,
+            targetAge: 25.0,
+            isAutoPlaying: false,
+            cameraFollowMode: true,
+            activeCurveFilter: null, // null means all curves visible
+            visibleCurves: {
+                gh: true,
+                dopamine: true,
+                fluid: true,
+                consc: true,
+                crystal: true
+            }
+        };
+
+        /*************************************************************************
+         * 4. THREE.JS 3D SCENE ARCHITECTURE
+         *************************************************************************/
+        let scene, camera, renderer;
+        let curveMeshes = {};
+        let curveParticles = [];
+        let agePlaneGroup;
+        let markerOrbs = {};
+        let crossoverBeacon;
+        let label3DElements = {};
+
+        // Coordinate mapping helper: Age [15..85] -> X [-38..+38], Value [0..100] -> Y [0..18]
+        const AGE_MIN = 15;
+        const AGE_MAX = 85;
+        const X_SPAN = 76;
+
+        function ageToX(age) {
+            return ((age - AGE_MIN) / (AGE_MAX - AGE_MIN)) * X_SPAN - (X_SPAN / 2);
+        }
+
+        function valToY(val) {
+            return (val / 100) * 17.5;
+        }
+
+        // Custom Orbit Camera Controller Variables
+        const camControl = {
+            isDragging: false,
+            prevX: 0,
+            prevY: 0,
+            theta: 0.18,         // Horizontal angle
+            phi: 1.18,           // Vertical angle
+            radius: 48,          // Distance from target
+            target: new THREE.Vector3(ageToX(25), 7, 0),
+            desiredTarget: new THREE.Vector3(ageToX(25), 7, 0)
+        };
+
+        function initThreeScene() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x050811);
+            scene.fog = new THREE.FogExp2(0x050811, 0.0085);
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 300);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.65);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0x00f2fe, 0.9);
+            dirLight1.position.set(-30, 40, 25);
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0xf6d365, 0.8);
+            dirLight2.position.set(35, 35, -20);
+            scene.add(dirLight2);
+
+            // Build 3D Environment Grid & Decade Pillars
+            buildEnvironmentFloor();
+
+            // Build the 5 Lifespan Spline Ribbons & Flowing Particles
+            buildLifespanCurves();
+
+            // Build the Interactive Age Scanner Plane & Node Orbs
+            buildAgeScanner();
+
+            // Build the "Great Crossover" Marker around Age 34
+            buildCrossoverLandmark();
+
+            // Ambient Floating Bio-Dust
+            buildAmbientParticles();
+
+            // Setup Mouse & Touch Camera Controls
+            setupCameraInteraction(renderer.domElement);
+
+            // Handle Window Resize
+            window.addEventListener('resize', onWindowResize);
+        }
+
+        function buildEnvironmentFloor() {
+            const floorGroup = new THREE.Group();
+
+            // Base cybernetic grid lines along X (Age) and Z (Track)
+            const gridMaterial = new THREE.LineBasicMaterial({
+                color: 0x1e293b,
+                transparent: true,
+                opacity: 0.55
+            });
+
+            const gridPoints = [];
+            // Longitudinal lines along each curve track
+            for (let z = -15; z <= 15; z += 3) {
+                gridPoints.push(new THREE.Vector3(-42, 0, z));
+                gridPoints.push(new THREE.Vector3(42, 0, z));
+            }
+            // Decade cross-lines from Age 15 to 85 every 5 years
+            for (let age = 15; age <= 85; age += 5) {
+                const x = ageToX(age);
+                gridPoints.push(new THREE.Vector3(x, 0, -16));
+                gridPoints.push(new THREE.Vector3(x, 0, 16));
+
+                // Vertical elevation reference post at major decades
+                if (age % 10 === 0) {
+                    gridPoints.push(new THREE.Vector3(x, 0, -15));
+                    gridPoints.push(new THREE.Vector3(x, 18, -15));
+                }
+            }
+
+            const gridGeo = new THREE.BufferGeometry().setFromPoints(gridPoints);
+            const gridLines = new THREE.LineSegments(gridGeo, gridMaterial);
+            floorGroup.add(gridLines);
+
+            // Horizontal elevation guide lines on the back wall (25%, 50%, 75%, 100%)
+            const wallMat = new THREE.LineBasicMaterial({ color: 0x334155, transparent: true, opacity: 0.3 });
+            const wallPoints = [];
+            [25, 50, 75, 100].forEach(pct => {
+                const y = valToY(pct);
+                wallPoints.push(new THREE.Vector3(-38, y, -15));
+                wallPoints.push(new THREE.Vector3(38, y, -15));
+            });
+            const wallGeo = new THREE.BufferGeometry().setFromPoints(wallPoints);
+            floorGroup.add(new THREE.LineSegments(wallGeo, wallMat));
+
+            // Glowing base platform plane
+            const planeGeo = new THREE.PlaneGeometry(88, 36);
+            const planeMat = new THREE.MeshBasicMaterial({
+                color: 0x091124,
+                transparent: true,
+                opacity: 0.5,
+                side: THREE.DoubleSide
+            });
+            const planeMesh = new THREE.Mesh(planeGeo, planeMat);
+            planeMesh.rotation.x = Math.PI / 2;
+            planeMesh.position.y = -0.05;
+            floorGroup.add(planeMesh);
+
+            scene.add(floorGroup);
+
+            // Create 3D HTML Decade Markers along the front edge of the floor
+            const labelsContainer = document.getElementById('labels-container');
+            for (let age = 20; age <= 80; age += 10) {
+                const el = document.createElement('div');
+                el.className = 'label-3d font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-900/80 text-slate-400 border border-white/10';
+                el.innerText = `AGE ${age}`;
+                labelsContainer.appendChild(el);
+                label3DElements[`decade_${age}`] = {
+                    el,
+                    pos: new THREE.Vector3(ageToX(age), -0.6, 16.5)
+                };
+            }
+        }
+
+        function buildLifespanCurves() {
+            const labelsContainer = document.getElementById('labels-container');
+
+            CURVE_DEFINITIONS.forEach((curveDef) => {
+                const group = new THREE.Group();
+                const points = [];
+                const samples = 140;
+
+                for (let i = 0; i <= samples; i++) {
+                    const age = AGE_MIN + (i / samples) * (AGE_MAX - AGE_MIN);
+                    const x = ageToX(age);
+                    const y = valToY(curveDef.evaluate(age));
+                    const z = curveDef.zOffset;
+                    points.push(new THREE.Vector3(x, y, z));
+                }
+
+                const spline = new THREE.CatmullRomCurve3(points);
+
+                // 1. Primary Glowing Tube Ribbon
+                const tubeGeo = new THREE.TubeGeometry(spline, 140, 0.28, 12, false);
+                const tubeMat = new THREE.MeshStandardMaterial({
+                    color: curveDef.hex,
+                    emissive: curveDef.hex,
+                    emissiveIntensity: 0.65,
+                    roughness: 0.2,
+                    metalness: 0.3,
+                    transparent: true,
+                    opacity: 0.92
+                });
+                const tubeMesh = new THREE.Mesh(tubeGeo, tubeMat);
+                group.add(tubeMesh);
+
+                // 2. Translucent Vertical Curtain beneath the curve down to Y=0
+                const curtainGeo = new THREE.BufferGeometry();
+                const vertices = [];
+                for (let i = 0; i < points.length - 1; i++) {
+                    const p1 = points[i];
+                    const p2 = points[i + 1];
+                    // Triangle 1
+                    vertices.push(p1.x, p1.y, p1.z);
+                    vertices.push(p1.x, 0, p1.z);
+                    vertices.push(p2.x, p2.y, p2.z);
+                    // Triangle 2
+                    vertices.push(p2.x, p2.y, p2.z);
+                    vertices.push(p1.x, 0, p1.z);
+                    vertices.push(p2.x, 0, p2.z);
+                }
+                curtainGeo.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+                const curtainMat = new THREE.MeshBasicMaterial({
+                    color: curveDef.hex,
+                    transparent: true,
+                    opacity: 0.09,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+                const curtainMesh = new THREE.Mesh(curtainGeo, curtainMat);
+                group.add(curtainMesh);
+
+                // 3. Energy Particles Flowing Along the Curve
+                const particleCount = 26;
+                const pGeo = new THREE.SphereGeometry(0.42, 8, 8);
+                const pMat = new THREE.MeshBasicMaterial({
+                    color: 0xffffff,
+                    transparent: true,
+                    opacity: 0.9
+                });
+
+                for (let p = 0; p < particleCount; p++) {
+                    const pMesh = new THREE.Mesh(pGeo, pMat);
+                    group.add(pMesh);
+                    curveParticles.push({
+                        mesh: pMesh,
+                        spline: spline,
+                        t: p / particleCount,
+                        speed: 0.0009 + Math.random() * 0.0004,
+                        curveId: curveDef.id
+                    });
+                }
+
+                scene.add(group);
+                curveMeshes[curveDef.id] = {
+                    group,
+                    tubeMat,
+                    curtainMat,
+                    spline
+                };
+
+                // Create floating HTML label at the start of each curve
+                const labelEl = document.createElement('div');
+                labelEl.className = 'label-3d hidden md:flex items-center gap-1.5 px-2 py-0.5 rounded-md text-[10px] font-mono font-semibold bg-slate-950/85 border border-white/15 shadow-lg whitespace-nowrap';
+                labelEl.style.color = curveDef.color;
+                labelEl.innerHTML = `<span class="w-1.5 h-1.5 rounded-full" style="background:${curveDef.color}"></span>${curveDef.shortName}`;
+                labelsContainer.appendChild(labelEl);
+
+                const labelAge = curveDef.id === 'consc' || curveDef.id === 'crystal' ? 78 : 17;
+                label3DElements[`curve_${curveDef.id}`] = {
+                    el: labelEl,
+                    curveId: curveDef.id,
+                    pos: new THREE.Vector3(
+                        ageToX(labelAge),
+                        valToY(curveDef.evaluate(labelAge)) + 1.4,
+                        curveDef.zOffset
+                    )
+                };
+            });
+        }
+
+        function buildAgeScanner() {
+            agePlaneGroup = new THREE.Group();
+
+            // Translucent Laser Scanning Slice across all 5 tracks
+            const sliceGeo = new THREE.PlaneGeometry(30, 19);
+            const sliceMat = new THREE.MeshBasicMaterial({
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.07,
+                side: THREE.DoubleSide,
+                depthWrite: false
+            });
+            const sliceMesh = new THREE.Mesh(sliceGeo, sliceMat);
+            sliceMesh.rotation.y = Math.PI / 2;
+            sliceMesh.position.y = 9.5;
+            agePlaneGroup.add(sliceMesh);
+
+            // Glowing Frame Border around the Age Scanner Plane
+            const framePts = [
+                new THREE.Vector3(0, 0, -15),
+                new THREE.Vector3(0, 19, -15),
+                new THREE.Vector3(0, 19, 15),
+                new THREE.Vector3(0, 0, 15),
+                new THREE.Vector3(0, 0, -15)
+            ];
+            const frameGeo = new THREE.BufferGeometry().setFromPoints(framePts);
+            const frameMat = new THREE.LineBasicMaterial({
+                color: 0x38bdf8,
+                transparent: true,
+                opacity: 0.65
+            });
+            agePlaneGroup.add(new THREE.Line(frameGeo, frameMat));
+
+            // Glowing Intersection Orbs & Vertical Drop Pillars for each of the 5 curves
+            CURVE_DEFINITIONS.forEach(curveDef => {
+                const orbGroup = new THREE.Group();
+
+                // Core bright sphere
+                const coreGeo = new THREE.SphereGeometry(0.68, 16, 16);
+                const coreMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+                const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+                orbGroup.add(coreMesh);
+
+                // Outer halo sphere
+                const haloGeo = new THREE.SphereGeometry(1.25, 16, 16);
+                const haloMat = new THREE.MeshBasicMaterial({
+                    color: curveDef.hex,
+                    transparent: true,
+                    opacity: 0.45
+                });
+                const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+                orbGroup.add(haloMesh);
+
+                // Vertical laser drop line to floor
+                const dropGeo = new THREE.BufferGeometry().setFromPoints([
+                    new THREE.Vector3(0, 0, 0),
+                    new THREE.Vector3(0, -1, 0)
+                ]);
+                const dropMat = new THREE.LineBasicMaterial({
+                    color: curveDef.hex,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const dropLine = new THREE.Line(dropGeo, dropMat);
+
+                agePlaneGroup.add(orbGroup);
+                agePlaneGroup.add(dropLine);
+
+                markerOrbs[curveDef.id] = {
+                    orbGroup,
+                    haloMesh,
+                    dropLine,
+                    zOffset: curveDef.zOffset,
+                    evaluate: curveDef.evaluate
+                };
+            });
+
+            scene.add(agePlaneGroup);
+        }
+
+        function buildCrossoverLandmark() {
+            // Around Age 34, Conscientiousness rises to intersect declining Dopamine/Novelty & GH
+            const crossAge = 34;
+            const x = ageToX(crossAge);
+            const y = valToY(CURVE_DEFINITIONS[3].evaluate(crossAge));
+            const z = 0;
+
+            const ringGeo = new THREE.RingGeometry(1.6, 1.9, 32);
+            const ringMat = new THREE.MeshBasicMaterial({
+                color: 0x10b981,
+                side: THREE.DoubleSide,
+                transparent: true,
+                opacity: 0.55
+            });
+            crossoverBeacon = new THREE.Mesh(ringGeo, ringMat);
+            crossoverBeacon.position.set(x, y, z);
+            scene.add(crossoverBeacon);
+        }
+
+        function buildAmbientParticles() {
+            const count = 220;
+            const positions = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                positions[i * 3] = (Math.random() - 0.5) * 95;
+                positions[i * 3 + 1] = Math.random() * 26;
+                positions[i * 3 + 2] = (Math.random() - 0.5) * 45;
+            }
+            const geo = new THREE.BufferGeometry();
+            geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const mat = new THREE.PointsMaterial({
+                color: 0x64748b,
+                size: 0.25,
+                transparent: true,
+                opacity: 0.45
+            });
+            const pts = new THREE.Points(geo, mat);
+            scene.add(pts);
+        }
+
+        /*************************************************************************
+         * 5. CAMERA ORBIT & INTERACTION SYSTEM
+         *************************************************************************/
+        function setupCameraInteraction(domElement) {
+            domElement.addEventListener('pointerdown', (e) => {
+                camControl.isDragging = true;
+                camControl.prevX = e.clientX;
+                camControl.prevY = e.clientY;
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!camControl.isDragging) return;
+                const dx = e.clientX - camControl.prevX;
+                const dy = e.clientY - camControl.prevY;
+                camControl.prevX = e.clientX;
+                camControl.prevY = e.clientY;
+
+                camControl.theta -= dx * 0.0065;
+                camControl.phi = Math.max(0.35, Math.min(1.48, camControl.phi - dy * 0.0065));
+            });
+
+            window.addEventListener('pointerup', () => {
+                camControl.isDragging = false;
+            });
+
+            domElement.addEventListener('wheel', (e) => {
+                e.preventDefault();
+                camControl.radius = Math.max(24, Math.min(82, camControl.radius + e.deltaY * 0.035));
+            }, { passive: false });
+        }
+
+        function updateCameraPosition() {
+            // If Follow Cam is active, smoothly track the current Age X coordinate
+            if (state.cameraFollowMode) {
+                camControl.desiredTarget.set(ageToX(state.currentAge) * 0.55, 7.5, 0);
+            } else {
+                camControl.desiredTarget.set(0, 7.5, 0);
+            }
+
+            camControl.target.lerp(camControl.desiredTarget, 0.06);
+
+            const x = camControl.target.x + camControl.radius * Math.sin(camControl.phi) * Math.sin(camControl.theta);
+            const y = camControl.target.y + camControl.radius * Math.cos(camControl.phi);
+            const z = camControl.target.z + camControl.radius * Math.sin(camControl.phi) * Math.cos(camControl.theta);
+
+            camera.position.set(x, y, z);
+            camera.lookAt(camControl.target);
+        }
+
+        function update3DLabels() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            const widthHalf = width / 2;
+            const heightHalf = height / 2;
+
+            Object.values(label3DElements).forEach(item => {
+                if (item.curveId && !state.visibleCurves[item.curveId]) {
+                    item.el.style.opacity = '0';
+                    return;
+                }
+
+                const v = item.pos.clone();
+                v.project(camera);
+
+                // Hide if behind camera
+                if (v.z > 1) {
+                    item.el.style.opacity = '0';
+                    return;
+                }
+
+                const x = (v.x * widthHalf) + widthHalf;
+                const y = -(v.y * heightHalf) + heightHalf;
+
+                item.el.style.opacity = '1';
+                item.el.style.left = `${x}px`;
+                item.el.style.top = `${y}px`;
+            });
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        /*************************************************************************
+         * 6. UI SYNCHRONIZATION & DASHBOARD RENDERING
+         *************************************************************************/
+        let lastBracketKey = null;
+
+        function updateAgeScannerAndUI(age) {
+            const x = ageToX(age);
+            agePlaneGroup.position.x = x;
+
+            // Update 3D Orbs and UI Progress Bars for each curve
+            CURVE_DEFINITIONS.forEach(curveDef => {
+                const val = curveDef.evaluate(age);
+                const roundedVal = Math.round(val);
+                const y = valToY(val);
+
+                const marker = markerOrbs[curveDef.id];
+                if (marker) {
+                    marker.orbGroup.position.set(0, y, marker.zOffset);
+                    marker.orbGroup.visible = state.visibleCurves[curveDef.id];
+                    marker.dropLine.visible = state.visibleCurves[curveDef.id];
+
+                    // Update vertical laser line from orb to floor
+                    const posAttr = marker.dropLine.geometry.attributes.position;
+                    posAttr.setXYZ(0, 0, y, marker.zOffset);
+                    posAttr.setXYZ(1, 0, 0, marker.zOffset);
+                    posAttr.needsUpdate = true;
+                }
+
+                // Update Left Panel Percentage & Bar Width
+                const valEl = document.getElementById(`val-${curveDef.id}`);
+                const barEl = document.getElementById(`bar-${curveDef.id}`);
+                if (valEl) valEl.innerText = `${roundedVal}%`;
+                if (barEl) barEl.style.width = `${roundedVal}%`;
+            });
+
+            // Update Age Display
+            document.getElementById('age-display-large').innerText = Math.round(age);
+            document.getElementById('age-slider').value = age;
+
+            // Find matching Life Stage Protocol Bracket
+            const stage = LIFE_STAGE_PROTOCOLS.find(s => age >= s.minAge && age <= s.maxAge) || LIFE_STAGE_PROTOCOLS[LIFE_STAGE_PROTOCOLS.length - 1];
+
+            if (stage.decadeKey !== lastBracketKey) {
+                lastBracketKey = stage.decadeKey;
+
+                document.getElementById('phase-title').innerText = stage.title;
+                document.getElementById('reality-description').innerText = stage.reality;
+                document.getElementById('crossover-title').innerText = stage.crossoverTitle;
+                document.getElementById('crossover-text').innerText = stage.crossoverText;
+                document.getElementById('bracket-badge').innerText = stage.rangeLabel;
+                document.getElementById('age-trap-text').innerText = stage.trap;
+
+                // Render Actionable Protocol Cards
+                const cardsContainer = document.getElementById('protocol-cards');
+                cardsContainer.innerHTML = stage.protocols.map(p => `
+                    <div class="bg-slate-900/75 hover:bg-slate-900/95 border border-white/10 rounded-xl p-3 transition-all">
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="ph-fill ${p.icon} ${p.color} text-base"></i>
+                            <span class="font-mono text-[10px] uppercase tracking-wider ${p.color} font-semibold">${p.badge}</span>
+                        </div>
+                        <h4 class="font-display font-semibold text-xs md:text-sm text-white mb-1">${p.title}</h4>
+                        <p class="text-xs text-slate-300 leading-relaxed">${p.desc}</p>
+                    </div>
+                `).join('');
+
+                // Highlight Active Decade Button
+                document.querySelectorAll('.decade-btn').forEach(btn => {
+                    if (btn.dataset.decade === stage.decadeKey) {
+                        btn.className = 'decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-cyan-500/25 text-white border border-cyan-400/60 shadow-[0_0_12px_rgba(0,242,254,0.3)]';
+                    } else {
+                        btn.className = 'decade-btn px-2.5 py-1 rounded-lg text-[11px] font-mono transition-all bg-white/5 hover:bg-white/15 text-slate-300 border border-white/10';
+                    }
+                });
+            }
+        }
+
+        function initHeaderCurveToggles() {
+            const container = document.getElementById('curve-toggles');
+            container.innerHTML = CURVE_DEFINITIONS.map(c => `
+                <button onclick="toggleCurveVisibility('${c.id}')" id="toggle-btn-${c.id}"
+                    class="flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-mono transition-all bg-white/10 text-white border border-white/15">
+                    <span class="w-2 h-2 rounded-full" style="background:${c.color}; box-shadow: 0 0 6px ${c.color}"></span>
+                    <span>${c.shortName}</span>
+                </button>
+            `).join('');
+        }
+
+        window.toggleCurveVisibility = function(curveId) {
+            state.visibleCurves[curveId] = !state.visibleCurves[curveId];
+            const isVis = state.visibleCurves[curveId];
+
+            const meshObj = curveMeshes[curveId];
+            if (meshObj) {
+                meshObj.group.visible = isVis;
+            }
+
+            const btn = document.getElementById(`toggle-btn-${curveId}`);
+            if (btn) {
+                btn.style.opacity = isVis ? '1' : '0.35';
+            }
+
+            updateAgeScannerAndUI(state.currentAge);
+        };
+
+        window.focusSingleCurve = function(curveId) {
+            if (state.activeCurveFilter === curveId) {
+                // Restore all
+                state.activeCurveFilter = null;
+                CURVE_DEFINITIONS.forEach(c => {
+                    state.visibleCurves[c.id] = true;
+                    curveMeshes[c.id].group.visible = true;
+                    const btn = document.getElementById(`toggle-btn-${c.id}`);
+                    if (btn) btn.style.opacity = '1';
+                });
+            } else {
+                state.activeCurveFilter = curveId;
+                CURVE_DEFINITIONS.forEach(c => {
+                    const show = c.id === curveId;
+                    state.visibleCurves[c.id] = show;
+                    curveMeshes[c.id].group.visible = show;
+                    const btn = document.getElementById(`toggle-btn-${c.id}`);
+                    if (btn) btn.style.opacity = show ? '1' : '0.35';
+                });
+            }
+            updateAgeScannerAndUI(state.currentAge);
+        };
+
+        window.setAgeSmooth = function(targetAge) {
+            state.isAutoPlaying = false;
+            updateAutoPlayButtonUI();
+            state.targetAge = targetAge;
+        };
+
+        /*************************************************************************
+         * 7. 2D SVG MATRIX COMPARISON MODAL
+         *************************************************************************/
+        function render2DComparisonChart() {
+            const svg = document.getElementById('svg-comparison-chart');
+            const w = 800;
+            const h = 320;
+            const padL = 48;
+            const padR = 24;
+            const padT = 20;
+            const padB = 36;
+            const plotW = w - padL - padR;
+            const plotH = h - padT - padB;
+
+            const mapX = (age) => padL + ((age - AGE_MIN) / (AGE_MAX - AGE_MIN)) * plotW;
+            const mapY = (val) => padT + plotH - (val / 100) * plotH;
+
+            let html = '';
+
+            // Horizontal Grid lines
+            [0, 25, 50, 75, 100].forEach(pct => {
+                const y = mapY(pct);
+                html += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="rgba(255,255,255,0.08)" stroke-dasharray="4 4" />`;
+                html += `<text x="${padL - 10}" y="${y + 4}" text-anchor="end" fill="#64748b" font-size="11" font-family="JetBrains Mono">${pct}%</text>`;
+            });
+
+            // Vertical Age Decade lines
+            for (let age = 15; age <= 85; age += 10) {
+                const x = mapX(age);
+                html += `<line x1="${x}" y1="${padT}" x2="${x}" y2="${h - padB}" stroke="rgba(255,255,255,0.06)" />`;
+                html += `<text x="${x}" y="${h - 10}" text-anchor="middle" fill="#94a3b8" font-size="11" font-family="JetBrains Mono">Age ${age}</text>`;
+            }
+
+            // Highlight Current Selected Age Vertical Line
+            const curX = mapX(state.currentAge);
+            html += `<line x1="${curX}" y1="${padT}" x2="${curX}" y2="${h - padB}" stroke="#38bdf8" stroke-width="2" />`;
+            html += `<rect x="${curX - 28}" y="${padT - 14}" width="56" height="18" rx="4" fill="#0284c7" />`;
+            html += `<text x="${curX}" y="${padT - 2}" text-anchor="middle" fill="#ffffff" font-size="10" font-family="JetBrains Mono" font-weight="bold">AGE ${Math.round(state.currentAge)}</text>`;
+
+            // Draw All 5 Curves
+            CURVE_DEFINITIONS.forEach(c => {
+                let d = '';
+                for (let age = AGE_MIN; age <= AGE_MAX; age += 1) {
+                    const x = mapX(age);
+                    const y = mapY(c.evaluate(age));
+                    d += (age === AGE_MIN ? `M ${x} ${y}` : ` L ${x} ${y}`);
+                }
+                html += `<path d="${d}" fill="none" stroke="${c.color}" stroke-width="3" stroke-linecap="round" />`;
+
+                // Current age dot on curve
+                const cy = mapY(c.evaluate(state.currentAge));
+                html += `<circle cx="${curX}" cy="${cy}" r="5" fill="#ffffff" stroke="${c.color}" stroke-width="3" />`;
+            });
+
+            svg.innerHTML = html;
+        }
+
+        /*************************************************************************
+         * 8. EVENT LISTENERS & ANIMATION LOOP
+         *************************************************************************/
+        function setupUIEvents() {
+            const slider = document.getElementById('age-slider');
+            slider.addEventListener('input', (e) => {
+                state.isAutoPlaying = false;
+                updateAutoPlayButtonUI();
+                state.targetAge = parseFloat(e.target.value);
+                state.currentAge = state.targetAge;
+                updateAgeScannerAndUI(state.currentAge);
+            });
+
+            // Auto-Play Life Journey Tour
+            document.getElementById('btn-autoplay').addEventListener('click', () => {
+                state.isAutoPlaying = !state.isAutoPlaying;
+                if (state.isAutoPlaying && state.currentAge >= 84.5) {
+                    state.currentAge = 15;
+                    state.targetAge = 15;
+                }
+                updateAutoPlayButtonUI();
+            });
+
+            // 2D Matrix Modal
+            const modal = document.getElementById('chart-modal');
+            document.getElementById('btn-chart-modal').addEventListener('click', () => {
+                render2DComparisonChart();
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            });
+            document.getElementById('close-chart-modal').addEventListener('click', () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            });
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+            });
+
+            // Camera Mode Toggle / Reset
+            document.getElementById('btn-camera-reset').addEventListener('click', () => {
+                state.cameraFollowMode = !state.cameraFollowMode;
+                camControl.theta = 0.18;
+                camControl.phi = 1.18;
+                camControl.radius = 48;
+                document.getElementById('camera-mode-label').innerText = state.cameraFollowMode ? 'Follow Cam' : 'Overview Cam';
+            });
+
+            // Mobile UI Toggle
+            let mobilePanelsVisible = true;
+            document.getElementById('btn-toggle-ui').addEventListener('click', () => {
+                mobilePanelsVisible = !mobilePanelsVisible;
+                const grid = document.getElementById('main-ui-grid');
+                grid.style.opacity = mobilePanelsVisible ? '1' : '0';
+                grid.style.pointerEvents = mobilePanelsVisible ? 'none' : 'none';
+                document.getElementById('left-panel').style.pointerEvents = mobilePanelsVisible ? 'auto' : 'none';
+                document.getElementById('right-panel').style.pointerEvents = mobilePanelsVisible ? 'auto' : 'none';
+            });
+        }
+
+        function updateAutoPlayButtonUI() {
+            const icon = document.getElementById('icon-autoplay');
+            const text = document.getElementById('text-autoplay');
+            const btn = document.getElementById('btn-autoplay');
+            if (state.isAutoPlaying) {
+                icon.className = 'ph-fill ph-pause text-sm';
+                text.innerText = 'Pause Tour';
+                btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-amber-500/20 text-amber-300 border border-amber-500/40 transition-all';
+            } else {
+                icon.className = 'ph-fill ph-play text-sm';
+                text.innerText = 'Life Tour';
+                btn.className = 'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 border border-emerald-500/30 transition-all';
+            }
+        }
+
+        function animate(timestamp) {
+            requestAnimationFrame(animate);
+
+            // Handle Auto-Play Progression
+            if (state.isAutoPlaying) {
+                state.targetAge += 0.045;
+                if (state.targetAge >= AGE_MAX) {
+                    state.targetAge = AGE_MIN;
+                    state.currentAge = AGE_MIN;
+                }
+            }
+
+            // Smooth interpolation of age scrubber
+            if (Math.abs(state.targetAge - state.currentAge) > 0.005) {
+                state.currentAge += (state.targetAge - state.currentAge) * 0.12;
+                updateAgeScannerAndUI(state.currentAge);
+            }
+
+            // Animate Flowing Bioluminescent Particles along the 5 Splines
+            curveParticles.forEach(p => {
+                if (!state.visibleCurves[p.curveId]) return;
+                p.t += p.speed;
+                if (p.t > 1) p.t -= 1;
+                const pos = p.spline.getPointAt(p.t);
+                p.mesh.position.copy(pos);
+            });
+
+            // Pulse Intersection Orbs & Crossover Ring
+            const pulse = 1 + 0.15 * Math.sin(timestamp * 0.005);
+            Object.values(markerOrbs).forEach(m => {
+                m.haloMesh.scale.set(pulse, pulse, pulse);
+            });
+
+            if (crossoverBeacon) {
+                crossoverBeacon.rotation.z += 0.01;
+                const beaconScale = 1 + 0.1 * Math.sin(timestamp * 0.003);
+                crossoverBeacon.scale.set(beaconScale, beaconScale, 1);
+            }
+
+            // Update Camera & 3D Floating Labels
+            updateCameraPosition();
+            update3DLabels();
+
+            renderer.render(scene, camera);
+        }
+
+        // Start Application on Window Load
+        window.onload = function() {
+            initHeaderCurveToggles();
+            initThreeScene();
+            setupUIEvents();
+            updateAgeScannerAndUI(state.currentAge);
+            animate(0);
+        };
+    </script>
+</body>
+</html>
