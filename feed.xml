@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Fri, 23 Oct 2026 21:05:00 +02:00</lastBuildDate>
+    <lastBuildDate>Sat, 31 Oct 2026 21:35:00 +01:00</lastBuildDate>
+
+    <item>
+      <title>Autumn Telemetry</title>
+      <link>https://rruxandra.github.io/autumn-telemetry.html</link>
+      <description>Mood is the fiction a nervous system writes when it cannot read its own photobiology. Auditing several years of ambient light sensors, nocturnal recovery, and workweek cardiac taxes at my Alpine latitude to settle whether October melancholy is existential depth or just an under-lit houseplant mistaking a photon deficit for character.</description>
+      <pubDate>Sat, 31 Oct 2026 21:35:00 +01:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/autumn-telemetry.html</guid>
+    </item>
 
     <item>
       <title>The Silent Transmission</title>

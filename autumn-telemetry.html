@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090a0f">
+<title>Autumn Telemetry · Around 4 Million Data Points vs. My October Personality</title>
+<meta name="description" content="I exported around 4 million data points over several years and asked an LLM what is wrong with me in autumn.">
+<link rel="stylesheet" href="assets/opto-fonts.css">
+<style>
+  :root {
+    --bg:        #090a0f;
+    --ink:       #f0eee8;
+    --ink-dim:   #888b99;
+    --ink-faint: #444754;
+    --warm:      #dfcca8;   /* soft natural linen / daylight */
+    --steel:     #8497ad;   /* calm mountain slate / Alpine latitude */
+    --clay:      #b87462;   /* muted terracotta for nocturnal/airway load */
+    --rule:      rgba(240, 238, 232, 0.08);
+    --rule-on:   rgba(240, 238, 232, 0.16);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-weight: 400;
+    line-height: 1.6;
+    letter-spacing: -0.011em;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+
+  /* ── Film grain ── */
+  .grain {
+    position: fixed; inset: 0; z-index: 100;
+    pointer-events: none; opacity: 0.035; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.6 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── Interactive Mountains & Sun Canvas ── */
+  canvas#field {
+    position: fixed; inset: 0;
+    width: 100vw; height: 100vh;
+    z-index: 0; pointer-events: none;
+  }
+
+  /* ── Atmospheric vignette ── */
+  .vignette {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: radial-gradient(ellipse at 65% 50%, transparent 42%, rgba(6, 7, 11, 0.72) 100%);
+  }
+
+  /* ── Reading backdrop shading on text side ── */
+  .shade {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background: linear-gradient(90deg, rgba(9, 10, 15, 0.84) 0%, rgba(9, 10, 15, 0.68) 42%, rgba(9, 10, 15, 0.16) 75%, transparent 100%);
+  }
+
+  /* ── Scroll progress rail ── */
+  .rail {
+    position: fixed; top: 0; right: 0;
+    height: 100vh; width: 1px;
+    background: var(--rule); z-index: 50;
+  }
+  .rail::after {
+    content: '';
+    position: absolute; top: 0; left: 0;
+    width: 2px; height: var(--p, 0%);
+    background: var(--warm);
+    transition: height 0.14s linear;
+  }
+
+  /* ── Corner navigation & HUD ── */
+  .meta {
+    position: fixed; top: 26px; left: 28px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+  .meta span { color: var(--ink-faint); }
+
+  .meta-r {
+    position: fixed; top: 26px; right: 38px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--ink-dim);
+  }
+
+  .hud {
+    position: fixed; bottom: 22px; right: 38px; z-index: 50;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-dim);
+    background: rgba(10, 11, 16, 0.85);
+    border: 1px solid var(--rule);
+    padding: 7px 12px; border-radius: 4px;
+    backdrop-filter: blur(8px);
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .hud b { color: var(--ink); font-weight: 500; }
+
+  .back {
+    position: fixed; bottom: 22px; left: 28px; z-index: 60;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--ink-faint);
+    text-decoration: none; transition: color 0.25s ease;
+  }
+  .back:hover { color: var(--ink); }
+  .back::before { content: "\2190  "; }
+
+  main { position: relative; z-index: 10; }
+
+  /* ── HERO ─────────────────────────────────────────────── */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: flex-end;
+    padding: 0 7vw 12vh; position: relative;
+  }
+  .hero-body { max-width: 680px; position: relative; }
+
+  .hero .kicker {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--ink-dim);
+    margin-bottom: 28px;
+    opacity: 0; animation: rise 1.3s 0.15s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 600;
+    font-size: clamp(48px, 9.2vw, 126px);
+    line-height: 0.95; letter-spacing: -0.04em;
+    color: #ffffff;
+    opacity: 0; animation: rise 1.5s 0.30s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 350;
+    color: var(--warm);
+  }
+
+  .hero .lede {
+    max-width: 550px;
+    font-size: clamp(17px, 1.65vw, 21.5px);
+    color: var(--ink-dim); margin-top: 36px;
+    line-height: 1.58;
+    opacity: 0; animation: rise 1.5s 0.55s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero .lede em { color: var(--ink); font-style: normal; font-weight: 500; }
+
+  .hero .scroll-cue {
+    position: absolute; bottom: 36px; right: 7vw;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.30em;
+    text-transform: uppercase; color: var(--ink-dim);
+    writing-mode: vertical-rl;
+    opacity: 0; animation: rise 1.4s 1.0s cubic-bezier(.2,.7,.2,1) forwards;
+  }
+  .hero .scroll-cue::after {
+    content: '';
+    display: block; width: 1px; height: 38px;
+    background: linear-gradient(180deg, var(--ink-dim), transparent);
+    margin: 10px auto 0;
+    animation: pulse 2.6s ease-in-out infinite;
+  }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.35; transform: scaleY(0.55); transform-origin: top; }
+    50%      { opacity: 1;    transform: scaleY(1); }
+  }
+
+  /* ── STAGES ────────────────────────────────────────────── */
+  .stage {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    padding: 100px 7vw; position: relative;
+    border-top: 1px solid var(--rule);
+  }
+  .stage-inner {
+    max-width: 560px; width: 100%; position: relative;
+    padding-left: 2rem; border-left: 1px solid var(--rule-on);
+  }
+  .stage-inner::before {
+    content: '';
+    position: absolute; inset: -46px -54px -46px -36px;
+    background: radial-gradient(ellipse 115% 82% at 36% 50%, rgba(9,10,15,0.94) 0%, rgba(9,10,15,0.82) 50%, rgba(9,10,15,0.36) 72%, transparent 88%);
+    z-index: -1; pointer-events: none;
+  }
+
+  .stage .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.30em;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 16px;
+  }
+  .stage .label b { color: var(--ink-dim); font-weight: 500; }
+
+  .stage .st-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: clamp(52px, 8.5vw, 110px);
+    font-weight: 700; line-height: 1; letter-spacing: -0.05em;
+    color: rgba(240, 238, 232, 0.04);
+    margin: -8px 0 14px -2.3rem;
+    user-select: none; pointer-events: none;
+  }
+
+  .stage p {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 400;
+    font-size: clamp(18px, 1.85vw, 22.5px);
+    line-height: 1.58; letter-spacing: -0.012em;
+    color: var(--ink);
+  }
+  .stage p + p { margin-top: 1.05rem; }
+  .stage p em {
+    font-style: normal; font-weight: 500;
+    color: #ffffff;
+    border-bottom: 1px solid rgba(240, 238, 232, 0.28);
+  }
+  .stage[data-cyan] p em {
+    color: var(--warm);
+    border-bottom: 1px solid rgba(223, 204, 168, 0.35);
+  }
+  .stage[data-sun] p em  {
+    color: #ffffff;
+    border-bottom: 1px solid rgba(223, 204, 168, 0.50);
+  }
+
+  .stage p .tag, .catalog .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-style: normal;
+    font-size: 0.78em; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--ink-dim);
+    font-weight: 500;
+  }
+
+  .stage a.xref {
+    color: var(--warm); text-decoration: none;
+    border-bottom: 1px solid rgba(223, 204, 168, 0.35);
+    transition: color 0.2s, border-bottom-color 0.2s;
+  }
+  .stage a.xref:hover { color: #ffffff; border-bottom-color: #ffffff; }
+
+  .stage .quiet {
+    margin-top: 24px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px; letter-spacing: 0.22em;
+    text-transform: uppercase; color: var(--ink-faint);
+  }
+
+  /* Compact ledger of relative shifts */
+  .catalog { margin: 14px 0 4px; border-top: 1px solid var(--rule); }
+  .catalog .item {
+    display: grid; grid-template-columns: 8.5rem 1fr; gap: 1rem;
+    padding: 0.78rem 0; border-bottom: 1px solid var(--rule);
+    align-items: baseline;
+  }
+  .catalog .term {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; letter-spacing: 0.08em;
+    text-transform: uppercase; color: var(--ink-dim);
+    font-weight: 500;
+  }
+  .catalog .gloss {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: clamp(14.5px, 1.45vw, 17.5px);
+    line-height: 1.46; color: var(--ink-dim);
+  }
+  .catalog .gloss em { font-style: normal; font-weight: 500; color: #ffffff; }
+
+  /* Scroll-in transitions */
+  .stage-inner > * {
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 1.0s cubic-bezier(.2,.7,.2,1), transform 1.0s cubic-bezier(.2,.7,.2,1);
+  }
+  .stage.in-view .stage-inner > *              { opacity: 1; transform: none; }
+  .stage.in-view .stage-inner > *:nth-child(2) { transition-delay: 0.08s; }
+  .stage.in-view .stage-inner > *:nth-child(3) { transition-delay: 0.16s; }
+  .stage.in-view .stage-inner > *:nth-child(4) { transition-delay: 0.26s; }
+  .stage.in-view .stage-inner > *:nth-child(5) { transition-delay: 0.36s; }
+
+  /* ── CODA ─────────────────────────────────────────────── */
+  .coda {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 120px 28px; position: relative;
+    border-top: 1px solid var(--rule);
+  }
+  .coda-inner { max-width: 700px; position: relative; }
+  .coda-inner::before {
+    content: '';
+    position: absolute; inset: -80px -90px;
+    background: radial-gradient(ellipse 74% 66% at center, rgba(9,10,15,0.94) 0%, rgba(9,10,15,0.82) 46%, rgba(9,10,15,0.40) 70%, transparent 88%);
+    z-index: -1; pointer-events: none;
+  }
+
+  .coda .mark {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px; letter-spacing: 0.26em;
+    text-transform: uppercase; color: var(--ink-dim);
+    margin-bottom: 34px;
+  }
+  .coda h2 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 600;
+    font-size: clamp(28px, 4.2vw, 54px);
+    line-height: 1.2; letter-spacing: -0.026em;
+    color: #ffffff; margin-bottom: 30px;
+  }
+  .coda h2 em {
+    font-style: italic; font-weight: 350;
+    color: var(--warm);
+  }
+  .coda p {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: clamp(16.5px, 1.55vw, 20px);
+    line-height: 1.62; color: var(--ink-dim);
+    max-width: 540px; margin: 0 auto;
+  }
+  .coda p em { color: var(--ink); font-style: normal; font-weight: 500; }
+
+  .coda hr {
+    border: none; width: 36px; height: 1px;
+    background: var(--ink-faint); margin: 44px auto;
+  }
+  .coda .send {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-weight: 500;
+    font-size: clamp(20px, 2.2vw, 28px);
+    line-height: 1.4; color: var(--ink);
+  }
+  .coda .send em { color: var(--warm); font-style: italic; font-weight: 400; }
+  .colophon {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px; letter-spacing: 0.24em;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin-top: 32px;
+  }
+  .colophon span { color: var(--ink-dim); }
+
+  .coda-inner > * {
+    opacity: 0; transform: translateY(16px);
+    transition: opacity 1.3s cubic-bezier(.2,.7,.2,1), transform 1.3s cubic-bezier(.2,.7,.2,1);
+  }
+  .coda.in-view .coda-inner > *              { opacity: 1; transform: none; }
+  .coda.in-view .coda-inner > *:nth-child(2) { transition-delay: 0.16s; }
+  .coda.in-view .coda-inner > *:nth-child(3) { transition-delay: 0.32s; }
+  .coda.in-view .coda-inner > *:nth-child(4) { transition-delay: 0.46s; }
+  .coda.in-view .coda-inner > *:nth-child(5) { transition-delay: 0.60s; }
+  .coda.in-view .coda-inner > *:nth-child(6) { transition-delay: 0.72s; }
+  .coda.in-view .coda-inner > *:nth-child(7) { transition-delay: 0.84s; }
+
+  @media (max-width: 720px) {
+    .meta    { left: 18px; top: 18px; font-size: 10px; }
+    .meta-r  { right: 22px; top: 18px; font-size: 10px; }
+    .hud     { display: none; }
+    .hero    { padding: 0 6vw 12vh; align-items: center; }
+    .stage   { padding: 84px 6vw; }
+    .stage-inner { padding-left: 1.25rem; }
+    .stage .st-num { margin-left: -1.5rem; }
+    .stage-inner::before { inset: -28px -20px; }
+    .catalog .item { grid-template-columns: 1fr; gap: 0.25rem; }
+    .back    { left: 18px; bottom: 14px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="grain"></div>
+<canvas id="field"></canvas>
+<div class="shade"></div>
+<div class="vignette"></div>
+<div class="rail"></div>
+
+<div class="meta">an essay <span>·</span> in motion</div>
+<div class="meta-r">№ 30 · 2026.10.31</div>
+<div class="hud" id="hud">TELEMETRY: <b>~4M ROWS</b> · ENVIRONMENT: MY ALPINE LATITUDE</div>
+<a class="back" href="index.html">return to log</a>
+
+<main>
+
+  <section class="hero">
+    <div class="hero-body">
+      <div class="kicker">around 4 million rows of telemetry · one embarrassing diagnosis</div>
+      <h1>Autumn<br><em>Telemetry</em></h1>
+      <p class="lede">I exported around 4 million data points over several years and asked an LLM what is wrong with me in autumn.</p>
+    </div>
+    <div class="scroll-cue">scroll</div>
+  </section>
+
+  <section class="stage" data-stage="1">
+    <div class="stage-inner">
+      <div class="label">exhibit a <b>· the disappearing sun</b></div>
+      <div class="st-num" aria-hidden="true">01</div>
+      <p>The model began by auditing the ambient light sensor hidden inside my watch. Between August and late autumn on the Swiss Plateau, my recorded daily daylight drops <em>five- to nine-fold</em>, while days that never once reach circadian-anchoring brightness multiply <em>more than tenfold</em>.</p>
+      <p>When I protested that this October was actually warm and sunny, the machine got meaner: at <span class="tag">my Alpine latitude</span>, even a cloudless October sky loses <em>over 90%</em> of my after-work daylight, leaves me waking in the dark, drops cool enough for a jacket sleeve to blind my wrist sensor, and tilts the sun low enough to wipe out <em>virtually 100% of UVB</em>.</p>
+      <div class="quiet">5× to 9× less wrist light · 0% autumn uvb · one very smug parser</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="2">
+    <div class="stage-inner">
+      <div class="label">exhibit b <b>· the 4 a.m. mutiny</b></div>
+      <div class="st-num" aria-hidden="true">02</div>
+      <p>Next it cross-examined several years of sleep. Total duration barely budged — varying by <em>under 2%</em> across the seasons, with virtually zero weekend social jetlag — yet autumn still left a quiet physiological tax:</p>
+      <div class="catalog">
+        <div class="item"><div class="term">Pulse</div><div class="gloss">resting and sleeping heart rates climb <em>6.5% to 7.6%</em> from August into November while nightly vagal recovery drops <em>nearly 10%</em>, every single year.</div></div>
+        <div class="item"><div class="term">04:00 AM</div><div class="gloss">pre-dawn wakefulness clustered noticeably following late-day workouts, compounding the seasonal dip in restorative sleep.</div></div>
+        <div class="item"><div class="term">Winter sleep</div><div class="gloss">across monitored winters, sleep conditions consistently degrade in sealed, heated bedrooms as dry air and indoor heating tax nighttime recovery.</div></div>
+        <div class="item"><div class="term">Airways</div><div class="gloss">sleeping breathing rate nudges upward from its August floor into <em>Heizperiode</em> winter air.</div></div>
+      </div>
+      <div class="quiet">same hours in bed · −9.4% vagal recovery · late workouts compound pre-dawn wakeups</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="3" data-cyan>
+    <div class="stage-inner">
+      <div class="label">exhibit c <b>· the accidental control group</b></div>
+      <div class="st-num" aria-hidden="true">03</div>
+      <p>When I tried to blame work or existential depth, the parser actually conceded half my alibi. Despite near-zero weekend social jetlag and a <em>completely flat</em> sleeping heart rate all seven nights of the week, weekdays consistently carry a measurable physiological surcharge compared with weekends — a workweek sympathetic tax as large as winter itself.</p>
+      <p>During several sunny, sea-level holidays, the telemetry revealed a consistent reset: sharply increased daylight exposure pushed resting heart rate down below even a restful weekend at home despite a substantial surge in daily walking; back at northern latitudes, the seasonal baseline returned immediately.</p>
+      <div class="quiet">weekday physiological surcharge · sea-level holidays · work and latitude neatly separated</div>
+    </div>
+  </section>
+
+  <section class="stage" data-stage="4" data-sun>
+    <div class="stage-inner">
+      <div class="label">the verdict <b>· narrative vs. photobiology</b></div>
+      <div class="st-num" aria-hidden="true">04</div>
+      <p><a class="xref" href="the-somatic-collimator.html">The Somatic Collimator</a> argued that mood is the fiction a nervous system writes when it cannot read its own telemetry. Autumn at northern latitudes is the grandest example we have: for centuries we have composed nocturnes and romanticized <em>spleen</em> over a seasonal drop in melanopsin signaling and <span class="tag">25-OH Vitamin D</span>.</p>
+      <p>I gave an algorithm four million chances to tell me I was a complex autumn creature. It informed me I am functionally a <em>slightly dramatic houseplant</em> parked too far from the window.</p>
+      <div class="quiet">not a dark night of the soul · just unwatered chlorophyll</div>
+    </div>
+  </section>
+
+  <section class="coda">
+    <div class="coda-inner">
+      <div class="mark">the prescription · my Alpine latitude</div>
+      <h2>I don't need to listen to music in autumn and be sad. <em>I just need 10,000 lux and Vitamin D.</em></h2>
+      <p>Turn on an obnoxiously bright light before breakfast, take the Vitamin D, and stop mistaking a photon deficit for character.</p>
+      <hr>
+      <p class="send">four million rows.<br><em>one lamp.</em></p>
+      <div class="colophon">audited by llm <span>·</span> cured by photosynthesis</div>
+    </div>
+  </section>
+
+</main>
+
+<script>
+(() => {
+  'use strict';
+
+  const canvas = document.getElementById('field');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const hud = document.getElementById('hud');
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const TAU = Math.PI * 2;
+
+  let W = 0, H = 0;
+  let progress = 0;
+
+  const clamp01 = t => t < 0 ? 0 : t > 1 ? 1 : t;
+  const lerp = (a, b, t) => a + (b - a) * t;
+  const sstep = t => { t = clamp01(t); return t * t * (3 - 2 * t); };
+
+  function band(p, a0, a1, b0, b1) {
+    return sstep((p - a0) / (a1 - a0)) * (1 - sstep((p - b0) / (b1 - b0)));
+  }
+
+  // Pre-generate stars for the nocturnal alpine sky
+  const N_STARS = 75;
+  const stars = [];
+  for (let i = 0; i < N_STARS; i++) {
+    stars.push({
+      xRatio: Math.random(),
+      yRatio: Math.random() * 0.52,
+      r: 0.6 + Math.random() * 1.3,
+      alpha: 0.25 + Math.random() * 0.55,
+      speed: 0.8 + Math.random() * 2.0,
+      phase: Math.random() * TAU
+    });
+  }
+
+  // Mountain ridge profile functions (normalized x in [0, 1])
+  function getDistantRidge(u) {
+    const y = 0.46;
+    const p1 = Math.pow(Math.max(0, 1 - Math.abs(u - 0.22) / 0.16), 1.3) * 0.22;
+    const p2 = Math.pow(Math.max(0, 1 - Math.abs(u - 0.52) / 0.20), 1.5) * 0.29; // Central peak
+    const p3 = Math.pow(Math.max(0, 1 - Math.abs(u - 0.78) / 0.18), 1.4) * 0.24;
+    const p4 = Math.max(0, 1 - Math.abs(u - 0.04) / 0.12) * 0.14;
+    const p5 = Math.max(0, 1 - Math.abs(u - 0.96) / 0.14) * 0.16;
+    const crags = (Math.sin(u * 50) * 0.014 + Math.cos(u * 110) * 0.007 + Math.sin(u * 220) * 0.003);
+    return y - (p1 + p2 + p3 + p4 + p5) + crags;
+  }
+
+  function getMidRidge(u) {
+    const y = 0.62;
+    const p1 = Math.pow(Math.max(0, 1 - Math.abs(u - 0.36) / 0.24), 1.3) * 0.18;
+    const p2 = Math.pow(Math.max(0, 1 - Math.abs(u - 0.70) / 0.22), 1.4) * 0.20;
+    const p3 = Math.max(0, 1 - Math.abs(u - 0.90) / 0.16) * 0.14;
+    const crags = (Math.sin(u * 38 + 1.2) * 0.018 + Math.cos(u * 85) * 0.009 + Math.sin(u * 160) * 0.004);
+    return y - (p1 + p2 + p3) + crags;
+  }
+
+  function getForeRidge(u) {
+    const y = 0.82;
+    const p1 = Math.pow(Math.max(0, 1 - Math.abs(u - 0.62) / 0.32), 1.3) * 0.16;
+    const p2 = Math.max(0, 1 - Math.abs(u - 0.15) / 0.20) * 0.10;
+    const crags = (Math.sin(u * 26 + 2.1) * 0.02 + Math.cos(u * 60) * 0.008);
+    return y - (p1 + p2) + crags;
+  }
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function onScroll() {
+    const docH = document.documentElement.scrollHeight - window.innerHeight;
+    progress = docH > 0 ? clamp01(window.scrollY / docH) : 0;
+    document.documentElement.style.setProperty('--p', (progress * 100).toFixed(2) + '%');
+    updateHud(progress);
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+
+  function updateHud(p) {
+    if (!hud) return;
+    if (p < 0.15) {
+      hud.innerHTML = 'TELEMETRY: <b>~4M ROWS</b> · ENVIRONMENT: <b>MY ALPINE LATITUDE</b>';
+    } else if (p < 0.36) {
+      hud.innerHTML = 'EXHIBIT A · WRIST LIGHT: <b>−85% TO −89%</b> · UVB: <b>~0%</b>';
+    } else if (p < 0.56) {
+      hud.innerHTML = 'EXHIBIT B · VAGAL HRV: <b>−9.4%</b> · LATE WORKOUTS: <b>PRE-DAWN WAKEFULNESS</b> · WINTER SLEEP CONDITIONS';
+    } else if (p < 0.75) {
+      hud.innerHTML = 'EXHIBIT C · WEEKDAYS: <b>PHYSIOLOGICAL SURCHARGE</b> · SUNNY HOLIDAYS: <b>RHR BELOW WEEKENDS</b>';
+    } else {
+      hud.innerHTML = 'VERDICT: <b>DRAMATIC HOUSEPLANT</b> · RX: <b>10,000 LUX + VITAMIN D₃</b>';
+    }
+  }
+  onScroll();
+
+  // Smoothly interpolated states
+  let sP = 0, sLamp = 0;
+
+  function mixRGB(c1, c2, t) {
+    return [
+      Math.round(lerp(c1[0], c2[0], t)),
+      Math.round(lerp(c1[1], c2[1], t)),
+      Math.round(lerp(c1[2], c2[2], t))
+    ];
+  }
+  const toRGBStr = c => `rgb(${c[0]}, ${c[1]}, ${c[2]})`;
+
+  function frame(now) {
+    sP += (progress - sP) * 0.065;
+    const targetLamp = sP > 0.78 ? 1 : 0;
+    sLamp += (targetLamp - sLamp) * 0.05;
+
+    // Stage weights
+    const w0 = 1 - sstep((sP - 0.08) / 0.10);
+    const w1 = band(sP, 0.08, 0.18, 0.28, 0.38);
+    const w2 = band(sP, 0.28, 0.38, 0.48, 0.58);
+    const w3 = band(sP, 0.48, 0.58, 0.68, 0.76);
+    const sunriseWeight = Math.max(sstep((sP - 0.68) / 0.14), sLamp);
+
+    let targetSunX = 0.72, targetSunY = 0.27, targetSunR = 30, sunAlpha = 0.95;
+
+    if (sLamp > 0.01) {
+      targetSunX = lerp(targetSunX, 0.52, sLamp);
+      targetSunY = lerp(targetSunY, 0.26, sLamp);
+      targetSunR = lerp(targetSunR, 38, sLamp);
+      sunAlpha = 1.0;
+    } else if (sP < 0.15) {
+      const t = sP / 0.15;
+      targetSunX = lerp(0.72, 0.75, t);
+      targetSunY = lerp(0.27, 0.38, t);
+      targetSunR = lerp(30, 26, t);
+      sunAlpha = 0.95;
+    } else if (sP < 0.35) {
+      const t = (sP - 0.15) / 0.20;
+      targetSunX = lerp(0.75, 0.79, t);
+      targetSunY = lerp(0.38, 0.62, t);
+      targetSunR = lerp(26, 22, t);
+      sunAlpha = lerp(0.95, 0.35, t);
+    } else if (sP < 0.55) {
+      const t = (sP - 0.35) / 0.20;
+      targetSunX = lerp(0.79, 0.72, t);
+      targetSunY = lerp(0.62, 0.88, t);
+      targetSunR = 18;
+      sunAlpha = lerp(0.35, 0.0, Math.min(1, t * 1.5));
+    } else if (sP < 0.75) {
+      const t = (sP - 0.55) / 0.20;
+      targetSunX = lerp(0.72, 0.64, t);
+      targetSunY = lerp(0.88, 0.20, t);
+      targetSunR = lerp(18, 34, t);
+      sunAlpha = lerp(0.0, 0.95, t);
+    } else {
+      const t = (sP - 0.75) / 0.25;
+      targetSunX = lerp(0.64, 0.52, t);
+      targetSunY = lerp(0.20, 0.26, t);
+      targetSunR = lerp(34, 38, t);
+      sunAlpha = 1.0;
+    }
+
+    const sunX = W * targetSunX;
+    const sunY = H * targetSunY;
+    const sunR = targetSunR;
+
+    // Restrained, natural atmospheric sky palette
+    let cTop = [10, 11, 16];
+    let cMid = [18, 21, 30];
+    let cHoriz = [52, 48, 52];
+
+    if (w1 > 0.01) {
+      cTop = mixRGB(cTop, [11, 12, 17], w1);
+      cMid = mixRGB(cMid, [20, 21, 26], w1);
+      cHoriz = mixRGB(cHoriz, [40, 38, 42], w1);
+    }
+    if (w2 > 0.01) {
+      cTop = mixRGB(cTop, [5, 6, 10], w2);
+      cMid = mixRGB(cMid, [9, 12, 20], w2);
+      cHoriz = mixRGB(cHoriz, [16, 20, 30], w2);
+    }
+    if (w3 > 0.01) {
+      cTop = mixRGB(cTop, [9, 18, 32], w3);
+      cMid = mixRGB(cMid, [18, 36, 58], w3);
+      cHoriz = mixRGB(cHoriz, [110, 102, 88], w3);
+    }
+    if (sunriseWeight > 0.01) {
+      cTop = mixRGB(cTop, [14, 12, 18], sunriseWeight);
+      cMid = mixRGB(cMid, [42, 28, 36], sunriseWeight);
+      cHoriz = mixRGB(cHoriz, [175, 148, 112], sunriseWeight);
+    }
+
+    // ── 1. SKY GRADIENT ──
+    const skyG = ctx.createLinearGradient(0, 0, 0, H * 0.85);
+    skyG.addColorStop(0, toRGBStr(cTop));
+    skyG.addColorStop(0.55, toRGBStr(cMid));
+    skyG.addColorStop(1, toRGBStr(cHoriz));
+    ctx.fillStyle = skyG;
+    ctx.fillRect(0, 0, W, H);
+
+    // ── 2. NIGHT STARS (visible during 4am stage) ──
+    const starWeight = Math.max(0, w2 * 1.1 - sLamp * 2.0);
+    if (starWeight > 0.02) {
+      ctx.save();
+      for (let i = 0; i < N_STARS; i++) {
+        const st = stars[i];
+        const tw = 0.6 + 0.4 * Math.sin(now * 0.002 * st.speed + st.phase);
+        ctx.fillStyle = `rgba(235, 238, 245, ${st.alpha * starWeight * tw})`;
+        ctx.beginPath();
+        ctx.arc(st.xRatio * W, st.yRatio * H, st.r, 0, TAU);
+        ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    // ── 3. THE SUN (NATURAL CORONA & DISC) ──
+    if (sunAlpha > 0.01) {
+      ctx.save();
+      ctx.globalAlpha = sunAlpha;
+
+      // Soft atmospheric rays (subtle, natural dust shafts)
+      const rayPower = Math.max(sunriseWeight * 0.8, w3 * 0.5, (1 - sP) * 0.25);
+      if (rayPower > 0.05) {
+        ctx.save();
+        const nRays = 22;
+        const raySpan = Math.max(W, H) * 1.3;
+        const rot = now * 0.00012;
+        for (let r = 0; r < nRays; r++) {
+          const a = (r / nRays) * TAU + rot;
+          const a1 = a - 0.04;
+          const a2 = a + 0.04;
+          const rayG = ctx.createRadialGradient(sunX, sunY, sunR * 0.8, sunX, sunY, raySpan);
+          const bright = (0.025 + 0.02 * Math.sin(r * 2.8 + now * 0.0015)) * rayPower;
+          rayG.addColorStop(0, `rgba(223, 204, 168, ${bright * 1.6})`);
+          rayG.addColorStop(0.35, `rgba(223, 204, 168, ${bright * 0.8})`);
+          rayG.addColorStop(1, 'rgba(223, 204, 168, 0)');
+
+          ctx.fillStyle = rayG;
+          ctx.beginPath();
+          ctx.moveTo(sunX, sunY);
+          ctx.lineTo(sunX + Math.cos(a1) * raySpan, sunY + Math.sin(a1) * raySpan);
+          ctx.lineTo(sunX + Math.cos(a2) * raySpan, sunY + Math.sin(a2) * raySpan);
+          ctx.closePath();
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+
+      // Soft natural ambient glow
+      const haloG = ctx.createRadialGradient(sunX, sunY, sunR * 0.3, sunX, sunY, sunR * 4.8);
+      haloG.addColorStop(0, 'rgba(235, 222, 198, 0.32)');
+      haloG.addColorStop(0.35, 'rgba(223, 204, 168, 0.12)');
+      haloG.addColorStop(0.75, 'rgba(210, 190, 155, 0.03)');
+      haloG.addColorStop(1, 'rgba(200, 180, 150, 0)');
+      ctx.fillStyle = haloG;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR * 4.8, 0, TAU);
+      ctx.fill();
+
+      // Sun core
+      const coreG = ctx.createRadialGradient(sunX, sunY, 0, sunX, sunY, sunR);
+      coreG.addColorStop(0, '#ffffff');
+      coreG.addColorStop(0.55, '#faf5ec');
+      coreG.addColorStop(0.90, '#dfcca8');
+      coreG.addColorStop(1, 'rgba(223, 204, 168, 0.85)');
+      ctx.fillStyle = coreG;
+      ctx.beginPath();
+      ctx.arc(sunX, sunY, sunR, 0, TAU);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // ── 4. MOUNTAIN LAYER 1 (DISTANT HIGH ALPS) ──
+    let cM1 = mixRGB([22, 24, 34], [14, 16, 26], w2);
+    if (w3 > 0.01) cM1 = mixRGB(cM1, [24, 34, 52], w3);
+    if (sunriseWeight > 0.01) cM1 = mixRGB(cM1, [40, 26, 36], sunriseWeight);
+
+    ctx.save();
+    ctx.fillStyle = toRGBStr(cM1);
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    const steps1 = 120;
+    for (let i = 0; i <= steps1; i++) {
+      const u = i / steps1;
+      const x = u * W;
+      const y = getDistantRidge(u) * H;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Subtle rim lighting along peak crests
+    ctx.strokeStyle = sunriseWeight > 0.1
+      ? 'rgba(223, 204, 168, 0.32)'
+      : 'rgba(240, 238, 232, 0.10)';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    for (let i = 0; i <= steps1; i++) {
+      const u = i / steps1;
+      const x = u * W;
+      const y = getDistantRidge(u) * H;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // Snowcap facet on the central peak (u ~ 0.52)
+    ctx.fillStyle = sunriseWeight > 0.1
+      ? 'rgba(235, 222, 198, 0.22)'
+      : 'rgba(225, 230, 240, 0.14)';
+    ctx.beginPath();
+    ctx.moveTo(W * 0.52, getDistantRidge(0.52) * H);
+    ctx.lineTo(W * 0.55, getDistantRidge(0.52) * H + 28);
+    ctx.lineTo(W * 0.49, getDistantRidge(0.52) * H + 24);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+
+    // ── 5. VALLEY FOG LAYER 1 (HOCHNEBEL INVERSION) ──
+    let fogDensity = 0.22;
+    if (w1 > 0.01) fogDensity = lerp(fogDensity, 0.85, w1);
+    if (w2 > 0.01) fogDensity = lerp(fogDensity, 0.42, w2);
+    if (w3 > 0.01) fogDensity = lerp(fogDensity, 0.02, w3);
+    if (sunriseWeight > 0.01) fogDensity = lerp(fogDensity, 0.0, sunriseWeight);
+
+    if (fogDensity > 0.02) {
+      ctx.save();
+      const fogY = H * 0.54;
+      const fogG = ctx.createLinearGradient(0, fogY - 40, 0, fogY + 50);
+      const fogAlpha = 0.28 * fogDensity;
+      const fogTint = sunriseWeight > 0.2
+        ? `rgba(223, 204, 168, ${fogAlpha})`
+        : `rgba(170, 175, 195, ${fogAlpha})`;
+      fogG.addColorStop(0, 'rgba(170, 175, 195, 0)');
+      fogG.addColorStop(0.5, fogTint);
+      fogG.addColorStop(1, 'rgba(170, 175, 195, 0)');
+      ctx.fillStyle = fogG;
+
+      ctx.beginPath();
+      ctx.moveTo(0, fogY + 45);
+      const fSteps = 40;
+      for (let s = 0; s <= fSteps; s++) {
+        const u = s / fSteps;
+        const x = u * W;
+        const wave = Math.sin(u * 9 + now * 0.0008) * 14 + Math.cos(u * 16 - now * 0.0006) * 8;
+        ctx.lineTo(x, fogY + wave);
+      }
+      ctx.lineTo(W, fogY + 45);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ── 6. MOUNTAIN LAYER 2 (MID-RANGE RIDGE) ──
+    let cM2 = mixRGB([14, 16, 24], [10, 12, 18], w2);
+    if (w3 > 0.01) cM2 = mixRGB(cM2, [16, 24, 38], w3);
+    if (sunriseWeight > 0.01) cM2 = mixRGB(cM2, [28, 16, 24], sunriseWeight);
+
+    ctx.save();
+    ctx.fillStyle = toRGBStr(cM2);
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    const steps2 = 100;
+    for (let i = 0; i <= steps2; i++) {
+      const u = i / steps2;
+      const x = u * W;
+      const y = getMidRidge(u) * H;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+
+    ctx.strokeStyle = sunriseWeight > 0.1
+      ? 'rgba(223, 204, 168, 0.24)'
+      : 'rgba(240, 238, 232, 0.07)';
+    ctx.lineWidth = 1.0;
+    ctx.beginPath();
+    for (let i = 0; i <= steps2; i++) {
+      const u = i / steps2;
+      const x = u * W;
+      const y = getMidRidge(u) * H;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+    ctx.restore();
+
+    // ── 7. VALLEY FOG LAYER 2 (LOWER STRATUS) ──
+    if (fogDensity > 0.1) {
+      ctx.save();
+      const fogY2 = H * 0.72;
+      const fogG2 = ctx.createLinearGradient(0, fogY2 - 30, 0, fogY2 + 40);
+      const fogAlpha2 = 0.22 * fogDensity;
+      fogG2.addColorStop(0, 'rgba(150, 155, 175, 0)');
+      fogG2.addColorStop(0.5, `rgba(155, 160, 180, ${fogAlpha2})`);
+      fogG2.addColorStop(1, 'rgba(150, 155, 175, 0)');
+      ctx.fillStyle = fogG2;
+
+      ctx.beginPath();
+      ctx.moveTo(0, fogY2 + 35);
+      for (let s = 0; s <= 30; s++) {
+        const u = s / 30;
+        const x = u * W;
+        const wave = Math.sin(u * 7 - now * 0.0007) * 12;
+        ctx.lineTo(x, fogY2 + wave);
+      }
+      ctx.lineTo(W, fogY2 + 35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // ── 8. MOUNTAIN LAYER 3 (FOREGROUND RIDGE WITH PINE TREES) ──
+    let cM3 = mixRGB([9, 10, 15], [7, 8, 12], w2);
+    if (sunriseWeight > 0.01) cM3 = mixRGB(cM3, [18, 12, 17], sunriseWeight);
+
+    ctx.save();
+    ctx.fillStyle = toRGBStr(cM3);
+    ctx.beginPath();
+    ctx.moveTo(0, H);
+    const steps3 = 80;
+    for (let i = 0; i <= steps3; i++) {
+      const u = i / steps3;
+      const x = u * W;
+      const y = getForeRidge(u) * H;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(W, H);
+    ctx.closePath();
+    ctx.fill();
+
+    // Pine tree silhouettes along foreground crest
+    ctx.fillStyle = toRGBStr(cM3);
+    const nTrees = 26;
+    for (let t = 0; t < nTrees; t++) {
+      const u = 0.28 + (t / nTrees) * 0.68;
+      const tx = u * W;
+      const ty = getForeRidge(u) * H;
+      const th = 8 + (t % 5) * 2.8;
+      const tw = th * 0.42;
+
+      ctx.beginPath();
+      ctx.moveTo(tx, ty - th);
+      ctx.lineTo(tx + tw, ty);
+      ctx.lineTo(tx - tw, ty);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    // ── 9. SUBTLE TELEMETRY OVERLAY ACROSS THE MOUNTAIN HORIZON ──
+    ctx.save();
+    // Stage 1
+    if (w1 > 0.05) {
+      ctx.globalAlpha = w1 * 0.65;
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(223, 204, 168, 0.70)';
+      ctx.textAlign = 'right';
+      ctx.fillText('MY ALPINE LATITUDE · 5× TO 9× LIGHT DROP', W * 0.92, H * 0.38);
+      ctx.fillText('UVB: ~0% · SLEEVE SHUTTER', W * 0.92, H * 0.41);
+    }
+
+    // Stage 2: 04:00 AM wave
+    if (w2 > 0.05) {
+      ctx.globalAlpha = w2 * 0.70;
+      const spanW = W * 0.42;
+      const startX = W * 0.52;
+      const baseWaveY = H * 0.42;
+
+      ctx.strokeStyle = 'rgba(184, 116, 98, 0.85)';
+      ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      for (let s = 0; s <= 60; s++) {
+        const u = s / 60;
+        const x = startX + u * spanW;
+        const spike = Math.exp(-Math.pow((u - 0.62) / 0.12, 2)) * 24 * Math.sin(u * 40 - now * 0.015);
+        const y = baseWaveY + spike;
+        if (s === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(184, 116, 98, 0.85)';
+      ctx.textAlign = 'right';
+      ctx.fillText('VAGAL HRV −9.4% · SLEEPING HR +7.6%', W * 0.92, baseWaveY - 18);
+      ctx.fillText('LATE WORKOUTS → PRE-DAWN WAKEFULNESS', W * 0.92, baseWaveY - 4);
+    }
+
+    // Stage 3: Weekday Surcharge & Sunny Sea-Level Holidays badge
+    if (w3 > 0.05) {
+      ctx.globalAlpha = w3 * 0.70;
+      ctx.font = '500 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = 'rgba(132, 151, 173, 0.90)';
+      ctx.textAlign = 'right';
+      ctx.fillText('WEEKDAYS: MEASURABLE PHYSIOLOGICAL SURCHARGE', W * 0.92, H * 0.32);
+      ctx.fillText('SUNNY SEA-LEVEL HOLIDAYS: RHR BELOW WEEKENDS', W * 0.92, H * 0.35);
+    }
+
+    // Stage 4 / Verdict & Coda: 10,000 Lux Crown
+    if (sunriseWeight > 0.1) {
+      ctx.globalAlpha = sunriseWeight * 0.85;
+      ctx.font = '500 10.5px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#dfcca8';
+      ctx.textAlign = 'center';
+      ctx.fillText('10,000 LUX + VITAMIN D₃ ACTIVE', W * 0.52, sunY - sunR - 14);
+    }
+    ctx.restore();
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+
+  const obs = new IntersectionObserver(
+    entries => entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in-view'); }),
+    { threshold: 0.25 }
+  );
+  document.querySelectorAll('.stage, .coda').forEach(s => obs.observe(s));
+})();
+</script>
+</body>
+</html>
