@@ -226,10 +226,25 @@
   /* before JS lays the desk out, the scraps simply sit in a column */
   html:not(.js) .scrap { position: static; margin: 0 0 2.5rem; }
 
+  .scrap.long-form {
+    width: clamp(280px, 34vw, 440px);
+  }
+  .scrap.long-form .note {
+    font-size: 0.98rem;
+    line-height: 1.44;
+  }
+  .scrap.long-form .note p + p {
+    margin-top: 0.75rem;
+  }
+  .scrap.long-form .note strong {
+    font-weight: 500;
+  }
+
   @media (max-width: 620px) {
     body { padding: 2rem 1.1rem 2.5rem; }
     .desk { min-height: 0; }
     .scrap { width: min(280px, 86vw); }
+    .scrap.long-form { width: min(320px, 92vw); }
     .hint { margin-top: 1.6rem; }
   }
 
@@ -371,12 +386,28 @@
       </div>
     </article>
 
+    <article class="scrap long-form">
+      <div class="paper" aria-hidden="true"></div>
+      <div class="tape" aria-hidden="true"></div>
+      <div class="body">
+        <div class="note">
+          <p><strong>The Bezos Question:</strong> Is this a reversible or irreversible decision? If reversible, maintain a bias toward action (most decisions are reversible).</p>
+          <p><strong>The Charlie Munger Question:</strong> Inversion. Instead of asking how something will succeed, ask how it will fail, and then avoid that.</p>
+          <p><strong>The Naval Question:</strong> What game are you playing? Are you optimizing for wealth, mastery, or legacy? Different games demand different moves.</p>
+          <p><strong>The Tim Ferriss Question (Fear-Setting):</strong> What is the worst thing that can happen? Realize that it usually will not be as bad as you think, and once identified, you can plan for it.</p>
+          <p><strong>The Suzy Welch Question (10/10/10):</strong> How will you feel about this decision 10 minutes from now, 10 months from now, or 10 years from now?</p>
+          <p><strong>The Warren Buffett Question (The Front Page Test):</strong> If this decision were written up on the front page of the local newspaper, would you still make it?</p>
+          <p><strong>The Drucker Question:</strong> Are you allocating decision time proportionately to its impact? Effective executives focus strictly on the few decisions that truly matter.</p>
+        </div>
+      </div>
+    </article>
+
   </div>
 
   <footer class="mono">
     <span class="end">End of transmission</span>
     <a href="index.html"><span>return to </span>log<span class="arrow">↗</span></a>
-    <span id="tally">6 scraps</span>
+    <span id="tally">7 scraps</span>
   </footer>
 
 </div>
