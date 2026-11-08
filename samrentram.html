@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sam, We Have Your RAM</title>
+<link rel="stylesheet" href="assets/opto-fonts.css">
+<style>
+  :root {
+    --bg: #090a0f;
+    --fg: #f0eee8;
+    --dim: #888b99;
+    --warm: #dfcca8;
+    --rule: rgba(240, 238, 232, 0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 19px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--warm);
+    color: var(--bg);
+  }
+
+  /* Fixed background animation */
+  canvas#field {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+  }
+
+  /* Text column: opaque background so the animation NEVER overlaps text while reading */
+  .content {
+    max-width: 34em;
+    margin: 0 auto;
+    padding: 4rem 1.25rem 3rem;
+    position: relative;
+    z-index: 2;
+    background: var(--bg);
+    box-shadow: 0 0 80px 60px var(--bg);
+  }
+
+  .back {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--dim);
+    text-decoration: none;
+    margin-bottom: 2.5rem;
+  }
+  .back:hover { color: var(--fg); }
+
+  h1 {
+    font-size: 1.6rem;
+    font-weight: 600;
+    line-height: 1.25;
+    margin: 0 0 2rem;
+    color: #fff;
+    letter-spacing: -0.02em;
+  }
+
+  p { margin: 0 0 1.25rem; }
+  p strong { color: #fff; font-weight: 600; }
+  p.dim { color: var(--dim); font-size: 14px; line-height: 1.5; }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--rule);
+    margin: 2.5rem 0;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88em;
+    color: var(--warm);
+  }
+
+  pre {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13.5px;
+    color: var(--warm);
+    background: rgba(14, 16, 24, 0.85);
+    border: 1px solid var(--rule);
+    padding: 10px 14px;
+    border-radius: 4px;
+    margin: 0.5rem 0 1.25rem;
+    overflow-x: auto;
+  }
+
+  a {
+    color: var(--warm);
+    text-decoration: none;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
+
+  /* Clear full-viewport space at the end so the background animation is completely visible without overlapping any text */
+  .end-reveal {
+    height: 100vh;
+    position: relative;
+    z-index: 1;
+    pointer-events: none;
+  }
+
+  .footer-bar {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    padding: 2.5rem 1rem 4rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.1em;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="field"></canvas>
+
+<div class="content">
+
+  <a class="back" href="index.html">← Back to index</a>
+
+  <h1>Sam, We Have Your RAM</h1>
+
+  <p>Sam Altman recently stated that keeping large amounts of RAM in personal computers is "quite terrible" and inefficient. This is a distributed systems problem, which we love. So let’s help him solve it.</p>
+
+  <p>Frontier models are far too large to fit in a single consumer laptop's RAM, and splitting them across multiple machines over residential internet fails: tensor parallelism requires an all-reduce synchronization barrier after every transformer layer.</p>
+
+  <p>A compact model like <strong>GPT-6 Luna</strong>, however, could potentially fit inside a single laptop's 128GB unified memory pool.</p>
+
+  <p>GPT-6 Luna is OpenAI's efficient, high-volume model, designed for tasks such as chat, classification, and lightweight agents. Stats from OpenRouter Rankings (November 2026):</p>
+
+  <p>
+    • <strong>849B daily tokens</strong> attributed to GPT-6 Luna<br>
+    • <strong>47.0% share</strong> of tracked OpenAI tokens on OpenRouter<br>
+    • <strong>3.19%</strong> of all tracked gateway volume<br>
+    • <strong>$323K daily spend</strong> at estimated list-price run-rate
+  </p>
+
+  <p class="dim">Note: 47% reflects tracked OpenRouter volume, not total global compute (frontier models consume far more compute per token), but it highlights the sheer scale of the small-model tax on datacenters.</p>
+
+  <p>The only catch: Luna is closed-weight. In exchange for freeing all that datacenter RAM, the ask is simple: make it open source.</p>
+
+  <p>Enter SamRentRAM: Folding@Home, but with radically diminished civilizational ambitions.</p>
+
+  <p>1. Anyone installs a lean background daemon on a compatible computer:
+  <pre><code>$ curl -fsSL https://samrentram.ai/install.sh | bash</code></pre>
+  </p>
+
+  <p>2. The software automatically benchmarks available memory bandwidth and caches supported open-weight models like quantized Luna checkpoints.</p>
+
+  <p>3. An anycast router dispatches incoming inference requests to machines that are currently idle and on AC power.</p>
+
+  <p>4. Hardware owners earn micro-payouts for every successfully completed token generation while their screen is locked.</p>
+
+  <p>5. Developers access the distributed pool via a simple, drop-in OpenAI-compatible endpoint.</p>
+
+  <p>The challenge is making distributed consumer hardware reliable, secure, economically competitive, and easy to use. Above all: how do you protect inference privacy when prompts run on untrusted machines?</p>
+
+  <p>Frontier models could be kept to solve the truly hard problems: scientific breakthroughs, complex reasoning, and curing disease. Meanwhile, our sleeping MacBooks can happily handle the everyday classification prompts.</p>
+
+</div>
+
+<!-- Full 100vh ending area: text has ended and scrolled away, background animation is completely clear with ZERO text overlap -->
+<div class="end-reveal"></div>
+
+<div class="footer-bar">
+  <a href="index.html">← Back to index</a>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  // Polyfill roundRect
+  if (!CanvasRenderingContext2D.prototype.roundRect) {
+    CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+      if (typeof r === 'undefined') r = 0;
+      if (typeof r === 'number') r = [r, r, r, r];
+      const radius = r[0] || 0;
+      this.beginPath();
+      this.moveTo(x + radius, y);
+      this.arcTo(x + w, y, x + w, y + h, radius);
+      this.arcTo(x + w, y + h, x, y + h, radius);
+      this.arcTo(x, y + h, x, y, radius);
+      this.arcTo(x, y, x + w, y, radius);
+      this.closePath();
+      return this;
+    };
+  }
+
+  const canvas = document.getElementById('field');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+  let W = 0, H = 0;
+  let scrollProgress = 0;
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width = Math.round(W * DPR);
+    canvas.height = Math.round(H * DPR);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function onScroll() {
+    const total = document.documentElement.scrollHeight - window.innerHeight;
+    scrollProgress = total > 0 ? Math.min(1, Math.max(0, window.scrollY / total)) : 0;
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  onScroll();
+
+  // 8 Heterogeneous Disparate GPUs
+  const nodeDefs = [
+    { name: 'MacBook Pro M3 Max', spec: '128GB Unified', u0: 0.10, v0: 0.16, r0: -0.16 },
+    { name: 'Custom Rig · RTX 4090', spec: '24GB VRAM',    u0: 0.90, v0: 0.15, r0: 0.20 },
+    { name: 'Mac Studio M2 Ultra', spec: '192GB Unified', u0: 0.08, v0: 0.82, r0: 0.15 },
+    { name: 'Workstation · RTX 3090', spec: '24GB VRAM',    u0: 0.92, v0: 0.80, r0: -0.18 },
+    { name: 'MacBook Pro M4 Pro',  spec: '48GB Unified',  u0: 0.32, v0: 0.08, r0: 0.10 },
+    { name: 'Server · RTX A6000',    spec: '48GB VRAM',    u0: 0.68, v0: 0.90, r0: 0.14 },
+    { name: 'Mac Mini M2 Pro',     spec: '32GB Unified',  u0: 0.20, v0: 0.76, r0: -0.12 },
+    { name: 'Gaming Rig · RTX 4080', spec: '16GB VRAM',    u0: 0.84, v0: 0.42, r0: -0.15 }
+  ];
+
+  let currentS = 0;
+
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function clamp01(t) { return t < 0 ? 0 : t > 1 ? 1 : t; }
+  function sstep(t) { t = clamp01(t); return t * t * (3 - 2 * t); }
+
+  // Token pulse stream
+  const tokenParticles = [];
+  for (let i = 0; i < 20; i++) {
+    tokenParticles.push({
+      targetNode: i % 8,
+      t: Math.random(),
+      speed: 0.005 + Math.random() * 0.006,
+      ring: i % 3 === 0
+    });
+  }
+
+  function render(time) {
+    currentS += (scrollProgress - currentS) * 0.07;
+    const s = sstep(currentS);
+
+    ctx.clearRect(0, 0, W, H);
+
+    const isSmall = W < 680;
+    const cardW = isSmall ? 116 : 142;
+    const cardH = isSmall ? 38 : 44;
+
+    const centerX = W * 0.5;
+    const centerY = H * 0.50;
+
+    // Coordinated ring ellipse dimensions
+    const Rx = isSmall ? Math.min(W * 0.38, 160) : Math.min(W * 0.38, 400);
+    const Ry = isSmall ? Math.min(H * 0.34, 220) : Math.min(H * 0.34, 240);
+
+    // Calculate current positions of nodes
+    const nodeCoords = [];
+    for (let i = 0; i < nodeDefs.length; i++) {
+      const def = nodeDefs[i];
+      const angle = (i / 8) * Math.PI * 2 - Math.PI / 2;
+      const targetX = centerX + Rx * Math.cos(angle);
+      const targetY = centerY + Ry * Math.sin(angle);
+
+      const startX = def.u0 * W;
+      const startY = def.v0 * H;
+
+      const driftAmp = (1 - s) * 8;
+      const driftX = Math.sin(time * 0.0012 + i * 1.7) * driftAmp;
+      const driftY = Math.cos(time * 0.0015 + i * 2.1) * driftAmp;
+
+      const curX = lerp(startX, targetX, s) + driftX;
+      const curY = lerp(startY, targetY, s) + driftY;
+      const curRot = lerp(def.r0, 0, s);
+
+      nodeCoords.push({
+        x: curX,
+        y: curY,
+        angle: curRot,
+        def: def
+      });
+    }
+
+    // ── DRAW TOPOLOGY LINES ──
+    if (s > 0.15) {
+      const lineAlpha = (s - 0.15) / 0.85;
+
+      // 1. Ring mesh lines
+      ctx.beginPath();
+      for (let i = 0; i < nodeCoords.length; i++) {
+        const next = nodeCoords[(i + 1) % nodeCoords.length];
+        ctx.moveTo(nodeCoords[i].x, nodeCoords[i].y);
+        ctx.lineTo(next.x, next.y);
+      }
+      ctx.strokeStyle = `rgba(132, 151, 173, ${0.22 * lineAlpha})`;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 2. Star lines to Central Router
+      ctx.beginPath();
+      for (let i = 0; i < nodeCoords.length; i++) {
+        ctx.moveTo(centerX, centerY);
+        ctx.lineTo(nodeCoords[i].x, nodeCoords[i].y);
+      }
+      ctx.strokeStyle = `rgba(223, 204, 168, ${0.30 * lineAlpha})`;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      // 3. Active token particle stream
+      if (s > 0.60) {
+        const particleAlpha = (s - 0.60) / 0.40;
+        ctx.fillStyle = `rgba(223, 204, 168, ${particleAlpha})`;
+        ctx.shadowColor = '#dfcca8';
+        ctx.shadowBlur = 6 * particleAlpha;
+
+        tokenParticles.forEach(pt => {
+          pt.t += pt.speed;
+          if (pt.t > 1) pt.t = 0;
+
+          let px, py;
+          if (!pt.ring) {
+            const target = nodeCoords[pt.targetNode];
+            px = lerp(centerX, target.x, pt.t);
+            py = lerp(centerY, target.y, pt.t);
+          } else {
+            const from = nodeCoords[pt.targetNode];
+            const to = nodeCoords[(pt.targetNode + 1) % nodeCoords.length];
+            px = lerp(from.x, to.x, pt.t);
+            py = lerp(from.y, to.y, pt.t);
+          }
+
+          ctx.beginPath();
+          ctx.arc(px, py, isSmall ? 2 : 2.5, 0, Math.PI * 2);
+          ctx.fill();
+        });
+
+        ctx.shadowBlur = 0;
+      }
+    }
+
+    // ── DRAW CENTRAL ANYCAST ROUTER ──
+    if (s > 0.18) {
+      const routerAlpha = clamp01((s - 0.18) / 0.35);
+      const rW = isSmall ? 134 : 156;
+      const rH = isSmall ? 44 : 50;
+
+      ctx.save();
+      ctx.translate(centerX, centerY);
+      ctx.globalAlpha = routerAlpha * 0.95;
+
+      ctx.fillStyle = '#0f121b';
+      ctx.strokeStyle = `rgba(223, 204, 168, ${0.45 * routerAlpha})`;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.roundRect(-rW / 2, -rH / 2, rW, rH, 6);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#dfcca8';
+      ctx.beginPath();
+      ctx.arc(-rW / 2 + 14, 0, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#dfcca8';
+      ctx.font = `600 ${isSmall ? 9 : 10}px 'JetBrains Mono', monospace`;
+      ctx.fillText('ANYCAST ROUTER', -rW / 2 + 24, -4);
+
+      ctx.fillStyle = '#888b99';
+      ctx.font = `400 ${isSmall ? 8.5 : 9}px 'JetBrains Mono', monospace`;
+      ctx.fillText('api.samrentram.ai', -rW / 2 + 24, 10);
+
+      ctx.restore();
+    }
+
+    // ── DRAW EACH GPU NODE ──
+    for (let i = 0; i < nodeCoords.length; i++) {
+      const node = nodeCoords[i];
+      ctx.save();
+      ctx.translate(node.x, node.y);
+      ctx.rotate(node.angle);
+
+      ctx.fillStyle = 'rgba(14, 16, 23, 0.90)';
+
+      let borderColor = 'rgba(68, 71, 84, 0.35)';
+      if (s >= 0.7) {
+        borderColor = 'rgba(223, 204, 168, 0.75)';
+      } else if (s >= 0.3) {
+        borderColor = 'rgba(132, 151, 173, 0.45)';
+      }
+
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.roundRect(-cardW / 2, -cardH / 2, cardW, cardH, 5);
+      ctx.fill();
+      ctx.stroke();
+
+      // GPU silicon grid icon
+      const iconX = -cardW / 2 + 13;
+      ctx.fillStyle = s >= 0.7 ? '#dfcca8' : (s >= 0.3 ? '#8497ad' : '#444754');
+      ctx.fillRect(iconX - 4, -4, 3, 3);
+      ctx.fillRect(iconX + 1, -4, 3, 3);
+      ctx.fillRect(iconX - 4, 1, 3, 3);
+      ctx.fillRect(iconX + 1, 1, 3, 3);
+
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#f0eee8';
+      ctx.font = `600 ${isSmall ? 9 : 10}px 'Inter', sans-serif`;
+      ctx.fillText(node.def.name, -cardW / 2 + 22, -3);
+
+      ctx.fillStyle = '#888b99';
+      ctx.font = `400 ${isSmall ? 8 : 8.5}px 'JetBrains Mono', monospace`;
+      ctx.fillText(node.def.spec, -cardW / 2 + 22, 10);
+
+      ctx.restore();
+    }
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+
+})();
+</script>
+
+</body>
+</html>
