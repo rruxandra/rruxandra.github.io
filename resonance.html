@@ -1,0 +1,2833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Resonance — On Attention, Emergence, and the Space Between Minds</title>
+  <style>
+    :root {
+      --bg: #02040a;
+      --ink: rgba(240, 245, 255, 0.92);
+      --ink-muted: rgba(186, 200, 228, 0.62);
+      --ink-faint: rgba(154, 174, 210, 0.36);
+      --panel: rgba(7, 11, 23, 0.52);
+      --border: rgba(168, 198, 255, 0.14);
+      --border-strong: rgba(168, 198, 255, 0.30);
+      --gold: #ffbe6b;
+      --cyan: #5ce8ff;
+      --serif: ui-serif, 'New York', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+      --sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: none;
+    }
+
+    #stage {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
+
+    /* Atmospheric subtle vignette & bottom editorial scrim */
+    .vignette-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(to top, rgba(2, 4, 10, 0.80) 0%, rgba(2, 4, 10, 0.25) 24%, transparent 48%),
+        radial-gradient(circle at 50% 50%, transparent 56%, rgba(2, 4, 10, 0.45) 100%);
+      z-index: 2;
+    }
+
+    /* HUD container */
+    .hud {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: clamp(18px, 3vw, 34px);
+      transition: opacity 0.8s var(--ease);
+    }
+
+    body.zen-mode .hud {
+      opacity: 0;
+    }
+
+    body.zen-mode .hud .zen-restore {
+      pointer-events: auto;
+      opacity: 0.42;
+    }
+
+    .hud-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 20px;
+    }
+
+    .brand {
+      pointer-events: auto;
+      max-width: 360px;
+    }
+
+    .eyebrow {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .eyebrow-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 10px var(--gold);
+      animation: breatheDot 3.6s ease-in-out infinite;
+    }
+
+    @keyframes breatheDot {
+      0%, 100% { opacity: 0.45; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.25); }
+    }
+
+    h1.title {
+      font-family: var(--serif);
+      font-weight: 400;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing: 0.015em;
+      line-height: 1.08;
+      color: rgba(245, 248, 255, 0.96);
+      text-shadow: 0 2px 24px rgba(0, 0, 0, 0.7);
+    }
+
+    .subtitle {
+      margin-top: 5px;
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(13px, 1.3vw, 15px);
+      color: var(--ink-muted);
+      letter-spacing: 0.01em;
+    }
+
+    /* Top-right Instrument Cluster */
+    .instruments {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 10px;
+    }
+
+    .telemetry-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .metric {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .metric-label {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .metric-value {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--ink);
+      min-width: 34px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .coherence-track {
+      width: 54px;
+      height: 3px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.09);
+      overflow: hidden;
+    }
+
+    .coherence-fill {
+      height: 100%;
+      width: 15%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--cyan), var(--gold));
+      box-shadow: 0 0 10px rgba(92, 232, 255, 0.6);
+      transition: width 0.15s linear;
+    }
+
+    .divider-v {
+      width: 1px;
+      height: 14px;
+      background: var(--border);
+    }
+
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .pill-btn {
+      appearance: none;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      color: var(--ink-muted);
+      font-family: var(--mono);
+      font-size: 10.5px;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      padding: 7px 12px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      transition: all 0.25s var(--ease);
+    }
+
+    .pill-btn:hover {
+      color: var(--ink);
+      border-color: var(--border-strong);
+      background: rgba(16, 24, 48, 0.68);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn.active {
+      color: #fff;
+      border-color: rgba(92, 232, 255, 0.45);
+      background: rgba(20, 42, 74, 0.56);
+      box-shadow: 0 0 18px rgba(92, 232, 255, 0.16);
+    }
+
+    .pill-btn.warm.active {
+      border-color: rgba(255, 190, 107, 0.55);
+      background: rgba(68, 42, 18, 0.5);
+      box-shadow: 0 0 18px rgba(255, 190, 107, 0.18);
+    }
+
+    .sound-bars {
+      display: inline-flex;
+      align-items: flex-end;
+      gap: 2px;
+      height: 10px;
+    }
+
+    .sound-bars span {
+      width: 2px;
+      height: 4px;
+      background: currentColor;
+      border-radius: 1px;
+      opacity: 0.65;
+      transition: height 0.2s ease, opacity 0.2s ease;
+    }
+    .sound-bars span:nth-child(2) { height: 7px; }
+    .sound-bars span:nth-child(3) { height: 5px; }
+    .pill-btn.active .sound-bars span { opacity: 1; }
+
+    .pill-btn.active .sound-bars span:nth-child(1) { animation: eq1 1.1s ease-in-out infinite; }
+    .pill-btn.active .sound-bars span:nth-child(2) { animation: eq2 0.85s ease-in-out infinite; }
+    .pill-btn.active .sound-bars span:nth-child(3) { animation: eq3 1.25s ease-in-out infinite; }
+
+    @keyframes eq1 { 0%, 100% { height: 3px; } 50% { height: 9px; } }
+    @keyframes eq2 { 0%, 100% { height: 8px; } 50% { height: 3px; } }
+    @keyframes eq3 { 0%, 100% { height: 4px; } 50% { height: 10px; } }
+
+    /* Floating Zen restore button */
+    .zen-restore {
+      position: fixed;
+      top: clamp(18px, 3vw, 34px);
+      right: clamp(18px, 3vw, 34px);
+      z-index: 20;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s var(--ease);
+    }
+
+    body.zen-mode .zen-restore {
+      opacity: 0.55;
+      pointer-events: auto;
+    }
+
+    body.zen-mode .zen-restore:hover {
+      opacity: 1;
+    }
+
+    /* Bottom Poetic Narrative & Chapter Navigation */
+    .hud-bottom {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+      padding-bottom: 4px;
+    }
+
+    .narrative-wrap {
+      max-width: 650px;
+      padding: 14px 24px;
+      border-radius: 20px;
+      background: radial-gradient(ellipse at center, rgba(2, 4, 12, 0.62) 0%, rgba(2, 4, 12, 0.0) 80%);
+      transition: opacity 0.65s var(--ease), transform 0.65s var(--ease);
+    }
+
+    .narrative-wrap.fading {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    .chapter-tag {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: rgba(255, 190, 107, 0.8);
+      margin-bottom: 7px;
+    }
+
+    .poem-line {
+      font-family: var(--serif);
+      font-size: clamp(16px, 2vw, 22px);
+      line-height: 1.48;
+      font-weight: 400;
+      color: rgba(242, 246, 255, 0.93);
+      text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+    }
+
+    .nav-bar {
+      pointer-events: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .chapters {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .chapter-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      color: var(--ink-muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 11px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.28s var(--ease);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .chapter-btn:hover {
+      color: var(--ink);
+    }
+
+    .chapter-btn.active {
+      color: #fff;
+      background: rgba(110, 175, 255, 0.16);
+      box-shadow: inset 0 0 0 1px rgba(150, 210, 255, 0.28);
+    }
+
+    .chapter-progress {
+      position: absolute;
+      left: 0;
+      bottom: 0;
+      height: 2px;
+      width: 0%;
+      background: linear-gradient(90deg, var(--cyan), var(--gold));
+      opacity: 0.85;
+    }
+
+    .hints {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: rgba(186, 200, 228, 0.52);
+    }
+
+    .hint-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .kbd {
+      padding: 1px 6px;
+      border-radius: 4px;
+      border: 1px solid rgba(180, 204, 245, 0.24);
+      background: rgba(6, 10, 22, 0.55);
+      color: rgba(226, 236, 255, 0.78);
+      font-size: 9.5px;
+    }
+
+    .intro-cue {
+      pointer-events: none;
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(215, 232, 255, 0.58);
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(4, 8, 18, 0.48);
+      border: 1px solid rgba(168, 200, 255, 0.15);
+      backdrop-filter: blur(10px);
+      max-width: calc(100vw - 36px);
+      opacity: 1;
+      transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    }
+
+    .intro-cue.hidden {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+
+    #clear-anchors-btn {
+      display: none;
+    }
+    #clear-anchors-btn.visible {
+      display: inline-flex;
+    }
+
+    .fallback-msg {
+      position: fixed;
+      inset: 0;
+      display: none;
+      place-items: center;
+      padding: 32px;
+      text-align: center;
+      font-family: var(--serif);
+      color: var(--ink);
+      background: var(--bg);
+      z-index: 100;
+    }
+
+    @media (max-width: 720px) {
+      .hud-top {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+      }
+      .instruments {
+        align-items: flex-start;
+      }
+      .controls-row {
+        justify-content: flex-start;
+      }
+      .telemetry-card {
+        padding: 7px 12px;
+        gap: 12px;
+      }
+      .chapters {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .chapter-btn {
+        padding: 6px 9px;
+        white-space: nowrap;
+      }
+      .hints {
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="stage"></canvas>
+  <div class="vignette-overlay"></div>
+
+  <button class="pill-btn zen-restore" id="zen-restore-btn" title="Show interface (H)">Show UI</button>
+
+  <div class="hud" id="hud">
+    <header class="hud-top">
+      <div class="brand">
+        <div class="eyebrow">
+          <span class="eyebrow-dot"></span>
+          <span>Living Simulation &middot; Real-Time Attention</span>
+        </div>
+        <h1 class="title">Resonance</h1>
+        <p class="subtitle">How scattered silence gathers into meaning</p>
+      </div>
+
+      <div class="instruments">
+        <div class="telemetry-card" title="Live Kuramoto phase coherence & active attention filaments">
+          <div class="metric">
+            <span class="metric-label">Coherence</span>
+            <div class="coherence-track">
+              <div class="coherence-fill" id="coherence-fill"></div>
+            </div>
+            <span class="metric-value" id="coherence-val">0.00</span>
+          </div>
+          <div class="divider-v"></div>
+          <div class="metric">
+            <span class="metric-label">Bridges</span>
+            <span class="metric-value" id="bridges-val">0</span>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <button class="pill-btn warm" id="converge-btn" title="Hold Space or press to toggle harmonic focus">Converge</button>
+          <button class="pill-btn" id="clear-anchors-btn" title="Remove placed Query Anchors">Clear Anchors (<span id="anchor-count">0</span>)</button>
+          <button class="pill-btn" id="auto-btn" title="Auto-advance through the 5 movements">Auto: On</button>
+          <button class="pill-btn" id="sound-btn" title="Toggle procedural harmonic soundscape (M)">
+            <span class="sound-bars"><span></span><span></span><span></span></span>
+            <span id="sound-label">Sound</span>
+          </button>
+          <button class="pill-btn" id="zen-btn" title="Hide UI for pure immersion (H)">Hide UI</button>
+        </div>
+      </div>
+    </header>
+
+    <footer class="hud-bottom">
+      <div class="intro-cue" id="intro-cue">Click to ripple &middot; Hold to converge &middot; Sound wakes on touch</div>
+      <div class="narrative-wrap" id="narrative-wrap">
+        <div class="chapter-tag" id="chapter-tag">I &middot; The Silent Latent</div>
+        <p class="poem-line" id="poem-line">
+          Before a question is asked, everything is distance&mdash;quiet coordinates drifting in the dark, touching nothing.
+        </p>
+      </div>
+
+      <div class="nav-bar">
+        <div class="chapters" id="chapters">
+          <button class="chapter-btn active" data-act="0">I &middot; Latent<span class="chapter-progress"></span></button>
+          <button class="chapter-btn" data-act="1">II &middot; Query<span class="chapter-progress"></span></button>
+          <button class="chapter-btn" data-act="2">III &middot; Attention<span class="chapter-progress"></span></button>
+          <button class="chapter-btn" data-act="3">IV &middot; Coherence<span class="chapter-progress"></span></button>
+          <button class="chapter-btn" data-act="4">V &middot; Horizon<span class="chapter-progress"></span></button>
+        </div>
+
+        <div class="hints">
+          <span class="hint-item"><span class="kbd">Move</span> steer lantern</span>
+          <span class="hint-item"><span class="kbd">Click</span> ripple</span>
+          <span class="hint-item"><span class="kbd">Hold</span> converge</span>
+          <span class="hint-item"><span class="kbd">Double-Click</span> anchor</span>
+          <span class="hint-item"><span class="kbd">Scroll</span> depth</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <div class="fallback-msg" id="fallback-msg">
+    <div>
+      <h2 style="font-weight:400;margin-bottom:10px;">WebGL2 Required</h2>
+      <p style="color:rgba(200,215,240,0.7);max-width:420px;line-height:1.5;">
+        This living light simulation requires WebGL2 in a modern browser.
+      </p>
+    </div>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    /* =========================================================================
+       MOVEMENTS — FIVE STAGES OF EMERGENT UNDERSTANDING
+       ========================================================================= */
+    const ACTS = [
+      {
+        tag: 'I \u00B7 The Silent Latent',
+        line: 'Before a question is asked, everything is distance\u2014quiet coordinates drifting in the dark, touching nothing.',
+        duration: 14,
+        params: {
+          spread: 3.35,
+          curlAmp: 0.72,
+          latticeMix: 0.03,
+          temperature: 1.55,
+          bridgeThreshold: 0.32,
+          pulseSpeed: 0.65,
+          couplingK: 0.25,
+          bloomBoost: 0.85,
+          astrolabeAlpha: 0.08,
+          dualPole: 0.0,
+          ambientGlow: 0.35
+        }
+      },
+      {
+        tag: 'II \u00B7 First Curiosity',
+        line: 'Then curiosity enters: not an answer, not a command\u2014just a direction in which to look.',
+        duration: 14,
+        params: {
+          spread: 3.05,
+          curlAmp: 0.56,
+          latticeMix: 0.14,
+          temperature: 0.85,
+          bridgeThreshold: 0.20,
+          pulseSpeed: 1.15,
+          couplingK: 0.95,
+          bloomBoost: 1.05,
+          astrolabeAlpha: 0.20,
+          dualPole: 0.0,
+          ambientGlow: 0.55
+        }
+      },
+      {
+        tag: 'III \u00B7 Attention',
+        line: 'Meaning never lives inside a single point. It lives in the arc between distant memories that suddenly recognize their own shape.',
+        duration: 16,
+        params: {
+          spread: 2.95,
+          curlAmp: 0.42,
+          latticeMix: 0.32,
+          temperature: 0.46,
+          bridgeThreshold: 0.13,
+          pulseSpeed: 1.65,
+          couplingK: 1.95,
+          bloomBoost: 1.25,
+          astrolabeAlpha: 0.38,
+          dualPole: 0.15,
+          ambientGlow: 0.72
+        }
+      },
+      {
+        tag: 'IV \u00B7 Coherence',
+        line: 'When enough threads align, noise crosses a threshold and becomes song\u2014briefly crystalline, whole, and luminous.',
+        duration: 16,
+        params: {
+          spread: 2.55,
+          curlAmp: 0.16,
+          latticeMix: 0.92,
+          temperature: 0.26,
+          bridgeThreshold: 0.09,
+          pulseSpeed: 2.25,
+          couplingK: 4.40,
+          bloomBoost: 1.48,
+          astrolabeAlpha: 0.78,
+          dualPole: 0.0,
+          ambientGlow: 0.95
+        }
+      },
+      {
+        tag: 'V \u00B7 The Open Horizon',
+        line: 'And then it softens back into possibility\u2014two poles orbiting across the dark, waiting for the next question only you could ask.',
+        duration: 18,
+        params: {
+          spread: 3.00,
+          curlAmp: 0.44,
+          latticeMix: 0.38,
+          temperature: 0.42,
+          bridgeThreshold: 0.14,
+          pulseSpeed: 1.50,
+          couplingK: 2.15,
+          bloomBoost: 1.25,
+          astrolabeAlpha: 0.42,
+          dualPole: 1.0,
+          ambientGlow: 0.76
+        }
+      }
+    ];
+
+    /* Curated bioluminescent palette per semantic cluster */
+    const CLUSTER_COLORS = [
+      [1.00, 0.72, 0.30], // 0: Memory — Warm Amber-Gold
+      [0.22, 0.90, 1.00], // 1: Inquiry — Electric Cyan
+      [0.36, 0.54, 1.00], // 2: Structure — Celestial Cobalt
+      [1.00, 0.43, 0.62], // 3: Empathy — Rose-Coral
+      [0.88, 0.94, 1.00]  // 4: Synthesis — Pearl Alabaster
+    ];
+
+    /* =========================================================================
+       PROCEDURAL WEB AUDIO ENGINE (GLITCH-FREE HARMONIC SYNTHESIZER)
+       ========================================================================= */
+    class ResonanceAudio {
+      constructor() {
+        this.ctx = null;
+        this.enabled = false;
+        this.unlocked = false;
+        this.master = null;
+        this.droneFilter = null;
+        this.choirGain = null;
+        this.reverbSend = null;
+        this.lastChimeAt = 0;
+        // D Lydian celestial scale (Hz)
+        this.scale = [293.66, 329.63, 369.99, 415.30, 440.00, 493.88, 554.37, 587.33, 659.25, 739.99, 880.00];
+      }
+
+      init() {
+        if (this.ctx) return;
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+
+        const ctx = new AudioCtx();
+        this.ctx = ctx;
+
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.value = -16;
+        compressor.knee.value = 18;
+        compressor.ratio.value = 4;
+        compressor.attack.value = 0.02;
+        compressor.release.value = 0.25;
+
+        const master = ctx.createGain();
+        master.gain.value = 0.0001;
+        master.connect(compressor);
+        compressor.connect(ctx.destination);
+        this.master = master;
+
+        // Procedural stereo impulse response for lush spatial reverb
+        const rate = ctx.sampleRate;
+        const len = Math.floor(rate * 3.1);
+        const impulse = ctx.createBuffer(2, len, rate);
+        for (let ch = 0; ch < 2; ch++) {
+          const data = impulse.getChannelData(ch);
+          let lp = 0;
+          for (let i = 0; i < len; i++) {
+            const t = i / len;
+            const env = Math.pow(1 - t, 2.7) * Math.min(1, i / (rate * 0.02));
+            const white = Math.random() * 2 - 1;
+            lp = lp * 0.72 + white * 0.28;
+            data[i] = lp * env * 0.55;
+          }
+        }
+        const convolver = ctx.createConvolver();
+        convolver.buffer = impulse;
+        const wetGain = ctx.createGain();
+        wetGain.gain.value = 0.62;
+        convolver.connect(wetGain);
+        wetGain.connect(master);
+        this.reverbSend = convolver;
+
+        // Warm breathing drone pad (D2, A2, E3, F#3)
+        const droneFilter = ctx.createBiquadFilter();
+        droneFilter.type = 'lowpass';
+        droneFilter.frequency.value = 280;
+        droneFilter.Q.value = 1.2;
+
+        const droneGain = ctx.createGain();
+        droneGain.gain.value = 0.22;
+        droneFilter.connect(droneGain);
+        droneGain.connect(master);
+        droneGain.connect(convolver);
+        this.droneFilter = droneFilter;
+
+        const droneFreqs = [
+          { f: 73.42, type: 'sine', g: 0.55, detune: 0 },
+          { f: 73.42, type: 'triangle', g: 0.16, detune: 4 },
+          { f: 110.00, type: 'sine', g: 0.34, detune: -3 },
+          { f: 164.81, type: 'sine', g: 0.18, detune: 2 },
+          { f: 185.00, type: 'sine', g: 0.11, detune: -5 }
+        ];
+        for (const d of droneFreqs) {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = d.type;
+          osc.frequency.value = d.f;
+          osc.detune.value = d.detune;
+          g.gain.value = d.g;
+          osc.connect(g);
+          g.connect(droneFilter);
+          osc.start();
+        }
+
+        // High harmonic shimmer choir (awakes at high coherence)
+        const choirGain = ctx.createGain();
+        choirGain.gain.value = 0.0001;
+        choirGain.connect(convolver);
+        choirGain.connect(master);
+        this.choirGain = choirGain;
+
+        const choirFreqs = [587.33, 880.0, 1108.73];
+        for (let i = 0; i < choirFreqs.length; i++) {
+          const osc = ctx.createOscillator();
+          const g = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = choirFreqs[i];
+          osc.detune.value = (i - 1) * 5;
+          g.gain.value = 0.025 / (i + 1);
+          osc.connect(g);
+          g.connect(choirGain);
+          osc.start();
+        }
+      }
+
+      setEnabled(on) {
+        if (on && !this.ctx) this.init();
+        this.enabled = on;
+        if (!this.ctx) return;
+        if (on && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        const now = this.ctx.currentTime;
+        this.master.gain.cancelScheduledValues(now);
+        this.master.gain.setTargetAtTime(on ? 0.55 : 0.0001, now, 0.35);
+      }
+
+      unlockOnFirstGesture() {
+        if (this.unlocked) return;
+        this.unlocked = true;
+        this.setEnabled(true);
+      }
+
+      update(coherence, convergeAmount) {
+        if (!this.ctx || !this.enabled) return;
+        const now = this.ctx.currentTime;
+        const targetCutoff = 220 + coherence * 650 + convergeAmount * 520;
+        this.droneFilter.frequency.setTargetAtTime(targetCutoff, now, 0.25);
+
+        const choirTarget = Math.max(0.0001, Math.pow(Math.max(0, coherence - 0.35) / 0.65, 1.5) * 0.75 + convergeAmount * 0.4);
+        this.choirGain.gain.setTargetAtTime(choirTarget, now, 0.45);
+      }
+
+      playChime(intensity = 0.6, pitchBias = 0.5) {
+        if (!this.ctx || !this.enabled) return;
+        const nowMs = performance.now();
+        if (nowMs - this.lastChimeAt < 110) return;
+        this.lastChimeAt = nowMs;
+
+        const ctx = this.ctx;
+        const now = ctx.currentTime;
+        const idx = Math.min(
+          this.scale.length - 1,
+          Math.max(0, Math.floor(pitchBias * (this.scale.length - 1) + (Math.random() - 0.5) * 2.5))
+        );
+        const freq = this.scale[idx];
+
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const env = ctx.createGain();
+        const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+
+        osc1.type = 'sine';
+        osc1.frequency.value = freq;
+        osc2.type = 'triangle';
+        osc2.frequency.value = freq * 2.0;
+
+        const g2 = ctx.createGain();
+        g2.gain.value = 0.08;
+
+        const peak = 0.065 * Math.min(1.2, intensity);
+        env.gain.setValueAtTime(0.0001, now);
+        env.gain.linearRampToValueAtTime(peak, now + 0.018);
+        env.gain.exponentialRampToValueAtTime(0.0001, now + 2.4);
+
+        osc1.connect(env);
+        osc2.connect(g2);
+        g2.connect(env);
+
+        if (pan) {
+          pan.pan.value = (Math.random() * 2 - 1) * 0.65;
+          env.connect(pan);
+          pan.connect(this.master);
+          pan.connect(this.reverbSend);
+        } else {
+          env.connect(this.master);
+          env.connect(this.reverbSend);
+        }
+
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 2.5);
+        osc2.stop(now + 2.5);
+      }
+
+      playWaveChord() {
+        if (!this.ctx || !this.enabled) return;
+        this.playChime(0.85, 0.25);
+        setTimeout(() => this.playChime(0.65, 0.58), 90);
+        setTimeout(() => this.playChime(0.45, 0.85), 185);
+      }
+    }
+
+    /* =========================================================================
+       WEBGL2 SETUP & SHADERS
+       ========================================================================= */
+    const canvas = document.getElementById('stage');
+    const gl = canvas.getContext('webgl2', {
+      alpha: false,
+      antialias: false,
+      depth: false,
+      stencil: false,
+      powerPreference: 'high-performance'
+    });
+
+    if (!gl) {
+      document.getElementById('fallback-msg').style.display = 'grid';
+      return;
+    }
+
+    // Check HDR float rendering support, fallback gracefully to RGBA8
+    const hasColorBufferFloat = !!gl.getExtension('EXT_color_buffer_float');
+    const maxPointSize = gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE)[1] || 64.0;
+
+    function compileShader(type, source) {
+      const s = gl.createShader(type);
+      gl.shaderSource(s, source);
+      gl.compileShader(s);
+      if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+        const info = gl.getShaderInfoLog(s);
+        console.error('Shader error:', info, '\n', source);
+        gl.deleteShader(s);
+        throw new Error('Shader compilation failed: ' + info);
+      }
+      return s;
+    }
+
+    function createProgram(vsSource, fsSource) {
+      const prog = gl.createProgram();
+      const vs = compileShader(gl.VERTEX_SHADER, vsSource);
+      const fs = compileShader(gl.FRAGMENT_SHADER, fsSource);
+      gl.attachShader(prog, vs);
+      gl.attachShader(prog, fs);
+      gl.linkProgram(prog);
+      gl.deleteShader(vs);
+      gl.deleteShader(fs);
+      if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+        throw new Error('Program link failed: ' + gl.getProgramInfoLog(prog));
+      }
+      const uniforms = {};
+      const count = gl.getProgramParameter(prog, gl.ACTIVE_UNIFORMS);
+      for (let i = 0; i < count; i++) {
+        const info = gl.getActiveUniform(prog, i);
+        const name = info.name.replace(/\[0\]$/, '');
+        uniforms[name] = gl.getUniformLocation(prog, name);
+      }
+      return { prog, u: uniforms };
+    }
+
+    /* Fullscreen Triangle Vertex Shader */
+    const VS_QUAD = `#version 300 es
+    precision highp float;
+    out vec2 vUv;
+    void main() {
+      vec2 pos = vec2(
+        float((gl_VertexID & 1) << 2) - 1.0,
+        float((gl_VertexID & 2) << 1) - 1.0
+      );
+      vUv = pos * 0.5 + 0.5;
+      gl_Position = vec4(pos, 0.0, 1.0);
+    }`;
+
+    /* 1. Volumetric Backdrop + Astrolabe Resonance Field */
+    const FS_BACKDROP = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    out vec4 fragColor;
+
+    uniform float uTime;
+    uniform vec2 uRes;
+    uniform vec2 uProbeUv;
+    uniform float uCoherence;
+    uniform float uAstrolabe;
+    uniform float uAmbientGlow;
+    uniform float uHdrScale;
+    uniform vec4 uWaves[6]; // xy = screen uv, z = radiusUV, w = strength
+
+    float hash(vec2 p) {
+      p = fract(p * vec2(123.34, 456.21));
+      p += dot(p, p + 45.32);
+      return fract(p.x * p.y);
+    }
+
+    float noise(vec2 p) {
+      vec2 i = floor(p);
+      vec2 f = fract(p);
+      f = f * f * (3.0 - 2.0 * f);
+      float a = hash(i);
+      float b = hash(i + vec2(1.0, 0.0));
+      float c = hash(i + vec2(0.0, 1.0));
+      float d = hash(i + vec2(1.0, 1.0));
+      return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+    }
+
+    float fbm(vec2 p) {
+      float v = 0.0;
+      float amp = 0.5;
+      mat2 rot = mat2(0.80, -0.60, 0.60, 0.80);
+      for (int i = 0; i < 4; i++) {
+        v += amp * noise(p);
+        p = rot * p * 2.03 + vec2(11.3, 7.1);
+        amp *= 0.5;
+      }
+      return v;
+    }
+
+    void main() {
+      vec2 aspect = vec2(uRes.x / max(uRes.y, 1.0), 1.0);
+      vec2 p = (vUv - 0.5) * aspect;
+
+      // Deep space abyssal gradient
+      float radial = length(p);
+      vec3 col = mix(vec3(0.004, 0.009, 0.024), vec3(0.001, 0.002, 0.006), smoothstep(0.0, 1.05, radial));
+
+      // Ultra-faint distant starfield with glacial twinkle
+      vec2 starGrid = p * 28.0 + vec2(uTime * 0.004, -uTime * 0.002);
+      vec2 sid = floor(starGrid);
+      vec2 suv = fract(starGrid) - 0.5;
+      float sr = hash(sid);
+      if (sr > 0.965) {
+        vec2 offset = vec2(hash(sid + 13.7), hash(sid + 41.3)) - 0.5;
+        float sd = length(suv - offset * 0.72);
+        float twinkle = 0.55 + 0.45 * sin(uTime * (1.2 + sr * 2.5) + sr * 90.0);
+        float star = exp(-sd * sd * 95.0) * twinkle * 0.14;
+        vec3 starTint = mix(vec3(0.65, 0.80, 1.0), vec3(1.0, 0.86, 0.68), fract(sr * 37.0));
+        col += starTint * star;
+      }
+
+      // Drifting latent nebula mist (rich velvet shadows with glowing veins)
+      vec2 q = p * 1.45 + vec2(uTime * 0.014, -uTime * 0.010);
+      float n1 = fbm(q);
+      float n2 = fbm(q * 1.6 - vec2(n1 * 0.9, uTime * 0.018));
+      vec3 nebulaIndigo = vec3(0.010, 0.024, 0.075) * smoothstep(0.35, 0.96, n1);
+      vec3 nebulaWarm   = vec3(0.042, 0.018, 0.012) * smoothstep(0.50, 0.98, n2) * (0.35 + 0.65 * uCoherence);
+      col += (nebulaIndigo + nebulaWarm) * (0.45 + 0.50 * uAmbientGlow);
+
+      // Soft atmospheric lantern scatter around cursor probe
+      vec2 dProbe = (vUv - uProbeUv) * aspect;
+      float probeDist = length(dProbe);
+      col += vec3(0.018, 0.048, 0.095) * exp(-probeDist * 4.8) * (0.45 + 0.45 * uAmbientGlow);
+
+      // Subtle sacred astrolabe rings that illuminate as order emerges
+      float astroVis = uAstrolabe * (0.25 + 0.75 * uCoherence);
+      if (astroVis > 0.01) {
+        float angle = atan(p.y, p.x);
+        float r1 = abs(radial - 0.24);
+        float r2 = abs(radial - 0.36);
+        float r3 = abs(radial - 0.49);
+        float rings = exp(-r1 * 260.0) * 0.55 + exp(-r2 * 290.0) * 0.42 + exp(-r3 * 240.0) * 0.35;
+        float ticks = pow(max(0.0, cos(angle * 24.0 + uTime * 0.08)), 28.0) * exp(-abs(radial - 0.36) * 65.0);
+        float crossHair = (exp(-abs(p.x) * 420.0) + exp(-abs(p.y) * 420.0)) * smoothstep(0.55, 0.08, radial) * 0.25;
+        vec3 astroCol = mix(vec3(0.22, 0.56, 0.85), vec3(1.0, 0.78, 0.45), uCoherence);
+        col += astroCol * (rings + ticks * 0.7 + crossHair) * astroVis * 0.42;
+      }
+
+      // Expanding spherical shockwave rings in backdrop
+      for (int i = 0; i < 6; i++) {
+        vec4 w = uWaves[i];
+        if (w.w > 0.001) {
+          float wd = length((vUv - w.xy) * aspect);
+          float ring = exp(-pow((wd - w.z) * 42.0, 2.0));
+          col += vec3(0.24, 0.65, 0.95) * ring * w.w * 0.28;
+        }
+      }
+
+      fragColor = vec4(col * uHdrScale, 1.0);
+    }`;
+
+    /* 2. 28,000 GPU Latent Motes (Curl Cloud <-> Harmonic Manifold + Bokeh DOF) */
+    const VS_MOTES = `#version 300 es
+    precision highp float;
+
+    layout(location = 0) in vec4 aSeed;   // x: u[0..1], y: v[0..1], z: radial[0..1], w: phase[0..1]
+    layout(location = 1) in vec4 aParams; // x: cluster[0..4], y: size, z: speed, w: ribbonStrand
+
+    uniform mat4 uViewProj;
+    uniform vec3 uCamPos;
+    uniform float uTime;
+    uniform float uSpread;
+    uniform float uCurlAmp;
+    uniform float uLatticeMix;
+    uniform float uCoherence;
+    uniform float uDualPole;
+    uniform float uPixelRatio;
+    uniform float uMaxPointSize;
+    uniform vec3 uProbePos;
+    uniform vec3 uAnchors[3];
+    uniform int uAnchorCount;
+    uniform vec4 uWaves[6]; // xyz = world origin, w = radius (negative if inactive)
+    uniform vec2 uWaveStr[6]; // x = strength, y = unused
+
+    out vec3 vColor;
+    out float vAlpha;
+    out float vSoftness;
+
+    vec3 clusterColor(float idx) {
+      if (idx < 0.5) return vec3(1.00, 0.72, 0.30);
+      if (idx < 1.5) return vec3(0.22, 0.90, 1.00);
+      if (idx < 2.5) return vec3(0.36, 0.54, 1.00);
+      if (idx < 3.5) return vec3(1.00, 0.43, 0.62);
+      return vec3(0.88, 0.94, 1.00);
+    }
+
+    // Smooth analytic curl-like displacement field (trig divergence-free flow)
+    vec3 curlField(vec3 p, float t) {
+      float a = sin(p.y * 1.15 + t * 0.55) * cos(p.z * 0.95 - t * 0.41);
+      float b = sin(p.z * 1.10 - t * 0.48) * cos(p.x * 1.05 + t * 0.52);
+      float c = sin(p.x * 0.98 + t * 0.60) * cos(p.y * 1.20 - t * 0.37);
+      return vec3(a - b * 0.6, b - c * 0.6, c - a * 0.6);
+    }
+
+    void main() {
+      float t = uTime * (0.42 + 0.50 * aParams.z);
+      // Sculpt phi and elevation slightly into flowing galactic strata with dark breathing space
+      float strandPhase = aParams.w * 2.0943951;
+      float phi = aSeed.x * 6.2831853 + 0.42 * sin(aSeed.x * 12.56637 + strandPhase) + t * (0.07 + 0.05 * aSeed.z);
+      float elev = aSeed.y * 2.0 - 1.0;
+      float costheta = mix(elev, sin(elev * 1.5708) * 0.68 + 0.22 * sin(phi * 2.0 + strandPhase), 0.55);
+      float sintheta = sqrt(max(0.0, 1.0 - costheta * costheta));
+
+      // 1) Organic drifting latent currents
+      float rCloud = uSpread * (0.34 + 0.66 * pow(aSeed.z, 0.52));
+      vec3 posCloud = vec3(
+        rCloud * sintheta * cos(phi),
+        rCloud * costheta * 0.66,
+        rCloud * sintheta * sin(phi)
+      );
+      posCloud += curlField(posCloud * 0.72, uTime) * uCurlAmp * (0.55 + 0.65 * aSeed.z);
+
+      // Optional Dual-Pole orbital braid in Act V
+      if (uDualPole > 0.01) {
+        float side = step(0.5, aSeed.w) * 2.0 - 1.0;
+        vec3 pole = vec3(cos(uTime * 0.22) * 1.65 * side, sin(uTime * 0.31) * 0.45 * side, sin(uTime * 0.22) * 1.65 * side);
+        vec3 orbitOffset = posCloud * 0.52 + pole;
+        // Bridge ribbon between the two poles
+        float bridgeMask = smoothstep(0.65, 1.0, aSeed.y);
+        vec3 bridgePos = mix(-pole, pole, aSeed.x) + curlField(vec3(aSeed.x * 4.0, aSeed.z * 2.0, uTime * 0.5), uTime) * 0.35;
+        posCloud = mix(posCloud, mix(orbitOffset, bridgePos, bridgeMask * 0.55), uDualPole * 0.78);
+      }
+
+      // 2) Harmonic Torus-Knot & Geodesic Shell (Act IV / Converge)
+      float strand = aParams.w; // 0, 1, 2
+      float u = aSeed.x * 6.2831853 + uTime * (0.22 + 0.04 * strand);
+      float pKnot = 3.0;
+      float qKnot = 5.0;
+      float knotR = 1.65 + 0.52 * cos(qKnot * u + strand * 2.094);
+      vec3 knotCenter = vec3(
+        knotR * cos(pKnot * u),
+        0.72 * sin(qKnot * u + strand * 2.094),
+        knotR * sin(pKnot * u)
+      );
+      // Ribbon thickness around the knot spine
+      float tubeA = aSeed.y * 6.2831853 + u * 4.0;
+      float tubeR = (0.08 + 0.26 * aSeed.z) * (1.25 - 0.55 * uCoherence);
+      vec3 radialDir = normalize(vec3(knotCenter.x, knotCenter.y * 0.3, knotCenter.z) + vec3(0.001));
+      vec3 upDir = vec3(0.0, 1.0, 0.0);
+      vec3 binorm = normalize(cross(radialDir, upDir));
+      vec3 posKnot = knotCenter + (radialDir * cos(tubeA) + binorm * sin(tubeA)) * tubeR;
+
+      // Blend organically between drifting cloud and coherent torus manifold
+      vec3 pos = mix(posCloud, posKnot, smoothstep(0.0, 1.0, uLatticeMix));
+
+      // Gentle magnetic swirl toward cursor probe
+      vec3 toProbe = uProbePos - pos;
+      float dProbe = length(toProbe);
+      float probeInfluence = exp(-dProbe * 0.58);
+      vec3 swirl = cross(normalize(toProbe + vec3(1e-4)), vec3(0.0, 1.0, 0.0));
+      pos += (toProbe * 0.16 + swirl * 0.24) * probeInfluence * (1.0 - 0.4 * uLatticeMix);
+
+      // Gentle pull toward placed Query Anchors
+      for (int i = 0; i < 3; i++) {
+        if (i >= uAnchorCount) break;
+        vec3 toAnc = uAnchors[i] - pos;
+        float dAnc = length(toAnc);
+        float wAnc = exp(-dAnc * 0.65);
+        pos += (toAnc * 0.18 + cross(normalize(toAnc + vec3(1e-4)), vec3(0.0, 1.0, 0.0)) * 0.28) * wAnc;
+      }
+
+      // Spherical Shockwave ripples
+      float waveFlare = 0.0;
+      for (int i = 0; i < 6; i++) {
+        float wRadius = uWaves[i].w;
+        float wStr = uWaveStr[i].x;
+        if (wStr > 0.001) {
+          vec3 wDiff = pos - uWaves[i].xyz;
+          float wDist = length(wDiff);
+          float band = exp(-pow((wDist - wRadius) * 2.1, 2.0));
+          pos += normalize(wDiff + vec3(1e-4)) * band * wStr * 0.38;
+          waveFlare = max(waveFlare, band * wStr);
+        }
+      }
+
+      vec4 clip = uViewProj * vec4(pos, 1.0);
+      gl_Position = clip;
+
+      float camDist = length(uCamPos - pos);
+      float focalDist = length(uCamPos);
+      float dofBlur = clamp(abs(camDist - focalDist) * 0.18, 0.0, 1.0);
+
+      float baseSize = (0.78 + 1.38 * aParams.y + waveFlare * 2.4) * uPixelRatio;
+      float perspSize = baseSize * (7.2 / max(1.2, camDist));
+      // Bokeh expansion for out-of-focus particles
+      gl_PointSize = clamp(perspSize * (1.0 + dofBlur * 1.35), 1.0, uMaxPointSize);
+
+      vec3 baseCol = clusterColor(aParams.x);
+      vec3 waveCol = mix(baseCol, vec3(0.95, 0.98, 1.0), 0.65);
+      vColor = mix(baseCol, waveCol, clamp(waveFlare + probeInfluence * 0.35 + uCoherence * 0.20, 0.0, 1.0));
+
+      float twinkle = 0.45 + 0.55 * sin(uTime * (1.4 + aParams.z * 2.0) + aSeed.w * 40.0);
+      float dofFade = 1.0 - dofBlur * 0.62;
+      vAlpha = clamp((0.06 + 0.24 * twinkle + waveFlare * 0.55 + probeInfluence * 0.25) * dofFade, 0.0, 1.0);
+      vSoftness = 0.28 + dofBlur * 0.68;
+    }`;
+
+    const FS_MOTES = `#version 300 es
+    precision highp float;
+    in vec3 vColor;
+    in float vAlpha;
+    in float vSoftness;
+    uniform float uHdrScale;
+    out vec4 fragColor;
+
+    void main() {
+      vec2 uv = gl_PointCoord * 2.0 - 1.0;
+      float r2 = dot(uv, uv);
+      if (r2 > 1.0) discard;
+      float core = exp(-r2 * mix(4.8, 1.9, vSoftness));
+      float rim  = smoothstep(1.0, 0.0, sqrt(r2));
+      float intensity = (core * 0.85 + rim * 0.15) * vAlpha;
+      fragColor = vec4(vColor * intensity * uHdrScale, intensity);
+    }`;
+
+    /* 3. Curved 3D Bezier Attention Filaments (Instanced Volumetric Ribbons) */
+    const VS_BRIDGES = `#version 300 es
+    precision highp float;
+
+    // Template quad strip vertex
+    layout(location = 0) in float aU;
+    layout(location = 1) in float aSide;
+
+    // Per-instance bridge attributes
+    layout(location = 2) in vec3 iP0;
+    layout(location = 3) in vec3 iP1;
+    layout(location = 4) in vec3 iP2;
+    layout(location = 5) in vec3 iCol0;
+    layout(location = 6) in vec3 iCol1;
+    layout(location = 7) in vec4 iMeta; // x: strength, y: width, z: pulseSpeed, w: pulsePhase
+
+    uniform mat4 uViewProj;
+    uniform vec3 uCamPos;
+
+    out vec2 vRibbonUv;
+    out vec3 vColor;
+    out vec4 vMeta;
+
+    void main() {
+      float u = aU;
+      float inv = 1.0 - u;
+      vec3 pos = inv * inv * iP0 + 2.0 * inv * u * iP1 + u * u * iP2;
+      vec3 deriv = 2.0 * inv * (iP1 - iP0) + 2.0 * u * (iP2 - iP1);
+      vec3 tang = normalize(deriv + vec3(1e-5, 0.0, 0.0));
+      vec3 toCam = normalize(uCamPos - pos + vec3(0.0, 1e-4, 0.0));
+      vec3 sideVec = normalize(cross(tang, toCam) + vec3(1e-5, 0.0, 0.0));
+
+      // Taper slightly at endpoints for elegant needle-like filament ends
+      float taper = sin(u * 3.14159265) * 0.65 + 0.35;
+      float halfW = iMeta.y * taper;
+      pos += sideVec * aSide * halfW;
+
+      gl_Position = uViewProj * vec4(pos, 1.0);
+      vRibbonUv = vec2(u, aSide);
+      vColor = mix(iCol0, iCol1, u);
+      vMeta = iMeta;
+    }`;
+
+    const FS_BRIDGES = `#version 300 es
+    precision highp float;
+    in vec2 vRibbonUv;
+    in vec3 vColor;
+    in vec4 vMeta;
+
+    uniform float uTime;
+    uniform float uPulseSpeed;
+    uniform float uHdrScale;
+    out vec4 fragColor;
+
+    void main() {
+      float u = vRibbonUv.x;
+      float v = vRibbonUv.y;
+      float strength = vMeta.x;
+      float pSpeed = vMeta.z * uPulseSpeed;
+      float pPhase = vMeta.w;
+
+      // Silky filament cross-section: tight bright core + soft luminous sheath
+      float core = exp(-v * v * 9.5);
+      float glow = exp(-v * v * 2.2) * 0.35;
+
+      // Traveling synaptic energy packets along u
+      float t1 = fract(u - uTime * pSpeed * 0.42 + pPhase);
+      float packet1 = exp(-pow(min(t1, 1.0 - t1) * 7.5, 2.0));
+      float t2 = fract(u + uTime * pSpeed * 0.28 + pPhase * 1.7);
+      float packet2 = exp(-pow(min(t2, 1.0 - t2) * 9.0, 2.0)) * 0.55;
+
+      float endFade = smoothstep(0.0, 0.06, u) * smoothstep(1.0, 0.94, u);
+      float packet = packet1 + packet2;
+
+      vec3 col = mix(vColor, vec3(1.0, 0.98, 0.95), packet * 0.72);
+      float lum = (core * (0.45 + packet * 1.45) + glow * (0.35 + packet * 0.6)) * strength * endFade;
+
+      fragColor = vec4(col * lum * uHdrScale, lum);
+    }`;
+
+    /* 4. Hero Concept Nodes, Query Probe & Anchor Stars (Instanced Billboards) */
+    const VS_NODES = `#version 300 es
+    precision highp float;
+
+    layout(location = 0) in vec2 aCorner; // [-1, 1] quad
+    layout(location = 1) in vec3 iPos;
+    layout(location = 2) in vec3 iCol;
+    layout(location = 3) in vec4 iProps; // x: size, y: activation, z: ringStrength, w: phase
+
+    uniform mat4 uViewProj;
+    uniform vec3 uCamRight;
+    uniform vec3 uCamUp;
+
+    out vec2 vUv;
+    out vec3 vCol;
+    out vec4 vProps;
+
+    void main() {
+      vec3 worldPos = iPos + (uCamRight * aCorner.x + uCamUp * aCorner.y) * iProps.x;
+      gl_Position = uViewProj * vec4(worldPos, 1.0);
+      vUv = aCorner;
+      vCol = iCol;
+      vProps = iProps;
+    }`;
+
+    const FS_NODES = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    in vec3 vCol;
+    in vec4 vProps;
+
+    uniform float uTime;
+    uniform float uHdrScale;
+    out vec4 fragColor;
+
+    void main() {
+      float r = length(vUv);
+      if (r > 1.0) discard;
+
+      float act = vProps.y;
+      float ringStr = vProps.z;
+      float phase = vProps.w;
+
+      // Intense star core + exponential halo + delicate phase ring
+      float core = exp(-r * r * 36.0) * (1.1 + act * 1.4);
+      float halo = exp(-r * r * 5.2) * (0.38 + act * 0.65);
+      float pulse = 0.85 + 0.15 * sin(phase + uTime * 2.2);
+
+      // Fine orbital resonance ring for anchors / highly activated nodes
+      float ringRadius = 0.56 + 0.05 * sin(uTime * 1.8 + phase);
+      float ring = exp(-pow((r - ringRadius) * 26.0, 2.0)) * ringStr;
+
+      vec3 coreTint = mix(vCol, vec3(1.0, 0.98, 0.94), clamp(core * 0.65, 0.0, 1.0));
+      float energy = (core + halo + ring * 0.9) * pulse;
+      fragColor = vec4(coreTint * energy * uHdrScale, energy);
+    }`;
+
+    /* 5. Trail Decay Pass (Eliminates 8-bit muddy ghosting cleanly) */
+    const FS_TRAIL_DECAY = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    uniform sampler2D uPrevTrail;
+    uniform float uDecay;
+    out vec4 fragColor;
+    void main() {
+      vec4 prev = texture(uPrevTrail, vUv);
+      fragColor = max(prev * uDecay - vec4(0.0022), vec4(0.0));
+    }`;
+
+    /* 6. Bloom Prefilter (Threshold with Soft Knee) */
+    const FS_BLOOM_PREFILTER = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    uniform sampler2D uSceneTex;
+    uniform float uThreshold;
+    uniform float uKnee;
+    out vec4 fragColor;
+
+    void main() {
+      vec3 c = texture(uSceneTex, vUv).rgb;
+      float br = max(c.r, max(c.g, c.b));
+      float soft = br - uThreshold + uKnee;
+      soft = clamp(soft, 0.0, 2.0 * uKnee);
+      soft = (soft * soft) / (4.0 * uKnee + 1e-5);
+      float contrib = max(soft, br - uThreshold) / max(br, 1e-5);
+      fragColor = vec4(c * contrib, 1.0);
+    }`;
+
+    /* 7. 13-Tap Jimenez Downsample Pass */
+    const FS_BLOOM_DOWN = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    uniform sampler2D uSrcTex;
+    uniform vec2 uTexel;
+    out vec4 fragColor;
+
+    void main() {
+      vec2 t = uTexel;
+      vec3 a = texture(uSrcTex, vUv + vec2(-2.0,  2.0) * t).rgb;
+      vec3 b = texture(uSrcTex, vUv + vec2( 0.0,  2.0) * t).rgb;
+      vec3 c = texture(uSrcTex, vUv + vec2( 2.0,  2.0) * t).rgb;
+      vec3 d = texture(uSrcTex, vUv + vec2(-1.0,  1.0) * t).rgb;
+      vec3 e = texture(uSrcTex, vUv + vec2( 1.0,  1.0) * t).rgb;
+      vec3 f = texture(uSrcTex, vUv + vec2(-2.0,  0.0) * t).rgb;
+      vec3 g = texture(uSrcTex, vUv).rgb;
+      vec3 h = texture(uSrcTex, vUv + vec2( 2.0,  0.0) * t).rgb;
+      vec3 i = texture(uSrcTex, vUv + vec2(-1.0, -1.0) * t).rgb;
+      vec3 j = texture(uSrcTex, vUv + vec2( 1.0, -1.0) * t).rgb;
+      vec3 k = texture(uSrcTex, vUv + vec2(-2.0, -2.0) * t).rgb;
+      vec3 l = texture(uSrcTex, vUv + vec2( 0.0, -2.0) * t).rgb;
+      vec3 m = texture(uSrcTex, vUv + vec2( 2.0, -2.0) * t).rgb;
+
+      vec3 col = g * 0.125;
+      col += (a + c + k + m) * 0.03125;
+      col += (b + f + h + l) * 0.0625;
+      col += (d + e + i + j) * 0.125;
+      fragColor = vec4(col, 1.0);
+    }`;
+
+    /* 8. 9-Tap Tent Upsample Pass */
+    const FS_BLOOM_UP = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    uniform sampler2D uSrcTex;
+    uniform vec2 uTexel;
+    uniform float uRadius;
+    out vec4 fragColor;
+
+    void main() {
+      vec2 t = uTexel * uRadius;
+      vec3 s = vec3(0.0);
+      s += texture(uSrcTex, vUv + vec2(-t.x,  t.y)).rgb * 1.0;
+      s += texture(uSrcTex, vUv + vec2( 0.0,  t.y)).rgb * 2.0;
+      s += texture(uSrcTex, vUv + vec2( t.x,  t.y)).rgb * 1.0;
+      s += texture(uSrcTex, vUv + vec2(-t.x,  0.0)).rgb * 2.0;
+      s += texture(uSrcTex, vUv).rgb * 4.0;
+      s += texture(uSrcTex, vUv + vec2( t.x,  0.0)).rgb * 2.0;
+      s += texture(uSrcTex, vUv + vec2(-t.x, -t.y)).rgb * 1.0;
+      s += texture(uSrcTex, vUv + vec2( 0.0, -t.y)).rgb * 2.0;
+      s += texture(uSrcTex, vUv + vec2( t.x, -t.y)).rgb * 1.0;
+      fragColor = vec4(s / 16.0, 1.0);
+    }`;
+
+    /* 9. Final Composite: Trails + HDR Bloom + Shockwave Refraction + ACES Filmic + Dither */
+    const FS_COMPOSITE = `#version 300 es
+    precision highp float;
+    in vec2 vUv;
+    uniform sampler2D uSceneTex;
+    uniform sampler2D uTrailTex;
+    uniform sampler2D uBloomTex;
+    uniform vec2 uRes;
+    uniform float uBloomStrength;
+    uniform float uHdrInvScale;
+    uniform vec4 uWaves[6];
+    out vec4 fragColor;
+
+    vec3 acesFilm(vec3 x) {
+      float a = 2.51;
+      float b = 0.03;
+      float c = 2.43;
+      float d = 0.59;
+      float e = 0.14;
+      return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+    }
+
+    float dither(vec2 p) {
+      return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+    }
+
+    void main() {
+      vec2 aspect = vec2(uRes.x / max(uRes.y, 1.0), 1.0);
+      vec2 uv = vUv;
+
+      // Subtle gravitational lensing along expanding wave rings
+      vec2 offset = vec2(0.0);
+      for (int i = 0; i < 6; i++) {
+        vec4 w = uWaves[i];
+        if (w.w > 0.001) {
+          vec2 delta = (uv - w.xy) * aspect;
+          float d = length(delta);
+          float ring = exp(-pow((d - w.z) * 32.0, 2.0));
+          offset += normalize(delta + vec2(1e-4)) * ring * w.w * 0.0055;
+        }
+      }
+
+      vec3 scene = texture(uSceneTex, uv - offset).rgb * uHdrInvScale;
+      vec3 trail = texture(uTrailTex, uv - offset * 0.6).rgb * uHdrInvScale;
+      vec3 bloom = texture(uBloomTex, uv).rgb * uHdrInvScale;
+
+      vec3 hdr = scene + trail * 0.58 + bloom * uBloomStrength;
+
+      // Subtle radial chromatic edge glow when bloom is intense
+      float edge = dot(uv - 0.5, uv - 0.5);
+      hdr.r += texture(uBloomTex, uv + (uv - 0.5) * 0.004).r * uHdrInvScale * uBloomStrength * 0.14 * edge;
+      hdr.b += texture(uBloomTex, uv - (uv - 0.5) * 0.004).b * uHdrInvScale * uBloomStrength * 0.14 * edge;
+
+      // Vignette
+      hdr *= 1.0 - smoothstep(0.32, 0.95, edge * 1.45) * 0.28;
+
+      // ACES Filmic + gamma + subtle 8-bit dither
+      vec3 ldr = acesFilm(hdr * 1.08);
+      ldr = pow(ldr, vec3(1.0 / 2.15));
+      ldr += dither(gl_FragCoord.xy) / 255.0;
+
+      fragColor = vec4(ldr, 1.0);
+    }`;
+
+    const progBackdrop = createProgram(VS_QUAD, FS_BACKDROP);
+    const progMotes    = createProgram(VS_MOTES, FS_MOTES);
+    const progBridges  = createProgram(VS_BRIDGES, FS_BRIDGES);
+    const progNodes    = createProgram(VS_NODES, FS_NODES);
+    const progTrail    = createProgram(VS_QUAD, FS_TRAIL_DECAY);
+    const progPrefilt  = createProgram(VS_QUAD, FS_BLOOM_PREFILTER);
+    const progDown     = createProgram(VS_QUAD, FS_BLOOM_DOWN);
+    const progUp       = createProgram(VS_QUAD, FS_BLOOM_UP);
+    const progComp     = createProgram(VS_QUAD, FS_COMPOSITE);
+
+    /* =========================================================================
+       FRAMEBUFFERS (HDR / FALLBACK SAFE + 5-MIP BLOOM + PING-PONG TRAILS)
+       ========================================================================= */
+    let useFloatFBO = hasColorBufferFloat;
+
+    function createFBO(w, h) {
+      const fbo = gl.createFramebuffer();
+      const tex = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, tex);
+
+      const internalFmt = useFloatFBO ? gl.RGBA16F : gl.RGBA8;
+      const type = useFloatFBO ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+
+      gl.texImage2D(gl.TEXTURE_2D, 0, internalFmt, w, h, 0, gl.RGBA, type, null);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE && useFloatFBO) {
+        useFloatFBO = false;
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, w, h, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+      }
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      return { fbo, tex, w, h };
+    }
+
+    function destroyFBO(target) {
+      if (!target) return;
+      gl.deleteFramebuffer(target.fbo);
+      gl.deleteTexture(target.tex);
+    }
+
+    let sceneFBO = null;
+    let trailFBOs = [null, null];
+    let trailIndex = 0;
+    let bloomMips = [];
+    let viewW = 1, viewH = 1, dpr = 1;
+
+    function resizeTargets() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      viewW = Math.max(2, Math.floor(window.innerWidth * dpr));
+      viewH = Math.max(2, Math.floor(window.innerHeight * dpr));
+      canvas.width = viewW;
+      canvas.height = viewH;
+
+      destroyFBO(sceneFBO);
+      destroyFBO(trailFBOs[0]);
+      destroyFBO(trailFBOs[1]);
+      bloomMips.forEach(destroyFBO);
+      bloomMips = [];
+
+      sceneFBO = createFBO(viewW, viewH);
+      trailFBOs = [createFBO(viewW, viewH), createFBO(viewW, viewH)];
+
+      // Clear trail buffers cleanly on resize
+      for (const tf of trailFBOs) {
+        gl.bindFramebuffer(gl.FRAMEBUFFER, tf.fbo);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+      }
+
+      let bw = viewW, bh = viewH;
+      for (let i = 0; i < 5; i++) {
+        bw = Math.max(2, bw >> 1);
+        bh = Math.max(2, bh >> 1);
+        bloomMips.push(createFBO(bw, bh));
+      }
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
+    window.addEventListener('resize', resizeTargets);
+    resizeTargets();
+
+    /* =========================================================================
+       GEOMETRY BUFFERS (QUAD, 28K MOTES, INSTANCED BRIDGES, INSTANCED NODES)
+       ========================================================================= */
+    // Empty VAO for gl_VertexID fullscreen triangle
+    const quadVAO = gl.createVertexArray();
+
+    // 28,000 GPU Latent Motes
+    const NUM_MOTES = 28000;
+    const moteSeedData = new Float32Array(NUM_MOTES * 4);
+    const moteParamData = new Float32Array(NUM_MOTES * 4);
+    for (let i = 0; i < NUM_MOTES; i++) {
+      const i4 = i * 4;
+      moteSeedData[i4 + 0] = Math.random();
+      moteSeedData[i4 + 1] = Math.random();
+      moteSeedData[i4 + 2] = Math.random();
+      moteSeedData[i4 + 3] = Math.random();
+
+      const cluster = i % 5;
+      moteParamData[i4 + 0] = cluster;
+      moteParamData[i4 + 1] = 0.25 + Math.pow(Math.random(), 2.2) * 1.15;
+      moteParamData[i4 + 2] = Math.random();
+      moteParamData[i4 + 3] = i % 3;
+    }
+
+    const motesVAO = gl.createVertexArray();
+    gl.bindVertexArray(motesVAO);
+    const moteSeedBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, moteSeedBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, moteSeedData, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 4, gl.FLOAT, false, 0, 0);
+
+    const moteParamBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, moteParamBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, moteParamData, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 4, gl.FLOAT, false, 0, 0);
+
+    // Instanced Bezier Ribbon Template (14 segments = 15 cross-sections = 30 vertices)
+    const BRIDGE_SEGS = 14;
+    const MAX_BRIDGES = 560;
+    const BRIDGE_STRIDE_FLOATS = 19; // 3(P0) + 3(P1) + 3(P2) + 3(C0) + 3(C1) + 4(Meta)
+    const bridgeInstanceData = new Float32Array(MAX_BRIDGES * BRIDGE_STRIDE_FLOATS);
+
+    const ribbonVerts = new Float32Array((BRIDGE_SEGS + 1) * 2 * 2);
+    for (let s = 0; s <= BRIDGE_SEGS; s++) {
+      const u = s / BRIDGE_SEGS;
+      const base = s * 4;
+      ribbonVerts[base + 0] = u;
+      ribbonVerts[base + 1] = -1.0;
+      ribbonVerts[base + 2] = u;
+      ribbonVerts[base + 3] = 1.0;
+    }
+    const ribbonIndices = new Uint16Array(BRIDGE_SEGS * 6);
+    for (let s = 0; s < BRIDGE_SEGS; s++) {
+      const v0 = s * 2;
+      const idx = s * 6;
+      ribbonIndices[idx + 0] = v0;
+      ribbonIndices[idx + 1] = v0 + 1;
+      ribbonIndices[idx + 2] = v0 + 2;
+      ribbonIndices[idx + 3] = v0 + 1;
+      ribbonIndices[idx + 4] = v0 + 3;
+      ribbonIndices[idx + 5] = v0 + 2;
+    }
+
+    const bridgesVAO = gl.createVertexArray();
+    gl.bindVertexArray(bridgesVAO);
+    const ribbonTplBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, ribbonTplBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, ribbonVerts, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 1, gl.FLOAT, false, 8, 0);
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 8, 4);
+
+    const ribbonIdxBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ribbonIdxBuf);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, ribbonIndices, gl.STATIC_DRAW);
+
+    const bridgeInstBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, bridgeInstBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, bridgeInstanceData.byteLength, gl.DYNAMIC_DRAW);
+
+    const strideBytes = BRIDGE_STRIDE_FLOATS * 4;
+    const bridgeAttrs = [
+      { loc: 2, size: 3, off: 0 },
+      { loc: 3, size: 3, off: 12 },
+      { loc: 4, size: 3, off: 24 },
+      { loc: 5, size: 3, off: 36 },
+      { loc: 6, size: 3, off: 48 },
+      { loc: 7, size: 4, off: 60 }
+    ];
+    for (const a of bridgeAttrs) {
+      gl.enableVertexAttribArray(a.loc);
+      gl.vertexAttribPointer(a.loc, a.size, gl.FLOAT, false, strideBytes, a.off);
+      gl.vertexAttribDivisor(a.loc, 1);
+    }
+
+    // Instanced Billboards for 180 Hero Concept Nodes + 3 Anchors + 1 Query Lantern
+    const NUM_NODES = 180;
+    const MAX_SPRITES = NUM_NODES + 8;
+    const NODE_STRIDE_FLOATS = 10; // 3(pos) + 3(col) + 4(props)
+    const nodeInstanceData = new Float32Array(MAX_SPRITES * NODE_STRIDE_FLOATS);
+
+    const quadCorners = new Float32Array([-1, -1,  1, -1,  -1, 1,  1, 1]);
+    const nodesVAO = gl.createVertexArray();
+    gl.bindVertexArray(nodesVAO);
+    const cornerBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, cornerBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, quadCorners, gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+
+    const nodeInstBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, nodeInstBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, nodeInstanceData.byteLength, gl.DYNAMIC_DRAW);
+    const nStrideBytes = NODE_STRIDE_FLOATS * 4;
+    gl.enableVertexAttribArray(1);
+    gl.vertexAttribPointer(1, 3, gl.FLOAT, false, nStrideBytes, 0);
+    gl.vertexAttribDivisor(1, 1);
+    gl.enableVertexAttribArray(2);
+    gl.vertexAttribPointer(2, 3, gl.FLOAT, false, nStrideBytes, 12);
+    gl.vertexAttribDivisor(2, 1);
+    gl.enableVertexAttribArray(3);
+    gl.vertexAttribPointer(3, 4, gl.FLOAT, false, nStrideBytes, 24);
+    gl.vertexAttribDivisor(3, 1);
+
+    gl.bindVertexArray(null);
+
+    /* =========================================================================
+       HERO NODE PHYSICS, SEMANTIC ATTENTION & KURAMOTO COUPLING
+       ========================================================================= */
+    const nodes = [];
+    for (let i = 0; i < NUM_NODES; i++) {
+      const cluster = i % 5;
+      // Golden-angle sphere initialization
+      const y = 1 - (i / (NUM_NODES - 1)) * 2;
+      const rad = Math.sqrt(Math.max(0, 1 - y * y));
+      const golden = i * 2.399963229728653;
+      const r0 = 1.6 + Math.random() * 1.9;
+
+      // 4D normalized semantic feature vector per cluster + gentle personal variation
+      const baseAngle = cluster * 1.256637;
+      let fx = Math.cos(baseAngle) + (Math.random() - 0.5) * 0.75;
+      let fy = Math.sin(baseAngle) + (Math.random() - 0.5) * 0.75;
+      let fz = Math.cos(baseAngle * 2.0 + 0.7) + (Math.random() - 0.5) * 0.75;
+      let fw = Math.sin(baseAngle * 1.5 - 0.4) + (Math.random() - 0.5) * 0.75;
+      const flen = Math.hypot(fx, fy, fz, fw) || 1;
+      fx /= flen; fy /= flen; fz /= flen; fw /= flen;
+
+      nodes.push({
+        x: Math.cos(golden) * rad * r0,
+        y: y * r0 * 0.72,
+        z: Math.sin(golden) * rad * r0,
+        vx: (Math.random() - 0.5) * 0.15,
+        vy: (Math.random() - 0.5) * 0.15,
+        vz: (Math.random() - 0.5) * 0.15,
+        cluster,
+        col: CLUSTER_COLORS[cluster],
+        phase: Math.random() * Math.PI * 2,
+        omega: 0.9 + (Math.random() - 0.5) * 0.65,
+        activation: 0.15 + Math.random() * 0.25,
+        fx, fy, fz, fw,
+        seed: Math.random(),
+        strand: i % 3
+      });
+    }
+
+    // Persistent smoothed attention matrix for zero-popping bridges
+    const PAIR_COUNT = (NUM_NODES * (NUM_NODES - 1)) >> 1;
+    const edgeStrength = new Float32Array(PAIR_COUNT);
+    const edgeCandidates = [];
+
+    /* =========================================================================
+       INTERACTION, CAMERA & SHOCKWAVES
+       ========================================================================= */
+    const audio = new ResonanceAudio();
+    const state = {
+      actIndex: 0,
+      actElapsed: 0,
+      autoAdvance: true,
+      convergeHold: false,
+      convergeToggle: false,
+      convergeMix: 0,
+      zen: false,
+      firstGestureDone: false,
+      pointerNdcX: 0,
+      pointerNdcY: 0,
+      pointerInside: false,
+      probePos: [0, 0, 0],
+      probeTarget: [0, 0, 0],
+      camDist: 8.6,
+      targetCamDist: 8.6,
+      camYaw: 0.3,
+      camPitch: 0.16,
+      anchors: [], // { x, y, z, col, phase }
+      waves: Array.from({ length: 6 }, () => ({ x: 0, y: 0, z: 0, age: 99, active: false, sx: 0.5, sy: 0.5 })),
+      nextWaveIdx: 0,
+      coherence: 0.12,
+      activeBridges: 0,
+      params: { ...ACTS[0].params }
+    };
+
+    // Simple 4x4 matrix math utilities
+    function mat4Perspective(fovRad, aspect, near, far) {
+      const f = 1.0 / Math.tan(fovRad * 0.5);
+      const nf = 1 / (near - far);
+      return new Float32Array([
+        f / aspect, 0, 0, 0,
+        0, f, 0, 0,
+        0, 0, (far + near) * nf, -1,
+        0, 0, 2 * far * near * nf, 0
+      ]);
+    }
+
+    function mat4Multiply(a, b) {
+      const out = new Float32Array(16);
+      for (let col = 0; col < 4; col++) {
+        for (let row = 0; row < 4; row++) {
+          out[col * 4 + row] =
+            a[0 * 4 + row] * b[col * 4 + 0] +
+            a[1 * 4 + row] * b[col * 4 + 1] +
+            a[2 * 4 + row] * b[col * 4 + 2] +
+            a[3 * 4 + row] * b[col * 4 + 3];
+        }
+      }
+      return out;
+    }
+
+    function buildCamera(time) {
+      const yaw = time * 0.045 + state.pointerNdcX * 0.38;
+      const pitch = 0.18 + Math.sin(time * 0.08) * 0.06 - state.pointerNdcY * 0.24;
+      const d = state.camDist;
+      const cp = Math.cos(pitch), sp = Math.sin(pitch);
+      const cy = Math.cos(yaw), sy = Math.sin(yaw);
+
+      const camPos = [d * cp * sy, d * sp, d * cp * cy];
+      // Forward pointing toward origin
+      const flen = Math.hypot(camPos[0], camPos[1], camPos[2]) || 1;
+      const fwd = [-camPos[0] / flen, -camPos[1] / flen, -camPos[2] / flen];
+      // Right = normalize(cross(fwd, [0,1,0]))
+      let rx = -fwd[2], ry = 0, rz = fwd[0];
+      const rlen = Math.hypot(rx, ry, rz) || 1;
+      rx /= rlen; rz /= rlen;
+      const right = [rx, ry, rz];
+      // Up = cross(right, fwd)
+      const up = [
+        right[1] * fwd[2] - right[2] * fwd[1],
+        right[2] * fwd[0] - right[0] * fwd[2],
+        right[0] * fwd[1] - right[1] * fwd[0]
+      ];
+
+      // View matrix
+      const view = new Float32Array([
+        right[0], up[0], -fwd[0], 0,
+        right[1], up[1], -fwd[1], 0,
+        right[2], up[2], -fwd[2], 0,
+        -(right[0] * camPos[0] + right[1] * camPos[1] + right[2] * camPos[2]),
+        -(up[0] * camPos[0] + up[1] * camPos[1] + up[2] * camPos[2]),
+        (fwd[0] * camPos[0] + fwd[1] * camPos[1] + fwd[2] * camPos[2]),
+        1
+      ]);
+
+      const fov = 48 * Math.PI / 180;
+      const aspect = viewW / Math.max(1, viewH);
+      const proj = mat4Perspective(fov, aspect, 0.1, 60.0);
+      const viewProj = mat4Multiply(proj, view);
+      return { camPos, fwd, right, up, viewProj, tanHalfFov: Math.tan(fov * 0.5), aspect };
+    }
+
+    let lastCam = buildCamera(0);
+
+    function screenToFocal3D(ndcX, ndcY, cam) {
+      // Intersect camera ray with focal plane passing through origin perpendicular to fwd
+      const dirX = cam.fwd[0] + ndcX * cam.tanHalfFov * cam.aspect * cam.right[0] + ndcY * cam.tanHalfFov * cam.up[0];
+      const dirY = cam.fwd[1] + ndcX * cam.tanHalfFov * cam.aspect * cam.right[1] + ndcY * cam.tanHalfFov * cam.up[1];
+      const dirZ = cam.fwd[2] + ndcX * cam.tanHalfFov * cam.aspect * cam.right[2] + ndcY * cam.tanHalfFov * cam.up[2];
+      const dlen = Math.hypot(dirX, dirY, dirZ) || 1;
+      const rx = dirX / dlen, ry = dirY / dlen, rz = dirZ / dlen;
+      const denom = rx * cam.fwd[0] + ry * cam.fwd[1] + rz * cam.fwd[2];
+      const t = -(cam.camPos[0] * cam.fwd[0] + cam.camPos[1] * cam.fwd[1] + cam.camPos[2] * cam.fwd[2]) / (denom || 1);
+      return [
+        cam.camPos[0] + rx * t,
+        cam.camPos[1] + ry * t,
+        cam.camPos[2] + rz * t
+      ];
+    }
+
+    function project3DToUv(p, viewProj) {
+      const cx = viewProj[0] * p[0] + viewProj[4] * p[1] + viewProj[8] * p[2] + viewProj[12];
+      const cy = viewProj[1] * p[0] + viewProj[5] * p[1] + viewProj[9] * p[2] + viewProj[13];
+      const cw = viewProj[3] * p[0] + viewProj[7] * p[1] + viewProj[11] * p[2] + viewProj[15];
+      if (Math.abs(cw) < 1e-4) return [0.5, 0.5];
+      return [(cx / cw) * 0.5 + 0.5, (cy / cw) * 0.5 + 0.5];
+    }
+
+    function spawnWave(pos3D, withSound = true) {
+      const w = state.waves[state.nextWaveIdx];
+      state.nextWaveIdx = (state.nextWaveIdx + 1) % state.waves.length;
+      w.x = pos3D[0];
+      w.y = pos3D[1];
+      w.z = pos3D[2];
+      w.age = 0;
+      w.active = true;
+      if (withSound) {
+        audio.playWaveChord();
+      }
+    }
+
+    function addAnchor(pos3D) {
+      if (state.anchors.length >= 3) {
+        state.anchors.shift();
+      }
+      const col = CLUSTER_COLORS[(state.anchors.length + 1) % CLUSTER_COLORS.length];
+      state.anchors.push({
+        x: pos3D[0],
+        y: pos3D[1],
+        z: pos3D[2],
+        col,
+        phase: Math.random() * Math.PI * 2
+      });
+      updateAnchorUI();
+      spawnWave(pos3D, true);
+    }
+
+    /* =========================================================================
+       UI BINDINGS & CHAPTER TRANSITIONS
+       ========================================================================= */
+    const ui = {
+      introCue: document.getElementById('intro-cue'),
+      coherenceFill: document.getElementById('coherence-fill'),
+      coherenceVal: document.getElementById('coherence-val'),
+      bridgesVal: document.getElementById('bridges-val'),
+      narrativeWrap: document.getElementById('narrative-wrap'),
+      chapterTag: document.getElementById('chapter-tag'),
+      poemLine: document.getElementById('poem-line'),
+      chapterBtns: Array.from(document.querySelectorAll('.chapter-btn')),
+      convergeBtn: document.getElementById('converge-btn'),
+      clearAnchorsBtn: document.getElementById('clear-anchors-btn'),
+      anchorCount: document.getElementById('anchor-count'),
+      autoBtn: document.getElementById('auto-btn'),
+      soundBtn: document.getElementById('sound-btn'),
+      soundLabel: document.getElementById('sound-label'),
+      zenBtn: document.getElementById('zen-btn'),
+      zenRestoreBtn: document.getElementById('zen-restore-btn')
+    };
+
+    function markGesture() {
+      if (!state.firstGestureDone) {
+        state.firstGestureDone = true;
+        ui.introCue.classList.add('hidden');
+        audio.unlockOnFirstGesture();
+        syncSoundUI();
+      }
+    }
+
+    function syncSoundUI() {
+      ui.soundBtn.classList.toggle('active', audio.enabled);
+      ui.soundLabel.textContent = audio.enabled ? 'Sound On' : 'Muted';
+    }
+
+    function updateAnchorUI() {
+      ui.anchorCount.textContent = String(state.anchors.length);
+      ui.clearAnchorsBtn.classList.toggle('visible', state.anchors.length > 0);
+    }
+
+    let narrativeTimer = null;
+    function setAct(index, ripple = true) {
+      const next = ((index % ACTS.length) + ACTS.length) % ACTS.length;
+      if (next === state.actIndex && state.actElapsed < 1.0) return;
+      state.actIndex = next;
+      state.actElapsed = 0;
+
+      ui.chapterBtns.forEach((btn, idx) => {
+        btn.classList.toggle('active', idx === next);
+        const bar = btn.querySelector('.chapter-progress');
+        if (bar) bar.style.width = idx < next ? '100%' : '0%';
+      });
+
+      clearTimeout(narrativeTimer);
+      ui.narrativeWrap.classList.add('fading');
+      narrativeTimer = setTimeout(() => {
+        ui.chapterTag.textContent = ACTS[next].tag;
+        ui.poemLine.textContent = ACTS[next].line;
+        ui.narrativeWrap.classList.remove('fading');
+      }, 320);
+
+      if (ripple) {
+        spawnWave([0, 0, 0], false);
+        audio.playChime(0.6, next / (ACTS.length - 1));
+      }
+    }
+
+    ui.chapterBtns.forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        markGesture();
+        setAct(Number(btn.dataset.act), true);
+      });
+    });
+
+    ui.convergeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      markGesture();
+      state.convergeToggle = !state.convergeToggle;
+      ui.convergeBtn.classList.toggle('active', state.convergeToggle);
+      if (state.convergeToggle) {
+        spawnWave(state.probePos, true);
+      }
+    });
+
+    ui.clearAnchorsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.anchors = [];
+      updateAnchorUI();
+    });
+
+    ui.autoBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      state.autoAdvance = !state.autoAdvance;
+      ui.autoBtn.textContent = state.autoAdvance ? 'Auto: On' : 'Auto: Off';
+      ui.autoBtn.classList.toggle('active', state.autoAdvance);
+    });
+    ui.autoBtn.classList.add('active');
+
+    setTimeout(() => {
+      ui.introCue.classList.add('hidden');
+    }, 7000);
+
+    // Optional URL query parameter (?act=1..5) to open directly on a movement
+    try {
+      const qAct = Number(new URLSearchParams(window.location.search).get('act'));
+      if (qAct >= 1 && qAct <= ACTS.length) {
+        const idx = qAct - 1;
+        state.actIndex = idx;
+        state.params = { ...ACTS[idx].params };
+        ui.chapterTag.textContent = ACTS[idx].tag;
+        ui.poemLine.textContent = ACTS[idx].line;
+        ui.chapterBtns.forEach((btn, i) => {
+          btn.classList.toggle('active', i === idx);
+          const bar = btn.querySelector('.chapter-progress');
+          if (bar) bar.style.width = i < idx ? '100%' : '0%';
+        });
+      }
+    } catch (_) {}
+
+    ui.soundBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (!state.firstGestureDone) {
+        state.firstGestureDone = true;
+        ui.introCue.classList.add('hidden');
+      }
+      audio.setEnabled(!audio.enabled);
+      syncSoundUI();
+    });
+
+    function toggleZen() {
+      state.zen = !state.zen;
+      document.body.classList.toggle('zen-mode', state.zen);
+    }
+    ui.zenBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleZen(); });
+    ui.zenRestoreBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleZen(); });
+
+    // Pointer Interactions on Canvas
+    let downTime = 0;
+    let holdTimer = null;
+    let didHold = false;
+    let lastTapTime = 0;
+
+    function updatePointerNDC(clientX, clientY) {
+      const rect = canvas.getBoundingClientRect();
+      state.pointerNdcX = ((clientX - rect.left) / Math.max(1, rect.width)) * 2 - 1;
+      state.pointerNdcY = -(((clientY - rect.top) / Math.max(1, rect.height)) * 2 - 1);
+      state.pointerInside = true;
+      state.probeTarget = screenToFocal3D(state.pointerNdcX, state.pointerNdcY, lastCam);
+    }
+
+    canvas.addEventListener('pointerdown', (e) => {
+      if (e.button === 2) return;
+      markGesture();
+      updatePointerNDC(e.clientX, e.clientY);
+      downTime = performance.now();
+      didHold = false;
+      clearTimeout(holdTimer);
+      holdTimer = setTimeout(() => {
+        didHold = true;
+        state.convergeHold = true;
+        ui.convergeBtn.classList.add('active');
+      }, 220);
+    });
+
+    window.addEventListener('pointermove', (e) => {
+      updatePointerNDC(e.clientX, e.clientY);
+    });
+
+    window.addEventListener('pointerup', (e) => {
+      clearTimeout(holdTimer);
+      if (state.convergeHold) {
+        state.convergeHold = false;
+        ui.convergeBtn.classList.toggle('active', state.convergeToggle);
+      }
+      if (downTime > 0 && !didHold && e.target === canvas) {
+        const now = performance.now();
+        if (now - lastTapTime < 290) {
+          addAnchor(state.probeTarget);
+          lastTapTime = 0;
+        } else {
+          spawnWave(state.probeTarget, true);
+          lastTapTime = now;
+        }
+      }
+      downTime = 0;
+    });
+
+    canvas.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      markGesture();
+      updatePointerNDC(e.clientX, e.clientY);
+      addAnchor(state.probeTarget);
+    });
+
+    canvas.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      state.targetCamDist = Math.min(13.5, Math.max(3.6, state.targetCamDist + e.deltaY * 0.0045));
+    }, { passive: false });
+
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        markGesture();
+        state.convergeHold = true;
+        ui.convergeBtn.classList.add('active');
+      } else if (e.key === 'h' || e.key === 'H') {
+        toggleZen();
+      } else if (e.key === 'm' || e.key === 'M') {
+        markGesture();
+        audio.setEnabled(!audio.enabled);
+        syncSoundUI();
+      } else if (e.key === 'a' || e.key === 'A') {
+        markGesture();
+        addAnchor(state.probePos);
+      } else if (e.key >= '1' && e.key <= '5') {
+        markGesture();
+        setAct(Number(e.key) - 1, true);
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'Space') {
+        state.convergeHold = false;
+        ui.convergeBtn.classList.toggle('active', state.convergeToggle);
+      }
+    });
+
+    /* =========================================================================
+       SIMULATION STEP (HERO NODES + ATTENTION + KURAMOTO + SHOCKWAVES)
+       ========================================================================= */
+    let simTime = 0;
+    let lastFrameMs = performance.now();
+    let lastTelemetryMs = 0;
+
+    function stepSimulation(dt, time) {
+      // Smooth act timeline
+      const currentAct = ACTS[state.actIndex];
+      if (state.autoAdvance && !state.convergeHold && !state.convergeToggle) {
+        state.actElapsed += dt;
+        const activeBtn = ui.chapterBtns[state.actIndex];
+        if (activeBtn) {
+          const bar = activeBtn.querySelector('.chapter-progress');
+          if (bar) bar.style.width = `${Math.min(100, (state.actElapsed / currentAct.duration) * 100)}%`;
+        }
+        if (state.actElapsed >= currentAct.duration) {
+          setAct((state.actIndex + 1) % ACTS.length, true);
+        }
+      }
+
+      // Smooth converge mix (Hold or Toggle pulls system into coherence)
+      const wantConverge = (state.convergeHold || state.convergeToggle) ? 1.0 : 0.0;
+      state.convergeMix += (wantConverge - state.convergeMix) * (1 - Math.exp(-3.4 * dt));
+
+      // Interpolate world parameters toward current act + converge boost
+      const target = ACTS[state.actIndex].params;
+      const kParam = 1 - Math.exp(-1.8 * dt);
+      const p = state.params;
+      for (const key in target) {
+        p[key] += (target[key] - p[key]) * kParam;
+      }
+
+      const conv = state.convergeMix;
+      const effSpread = p.spread * (1 - conv * 0.25);
+      const effCurl = p.curlAmp * (1 - conv * 0.72);
+      const effLattice = Math.min(1.0, p.latticeMix + conv * (1.0 - p.latticeMix));
+      const effTemp = Math.max(0.14, p.temperature * (1 - conv * 0.65));
+      const effCoupling = p.couplingK + conv * 3.8;
+      const effBloom = p.bloomBoost + conv * 0.45;
+      const effAstrolabe = Math.min(1.0, p.astrolabeAlpha + conv * 0.55);
+
+      // Smooth camera zoom & cursor probe
+      state.camDist += (state.targetCamDist - state.camDist) * (1 - Math.exp(-6.0 * dt));
+      if (!state.pointerInside) {
+        state.probeTarget = [
+          Math.cos(time * 0.42) * 1.45,
+          Math.sin(time * 0.57) * 0.65,
+          Math.sin(time * 0.42) * 1.45
+        ];
+      }
+      const kProbe = 1 - Math.exp(-8.5 * dt);
+      state.probePos[0] += (state.probeTarget[0] - state.probePos[0]) * kProbe;
+      state.probePos[1] += (state.probeTarget[1] - state.probePos[1]) * kProbe;
+      state.probePos[2] += (state.probeTarget[2] - state.probePos[2]) * kProbe;
+
+      // Update active spherical waves
+      for (const w of state.waves) {
+        if (!w.active) continue;
+        w.age += dt;
+        if (w.age > 3.2) w.active = false;
+      }
+
+      // Dynamic Query semantic vector rotates gently through meaning space
+      const qt = time * 0.32;
+      const qx = Math.cos(qt);
+      const qy = Math.sin(qt * 0.83);
+      const qz = Math.cos(qt * 1.17 + 1.0);
+      const qw = Math.sin(qt * 0.67 - 0.5);
+      const qLen = Math.hypot(qx, qy, qz, qw) || 1;
+      const qVec = [qx / qLen, qy / qLen, qz / qLen, qw / qLen];
+
+      // 1) Update Hero Node positions & forces
+      const pole1 = [Math.cos(time * 0.22) * 1.65, Math.sin(time * 0.31) * 0.45, Math.sin(time * 0.22) * 1.65];
+      const pole2 = [-pole1[0], -pole1[1], -pole1[2]];
+
+      for (let i = 0; i < NUM_NODES; i++) {
+        const n = nodes[i];
+
+        // Gentle 3D curl force
+        const cx = Math.sin(n.y * 1.1 + time * 0.55) * Math.cos(n.z * 0.95 - time * 0.4) * effCurl;
+        const cy = Math.sin(n.z * 1.1 - time * 0.48) * Math.cos(n.x * 1.05 + time * 0.5) * effCurl;
+        const cz = Math.sin(n.x * 0.98 + time * 0.6) * Math.cos(n.y * 1.2 - time * 0.37) * effCurl;
+
+        // Soft orbital home & harmonic torus-knot target with living Kuramoto phase wave
+        const u = n.seed * Math.PI * 2 + time * (0.22 + 0.04 * n.strand);
+        const phaseWave = Math.sin(n.phase) * 0.14 * effLattice;
+        const knotR = 1.65 + 0.52 * Math.cos(5.0 * u + n.strand * 2.094) + phaseWave;
+        const tubeOff = (n.cluster - 2) * 0.055;
+        const kx = (knotR + tubeOff) * Math.cos(3.0 * u);
+        const ky = 0.72 * Math.sin(5.0 * u + n.strand * 2.094) + Math.cos(n.phase) * 0.09 * effLattice;
+        const kz = (knotR + tubeOff) * Math.sin(3.0 * u);
+
+        // Dual pole attractor in Act V
+        let targetX = kx, targetY = ky, targetZ = kz;
+        if (p.dualPole > 0.05 && effLattice < 0.75) {
+          const pole = (i % 2 === 0) ? pole1 : pole2;
+          const orbA = n.seed * Math.PI * 2 + time * 0.45;
+          const ox = pole[0] + Math.cos(orbA) * 0.95;
+          const oy = pole[1] + Math.sin(orbA * 1.3) * 0.55;
+          const oz = pole[2] + Math.sin(orbA) * 0.95;
+          targetX = targetX * (1 - p.dualPole * 0.65) + ox * (p.dualPole * 0.65);
+          targetY = targetY * (1 - p.dualPole * 0.65) + oy * (p.dualPole * 0.65);
+          targetZ = targetZ * (1 - p.dualPole * 0.65) + oz * (p.dualPole * 0.65);
+        }
+
+        // Pull toward harmonic lattice when latticeMix rises
+        const pullK = 0.45 + effLattice * 3.8;
+        const r = Math.hypot(n.x, n.y, n.z) || 1;
+        const radialHome = (effSpread * 0.78 - r) * 0.45;
+        const homeFx = (n.x / r) * radialHome;
+        const homeFy = (n.y / r) * radialHome - n.y * 0.15;
+        const homeFz = (n.z / r) * radialHome;
+
+        n.vx += ((targetX - n.x) * effLattice * pullK + homeFx * (1 - effLattice * 0.8) + cx) * dt;
+        n.vy += ((targetY - n.y) * effLattice * pullK + homeFy * (1 - effLattice * 0.8) + cy) * dt;
+        n.vz += ((targetZ - n.z) * effLattice * pullK + homeFz * (1 - effLattice * 0.8) + cz) * dt;
+
+        // Subtle orbital angular momentum around Y axis
+        n.vx += -n.z * 0.18 * dt;
+        n.vz += n.x * 0.18 * dt;
+
+        // Cursor Probe attraction / activation
+        const pdx = state.probePos[0] - n.x;
+        const pdy = state.probePos[1] - n.y;
+        const pdz = state.probePos[2] - n.z;
+        const pd = Math.hypot(pdx, pdy, pdz) || 1;
+        const probeW = Math.exp(-pd * 0.68);
+        if (pd > 0.55) {
+          n.vx += (pdx / pd) * probeW * 1.15 * dt;
+          n.vy += (pdy / pd) * probeW * 1.15 * dt;
+          n.vz += (pdz / pd) * probeW * 1.15 * dt;
+        }
+
+        // Query Anchors gentle orbit
+        let anchorAct = 0;
+        for (const anc of state.anchors) {
+          const adx = anc.x - n.x;
+          const ady = anc.y - n.y;
+          const adz = anc.z - n.z;
+          const ad = Math.hypot(adx, ady, adz) || 1;
+          const aw = Math.exp(-ad * 0.72);
+          anchorAct = Math.max(anchorAct, aw);
+          if (ad > 0.65) {
+            n.vx += (adx / ad) * aw * 1.45 * dt;
+            n.vy += (ady / ad) * aw * 1.45 * dt;
+            n.vz += (adz / ad) * aw * 1.45 * dt;
+          }
+        }
+
+        // Shockwave stimulation
+        let waveAct = 0;
+        for (const w of state.waves) {
+          if (!w.active) continue;
+          const wRadius = w.age * 3.1;
+          const wStr = Math.max(0, 1 - w.age / 3.2);
+          const wdx = n.x - w.x;
+          const wdy = n.y - w.y;
+          const wdz = n.z - w.z;
+          const wd = Math.hypot(wdx, wdy, wdz) || 1;
+          const band = Math.exp(-Math.pow((wd - wRadius) * 1.9, 2));
+          if (band > 0.05) {
+            n.vx += (wdx / wd) * band * wStr * 1.8 * dt;
+            n.vy += (wdy / wd) * band * wStr * 1.8 * dt;
+            n.vz += (wdz / wd) * band * wStr * 1.8 * dt;
+            waveAct = Math.max(waveAct, band * wStr);
+          }
+        }
+
+        // Semantic resonance with live Query vector
+        const qDot = Math.max(0, n.fx * qVec[0] + n.fy * qVec[1] + n.fz * qVec[2] + n.fw * qVec[3]);
+        const targetAct = Math.min(1.0, 0.14 + probeW * 0.85 + anchorAct * 0.85 + waveAct * 0.95 + qDot * 0.35 + conv * 0.45);
+        n.activation += (targetAct - n.activation) * (1 - Math.exp(-5.0 * dt));
+
+        // Velocity damping
+        const damp = Math.exp(-2.8 * dt);
+        n.vx *= damp;
+        n.vy *= damp;
+        n.vz *= damp;
+
+        n.x += n.vx * dt;
+        n.y += n.vy * dt;
+        n.z += n.vz * dt;
+      }
+
+      // 2) Scaled Dot-Product Attention & Kuramoto Oscillator Synchronization
+      const maxRange = 3.15 + conv * 0.85;
+      const phaseForces = new Float32Array(NUM_NODES);
+      const edgeFadeK = 1 - Math.exp(-6.0 * dt);
+      edgeCandidates.length = 0;
+
+      let pairIdx = 0;
+      for (let i = 0; i < NUM_NODES; i++) {
+        const a = nodes[i];
+        for (let j = i + 1; j < NUM_NODES; j++) {
+          const b = nodes[j];
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const dz = b.z - a.z;
+          const d2 = dx * dx + dy * dy + dz * dz;
+
+          let targetEdge = 0;
+          if (d2 < maxRange * maxRange) {
+            const d = Math.sqrt(d2);
+            const prox = Math.pow(1 - d / maxRange, 1.35);
+            const dot = a.fx * b.fx + a.fy * b.fy + a.fz * b.fz + a.fw * b.fw;
+            const attn = Math.exp((dot - 1.0) / effTemp);
+            const actBoost = 0.42 + 0.58 * Math.max(a.activation, b.activation);
+            const raw = attn * prox * actBoost;
+            if (raw > p.bridgeThreshold) {
+              targetEdge = Math.min(1.0, (raw - p.bridgeThreshold) / (1.0 - p.bridgeThreshold) * 1.55);
+            }
+          }
+
+          const s = edgeStrength[pairIdx] + (targetEdge - edgeStrength[pairIdx]) * edgeFadeK;
+          edgeStrength[pairIdx] = s;
+
+          if (s > 0.025) {
+            // Kuramoto sine coupling across active attention bridge
+            const diffSin = Math.sin(b.phase - a.phase);
+            phaseForces[i] += s * diffSin;
+            phaseForces[j] -= s * diffSin;
+            edgeCandidates.push({ i, j, s });
+          }
+          pairIdx++;
+        }
+      }
+
+      // Compute current mean phase for global harmonic resonance coupling
+      let prevCos = 0, prevSin = 0;
+      for (let i = 0; i < NUM_NODES; i++) {
+        prevCos += Math.cos(nodes[i].phase);
+        prevSin += Math.sin(nodes[i].phase);
+      }
+      const meanPhase = Math.atan2(prevSin, prevCos);
+      const globalK = Math.max(0, effLattice - 0.25) * effCoupling * 0.55 + conv * 2.2;
+
+      // Update phases and compute global Kuramoto Order Parameter R
+      let sumCos = 0, sumSin = 0;
+      for (let i = 0; i < NUM_NODES; i++) {
+        const n = nodes[i];
+        const globalPull = Math.sin(meanPhase - n.phase) * globalK;
+        n.phase += (n.omega + effCoupling * phaseForces[i] * 0.28 + globalPull) * dt;
+        sumCos += Math.cos(n.phase);
+        sumSin += Math.sin(n.phase);
+      }
+      const orderR = Math.hypot(sumCos, sumSin) / NUM_NODES;
+      state.coherence += (orderR - state.coherence) * (1 - Math.exp(-4.0 * dt));
+
+      // Sort top bridges if > MAX_BRIDGES - 6 (reserves 6 slots for Anchor braided arcs)
+      const maxNodeBridges = MAX_BRIDGES - 6;
+      if (edgeCandidates.length > maxNodeBridges) {
+        edgeCandidates.sort((u, v) => v.s - u.s);
+        edgeCandidates.length = maxNodeBridges;
+      }
+      state.activeBridges = edgeCandidates.length;
+
+      // Subtle organic chime when a high-coherence harmonic crest occurs
+      if (state.coherence > 0.62 && Math.random() < dt * 0.65) {
+        audio.playChime(0.32, 0.35 + Math.random() * 0.55);
+      }
+
+      audio.update(state.coherence, conv);
+
+      // Update DOM telemetry at ~12Hz to avoid layout thrash
+      const nowMs = performance.now();
+      if (nowMs - lastTelemetryMs > 80) {
+        lastTelemetryMs = nowMs;
+        ui.coherenceVal.textContent = state.coherence.toFixed(2);
+        ui.coherenceFill.style.width = `${Math.round(state.coherence * 100)}%`;
+        ui.bridgesVal.textContent = String(state.activeBridges);
+      }
+
+      return {
+        effSpread,
+        effCurl,
+        effLattice,
+        effBloom,
+        effAstrolabe,
+        effPulseSpeed: p.pulseSpeed + conv * 1.1
+      };
+    }
+
+    /* =========================================================================
+       RENDER LOOP (MULTIPASS WEBGL2 WITH TRAILS & 5-MIP HDR BLOOM)
+       ========================================================================= */
+    function render(nowMs) {
+      requestAnimationFrame(render);
+
+      const dt = Math.min(0.05, Math.max(0.001, (nowMs - lastFrameMs) / 1000));
+      lastFrameMs = nowMs;
+      simTime += dt;
+
+      const sim = stepSimulation(dt, simTime);
+      const cam = buildCamera(simTime);
+      lastCam = cam;
+
+      const hdrScale = useFloatFBO ? 1.0 : 0.52;
+      const hdrInvScale = 1.0 / hdrScale;
+
+      // Project shockwaves to UV for backdrop/lensing
+      const waveUvArr = new Float32Array(24);
+      const waveWorldArr = new Float32Array(24);
+      const waveStrArr = new Float32Array(12);
+
+      for (let i = 0; i < 6; i++) {
+        const w = state.waves[i];
+        const i4 = i * 4;
+        const i2 = i * 2;
+        if (w.active) {
+          const wRadius = w.age * 3.1;
+          const wStr = Math.max(0, 1 - w.age / 3.2);
+          const uv = project3DToUv([w.x, w.y, w.z], cam.viewProj);
+          waveUvArr[i4 + 0] = uv[0];
+          waveUvArr[i4 + 1] = uv[1];
+          waveUvArr[i4 + 2] = wRadius * 0.14;
+          waveUvArr[i4 + 3] = wStr;
+
+          waveWorldArr[i4 + 0] = w.x;
+          waveWorldArr[i4 + 1] = w.y;
+          waveWorldArr[i4 + 2] = w.z;
+          waveWorldArr[i4 + 3] = wRadius;
+
+          waveStrArr[i2 + 0] = wStr;
+          waveStrArr[i2 + 1] = 0;
+        } else {
+          waveUvArr[i4 + 3] = 0;
+          waveWorldArr[i4 + 3] = -10;
+          waveStrArr[i2 + 0] = 0;
+        }
+      }
+
+      // Anchor positions padded to 3
+      const anchorArr = new Float32Array(9);
+      for (let i = 0; i < state.anchors.length && i < 3; i++) {
+        anchorArr[i * 3 + 0] = state.anchors[i].x;
+        anchorArr[i * 3 + 1] = state.anchors[i].y;
+        anchorArr[i * 3 + 2] = state.anchors[i].z;
+      }
+
+      const probeUv = project3DToUv(state.probePos, cam.viewProj);
+
+      // Pack active Bezier Bridges into instance buffer
+      let activeBridges = edgeCandidates.length;
+      for (let b = 0; b < activeBridges; b++) {
+        const c = edgeCandidates[b];
+        const n0 = nodes[c.i];
+        const n1 = nodes[c.j];
+        const mx = (n0.x + n1.x) * 0.5;
+        const my = (n0.y + n1.y) * 0.5;
+        const mz = (n0.z + n1.z) * 0.5;
+
+        // Arch outward gently via vector cross-product & spherical normal for organic curves
+        const dx = n1.x - n0.x, dy = n1.y - n0.y, dz = n1.z - n0.z;
+        const len = Math.hypot(dx, dy, dz) || 1;
+        const rLen = Math.hypot(mx, my, mz) || 1;
+        const arch = len * 0.22;
+        const p1x = mx + (mx / rLen) * arch + (dy * 0.12);
+        const p1y = my + (my / rLen) * arch - (dx * 0.12);
+        const p1z = mz + (mz / rLen) * arch;
+
+        const off = b * BRIDGE_STRIDE_FLOATS;
+        bridgeInstanceData[off + 0] = n0.x;
+        bridgeInstanceData[off + 1] = n0.y;
+        bridgeInstanceData[off + 2] = n0.z;
+        bridgeInstanceData[off + 3] = p1x;
+        bridgeInstanceData[off + 4] = p1y;
+        bridgeInstanceData[off + 5] = p1z;
+        bridgeInstanceData[off + 6] = n1.x;
+        bridgeInstanceData[off + 7] = n1.y;
+        bridgeInstanceData[off + 8] = n1.z;
+
+        bridgeInstanceData[off + 9]  = n0.col[0];
+        bridgeInstanceData[off + 10] = n0.col[1];
+        bridgeInstanceData[off + 11] = n0.col[2];
+        bridgeInstanceData[off + 12] = n1.col[0];
+        bridgeInstanceData[off + 13] = n1.col[1];
+        bridgeInstanceData[off + 14] = n1.col[2];
+
+        const syncMatch = 0.5 + 0.5 * Math.cos(n0.phase - n1.phase);
+        bridgeInstanceData[off + 15] = c.s * (0.62 + 0.72 * syncMatch);
+        bridgeInstanceData[off + 16] = 0.015 + c.s * 0.022;
+        bridgeInstanceData[off + 17] = 0.8 + syncMatch * 0.6;
+        bridgeInstanceData[off + 18] = (c.i * 0.37 + c.j * 0.19) % 1.0;
+      }
+
+      // Dedicated double-stranded harmonic arcs between placed Query Anchors
+      if (state.anchors.length >= 2) {
+        for (let i = 0; i < state.anchors.length; i++) {
+          for (let j = i + 1; j < state.anchors.length; j++) {
+            const a0 = state.anchors[i];
+            const a1 = state.anchors[j];
+            const mx = (a0.x + a1.x) * 0.5;
+            const my = (a0.y + a1.y) * 0.5;
+            const mz = (a0.z + a1.z) * 0.5;
+            const dist = Math.hypot(a1.x - a0.x, a1.y - a0.y, a1.z - a0.z) || 1;
+            for (let strand = 0; strand < 2 && activeBridges < MAX_BRIDGES; strand++) {
+              const sgn = strand === 0 ? 1 : -1;
+              const sway = Math.sin(simTime * 1.1 + i + j + strand * 1.8) * 0.32 * sgn;
+              const off = activeBridges * BRIDGE_STRIDE_FLOATS;
+              bridgeInstanceData[off + 0] = a0.x;
+              bridgeInstanceData[off + 1] = a0.y;
+              bridgeInstanceData[off + 2] = a0.z;
+              bridgeInstanceData[off + 3] = mx + sway;
+              bridgeInstanceData[off + 4] = my + dist * 0.24 * sgn;
+              bridgeInstanceData[off + 5] = mz - sway;
+              bridgeInstanceData[off + 6] = a1.x;
+              bridgeInstanceData[off + 7] = a1.y;
+              bridgeInstanceData[off + 8] = a1.z;
+              bridgeInstanceData[off + 9]  = a0.col[0];
+              bridgeInstanceData[off + 10] = a0.col[1];
+              bridgeInstanceData[off + 11] = a0.col[2];
+              bridgeInstanceData[off + 12] = a1.col[0];
+              bridgeInstanceData[off + 13] = a1.col[1];
+              bridgeInstanceData[off + 14] = a1.col[2];
+              bridgeInstanceData[off + 15] = 0.95;
+              bridgeInstanceData[off + 16] = 0.026;
+              bridgeInstanceData[off + 17] = 1.6;
+              bridgeInstanceData[off + 18] = strand * 0.5;
+              activeBridges++;
+            }
+          }
+        }
+      }
+
+      // Pack Hero Nodes + Cursor Lantern + Query Anchors
+      let spriteCount = 0;
+      for (let i = 0; i < NUM_NODES; i++) {
+        const n = nodes[i];
+        const off = spriteCount * NODE_STRIDE_FLOATS;
+        nodeInstanceData[off + 0] = n.x;
+        nodeInstanceData[off + 1] = n.y;
+        nodeInstanceData[off + 2] = n.z;
+        nodeInstanceData[off + 3] = n.col[0];
+        nodeInstanceData[off + 4] = n.col[1];
+        nodeInstanceData[off + 5] = n.col[2];
+        nodeInstanceData[off + 6] = 0.095 + n.activation * 0.125;
+        nodeInstanceData[off + 7] = n.activation;
+        nodeInstanceData[off + 8] = n.activation > 0.72 ? (n.activation - 0.72) * 1.4 : 0.0;
+        nodeInstanceData[off + 9] = n.phase;
+        spriteCount++;
+      }
+
+      // Cursor Query Lantern sprite
+      {
+        const off = spriteCount * NODE_STRIDE_FLOATS;
+        nodeInstanceData[off + 0] = state.probePos[0];
+        nodeInstanceData[off + 1] = state.probePos[1];
+        nodeInstanceData[off + 2] = state.probePos[2];
+        nodeInstanceData[off + 3] = 0.75;
+        nodeInstanceData[off + 4] = 0.92;
+        nodeInstanceData[off + 5] = 1.00;
+        nodeInstanceData[off + 6] = 0.24 + state.convergeMix * 0.12;
+        nodeInstanceData[off + 7] = 0.95;
+        nodeInstanceData[off + 8] = 0.55;
+        nodeInstanceData[off + 9] = simTime * 1.5;
+        spriteCount++;
+      }
+
+      // Query Anchor sprites
+      for (const anc of state.anchors) {
+        const off = spriteCount * NODE_STRIDE_FLOATS;
+        nodeInstanceData[off + 0] = anc.x;
+        nodeInstanceData[off + 1] = anc.y;
+        nodeInstanceData[off + 2] = anc.z;
+        nodeInstanceData[off + 3] = anc.col[0];
+        nodeInstanceData[off + 4] = anc.col[1];
+        nodeInstanceData[off + 5] = anc.col[2];
+        nodeInstanceData[off + 6] = 0.34;
+        nodeInstanceData[off + 7] = 1.15;
+        nodeInstanceData[off + 8] = 1.0;
+        nodeInstanceData[off + 9] = anc.phase;
+        spriteCount++;
+      }
+
+      // Upload instance buffers
+      if (activeBridges > 0) {
+        gl.bindBuffer(gl.ARRAY_BUFFER, bridgeInstBuf);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, bridgeInstanceData.subarray(0, activeBridges * BRIDGE_STRIDE_FLOATS));
+      }
+      gl.bindBuffer(gl.ARRAY_BUFFER, nodeInstBuf);
+      gl.bufferSubData(gl.ARRAY_BUFFER, 0, nodeInstanceData.subarray(0, spriteCount * NODE_STRIDE_FLOATS));
+
+      gl.disable(gl.DEPTH_TEST);
+
+      // -----------------------------------------------------------------------
+      // PASS 1: UPDATE PERSISTENCE TRAIL FBO (DECAY PREVIOUS + ADD NEW PARTICLES)
+      // -----------------------------------------------------------------------
+      const prevTrail = trailFBOs[trailIndex];
+      const nextTrail = trailFBOs[1 - trailIndex];
+      trailIndex = 1 - trailIndex;
+
+      gl.bindFramebuffer(gl.FRAMEBUFFER, nextTrail.fbo);
+      gl.viewport(0, 0, viewW, viewH);
+      gl.disable(gl.BLEND);
+      gl.useProgram(progTrail.prog);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, prevTrail.tex);
+      gl.uniform1i(progTrail.u.uPrevTrail, 0);
+      gl.uniform1f(progTrail.u.uDecay, 0.87 + state.convergeMix * 0.04);
+      gl.bindVertexArray(quadVAO);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      // Draw Motes & Bridges softly into Trail FBO
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+
+      // Motes into trail
+      gl.useProgram(progMotes.prog);
+      gl.uniformMatrix4fv(progMotes.u.uViewProj, false, cam.viewProj);
+      gl.uniform3fv(progMotes.u.uCamPos, cam.camPos);
+      gl.uniform1f(progMotes.u.uTime, simTime);
+      gl.uniform1f(progMotes.u.uSpread, sim.effSpread);
+      gl.uniform1f(progMotes.u.uCurlAmp, sim.effCurl);
+      gl.uniform1f(progMotes.u.uLatticeMix, sim.effLattice);
+      gl.uniform1f(progMotes.u.uCoherence, state.coherence);
+      gl.uniform1f(progMotes.u.uDualPole, state.params.dualPole);
+      gl.uniform1f(progMotes.u.uPixelRatio, dpr);
+      gl.uniform1f(progMotes.u.uMaxPointSize, maxPointSize);
+      gl.uniform3fv(progMotes.u.uProbePos, state.probePos);
+      gl.uniform3fv(progMotes.u.uAnchors, anchorArr);
+      gl.uniform1i(progMotes.u.uAnchorCount, state.anchors.length);
+      gl.uniform4fv(progMotes.u.uWaves, waveWorldArr);
+      gl.uniform2fv(progMotes.u.uWaveStr, waveStrArr);
+      gl.uniform1f(progMotes.u.uHdrScale, hdrScale * 0.18);
+      gl.bindVertexArray(motesVAO);
+      gl.drawArrays(gl.POINTS, 0, NUM_MOTES);
+
+      // Bridges softly into trail for gossamer aurora afterimages
+      if (activeBridges > 0) {
+        gl.useProgram(progBridges.prog);
+        gl.uniformMatrix4fv(progBridges.u.uViewProj, false, cam.viewProj);
+        gl.uniform3fv(progBridges.u.uCamPos, cam.camPos);
+        gl.uniform1f(progBridges.u.uTime, simTime);
+        gl.uniform1f(progBridges.u.uPulseSpeed, sim.effPulseSpeed);
+        gl.uniform1f(progBridges.u.uHdrScale, hdrScale * 0.20);
+        gl.bindVertexArray(bridgesVAO);
+        gl.drawElementsInstanced(gl.TRIANGLES, BRIDGE_SEGS * 6, gl.UNSIGNED_SHORT, 0, activeBridges);
+      }
+
+      // -----------------------------------------------------------------------
+      // PASS 2: MAIN HDR SCENE FBO (BACKDROP + MOTES + FILAMENTS + HERO NODES)
+      // -----------------------------------------------------------------------
+      gl.bindFramebuffer(gl.FRAMEBUFFER, sceneFBO.fbo);
+      gl.viewport(0, 0, viewW, viewH);
+      gl.disable(gl.BLEND);
+
+      // Volumetric Backdrop
+      gl.useProgram(progBackdrop.prog);
+      gl.uniform1f(progBackdrop.u.uTime, simTime);
+      gl.uniform2f(progBackdrop.u.uRes, viewW, viewH);
+      gl.uniform2fv(progBackdrop.u.uProbeUv, probeUv);
+      gl.uniform1f(progBackdrop.u.uCoherence, state.coherence);
+      gl.uniform1f(progBackdrop.u.uAstrolabe, sim.effAstrolabe);
+      gl.uniform1f(progBackdrop.u.uAmbientGlow, state.params.ambientGlow);
+      gl.uniform1f(progBackdrop.u.uHdrScale, hdrScale);
+      gl.uniform4fv(progBackdrop.u.uWaves, waveUvArr);
+      gl.bindVertexArray(quadVAO);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+
+      // Crisp GPU Motes
+      gl.useProgram(progMotes.prog);
+      gl.uniform1f(progMotes.u.uHdrScale, hdrScale * 0.28);
+      gl.bindVertexArray(motesVAO);
+      gl.drawArrays(gl.POINTS, 0, NUM_MOTES);
+
+      // Curved 3D Bezier Attention Filaments
+      if (activeBridges > 0) {
+        gl.useProgram(progBridges.prog);
+        gl.uniform1f(progBridges.u.uHdrScale, hdrScale);
+        gl.bindVertexArray(bridgesVAO);
+        gl.drawElementsInstanced(gl.TRIANGLES, BRIDGE_SEGS * 6, gl.UNSIGNED_SHORT, 0, activeBridges);
+      }
+
+      // Hero Concept Nodes, Query Lantern & Anchors
+      gl.useProgram(progNodes.prog);
+      gl.uniformMatrix4fv(progNodes.u.uViewProj, false, cam.viewProj);
+      gl.uniform3fv(progNodes.u.uCamRight, cam.right);
+      gl.uniform3fv(progNodes.u.uCamUp, cam.up);
+      gl.uniform1f(progNodes.u.uTime, simTime);
+      gl.uniform1f(progNodes.u.uHdrScale, hdrScale);
+      gl.bindVertexArray(nodesVAO);
+      gl.drawArraysInstanced(gl.TRIANGLE_STRIP, 0, 4, spriteCount);
+
+      // -----------------------------------------------------------------------
+      // PASS 3: 5-LEVEL PROGRESSIVE HDR BLOOM PYRAMID
+      // -----------------------------------------------------------------------
+      gl.disable(gl.BLEND);
+      gl.bindVertexArray(quadVAO);
+
+      // Prefilter Scene -> Mip 0
+      gl.bindFramebuffer(gl.FRAMEBUFFER, bloomMips[0].fbo);
+      gl.viewport(0, 0, bloomMips[0].w, bloomMips[0].h);
+      gl.useProgram(progPrefilt.prog);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, sceneFBO.tex);
+      gl.uniform1i(progPrefilt.u.uSceneTex, 0);
+      gl.uniform1f(progPrefilt.u.uThreshold, useFloatFBO ? 0.58 : 0.30);
+      gl.uniform1f(progPrefilt.u.uKnee, useFloatFBO ? 0.45 : 0.25);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+      // Downsample chain: 0 -> 1 -> 2 -> 3 -> 4
+      gl.useProgram(progDown.prog);
+      for (let i = 1; i < bloomMips.length; i++) {
+        const src = bloomMips[i - 1];
+        const dst = bloomMips[i];
+        gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fbo);
+        gl.viewport(0, 0, dst.w, dst.h);
+        gl.bindTexture(gl.TEXTURE_2D, src.tex);
+        gl.uniform1i(progDown.u.uSrcTex, 0);
+        gl.uniform2f(progDown.u.uTexel, 1 / src.w, 1 / src.h);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+
+      // Additive Tent-Filter Upsample chain: 4 -> 3 -> 2 -> 1 -> 0
+      gl.enable(gl.BLEND);
+      gl.blendFunc(gl.ONE, gl.ONE);
+      gl.useProgram(progUp.prog);
+      for (let i = bloomMips.length - 1; i > 0; i--) {
+        const src = bloomMips[i];
+        const dst = bloomMips[i - 1];
+        gl.bindFramebuffer(gl.FRAMEBUFFER, dst.fbo);
+        gl.viewport(0, 0, dst.w, dst.h);
+        gl.bindTexture(gl.TEXTURE_2D, src.tex);
+        gl.uniform1i(progUp.u.uSrcTex, 0);
+        gl.uniform2f(progUp.u.uTexel, 1 / src.w, 1 / src.h);
+        gl.uniform1f(progUp.u.uRadius, 1.15);
+        gl.drawArrays(gl.TRIANGLES, 0, 3);
+      }
+
+      // -----------------------------------------------------------------------
+      // PASS 4: COMPOSITE TO SCREEN
+      // -----------------------------------------------------------------------
+      gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+      gl.viewport(0, 0, viewW, viewH);
+      gl.disable(gl.BLEND);
+      gl.useProgram(progComp.prog);
+
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, sceneFBO.tex);
+      gl.uniform1i(progComp.u.uSceneTex, 0);
+
+      gl.activeTexture(gl.TEXTURE1);
+      gl.bindTexture(gl.TEXTURE_2D, nextTrail.tex);
+      gl.uniform1i(progComp.u.uTrailTex, 1);
+
+      gl.activeTexture(gl.TEXTURE2);
+      gl.bindTexture(gl.TEXTURE_2D, bloomMips[0].tex);
+      gl.uniform1i(progComp.u.uBloomTex, 2);
+
+      gl.uniform2f(progComp.u.uRes, viewW, viewH);
+      gl.uniform1f(progComp.u.uBloomStrength, 0.56 * sim.effBloom);
+      gl.uniform1f(progComp.u.uHdrInvScale, hdrInvScale);
+      gl.uniform4fv(progComp.u.uWaves, waveUvArr);
+
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+    }
+
+    requestAnimationFrame(render);
+  })();
+  </script>
+</body>
+</html>
