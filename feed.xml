@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Thu, 12 Nov 2026 22:10:00 +01:00</lastBuildDate>
+    <lastBuildDate>Thu, 12 Nov 2026 22:35:00 +01:00</lastBuildDate>
+
+    <item>
+      <title>Rain on Glass: kinetic storm</title>
+      <link>https://rruxandra.github.io/immersive-rain.html</link>
+      <description>Refracting raindrops steered by phone motion, with two-phone bump splashes and misted glass trails.</description>
+      <pubDate>Thu, 12 Nov 2026 22:35:00 +01:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/immersive-rain.html</guid>
+    </item>
 
     <item>
       <title>Resonance</title>

@@ -1,0 +1,1481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Rain on Glass</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #05070a;
+      touch-action: none;
+      overscroll-behavior: none;
+    }
+
+    #glCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      touch-action: none;
+    }
+
+    #iosTapLayer {
+      position: fixed;
+      inset: 0;
+      z-index: 20;
+      display: none;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    #iosTapLayer.show {
+      display: block;
+    }
+
+    #iosPrompt {
+      position: fixed;
+      bottom: max(32px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      border-radius: 999px;
+      background: rgba(15, 22, 34, 0.72);
+      border: 1px solid rgba(180, 220, 255, 0.28);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: rgba(230, 244, 255, 0.92);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    #statusPill {
+      position: fixed;
+      bottom: max(32px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 15;
+      padding: 9px 18px;
+      border-radius: 999px;
+      background: rgba(15, 22, 34, 0.76);
+      border: 1px solid rgba(251, 191, 36, 0.38);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: #fef3c7;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 12px;
+      text-align: center;
+      max-width: calc(100vw - 32px);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.45s ease;
+    }
+
+    #statusPill.show {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="glCanvas"></canvas>
+  <button id="iosTapLayer" type="button" aria-label="Enable motion sensors">
+    <span id="iosPrompt">Tap anywhere to enable tilt &amp; bump</span>
+  </button>
+  <div id="statusPill" role="status"></div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ==========================================================================
+   * 1. RAIN SIMULATION STATE & PHYSICAL CONSTANTS
+   * ========================================================================== */
+  const MAX_DROPS = 1400;
+
+  let simW = 100.0;
+  let simH = 160.0;
+
+  const dxPos = new Float32Array(MAX_DROPS);
+  const dyPos = new Float32Array(MAX_DROPS);
+  const dxVel = new Float32Array(MAX_DROPS);
+  const dyVel = new Float32Array(MAX_DROPS);
+  const dRad  = new Float32Array(MAX_DROPS);
+  const dPin  = new Float32Array(MAX_DROPS);
+  const dSeed = new Float32Array(MAX_DROPS);
+  let numDrops = 0;
+
+  // Spatial Hash Grid for O(N) raindrop coalescence
+  const CELL_SIZE = 5.0;
+  const MAX_GRID = 64;
+  const gridHead = new Int32Array(MAX_GRID * MAX_GRID);
+  const gridNext = new Int32Array(MAX_DROPS);
+  let gridCols = 24;
+  let gridRows = 36;
+
+  const state = {
+    motionActive: false,
+    listenersAttached: false,
+
+    // Screen-plane gravity (+x right, +y UP)
+    gx: 0.0,
+    gy: -0.22,
+    // Inertial force from moving/swinging the phone
+    ix: 0.0,
+    iy: 0.0,
+    effGx: 0.0,
+    effGy: -0.22,
+    tiltMagnitude: 0.22,
+
+    // Bump shockwave & lightning
+    shockOrigin: { x: 0.5, y: 0.5 },
+    shockDir: { x: 0.0, y: -1.0 },
+    shockTime: -100.0,
+    shockIntensity: 0.0,
+    lightningFlash: 0.0,
+    nextLightning: 10.0,
+    screenShakeX: 0.0,
+    screenShakeY: 0.0,
+    shakeVelX: 0.0,
+    shakeVelY: 0.0,
+    paletteIndex: 0,
+
+    // Pointer / Touch wiping & desktop tilt fallback
+    pointers: new Map(),
+    pointerActive: false,
+    pointerGx: 0.0,
+    pointerGy: -0.22,
+
+    lastBumpMs: 0
+  };
+
+  function updateSimBounds() {
+    const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+    if (aspect < 1.0) {
+      simW = 100.0;
+      simH = 100.0 / aspect;
+    } else {
+      simH = 100.0;
+      simW = 100.0 * aspect;
+    }
+    gridCols = Math.min(MAX_GRID - 1, Math.ceil(simW / CELL_SIZE) + 1);
+    gridRows = Math.min(MAX_GRID - 1, Math.ceil(simH / CELL_SIZE) + 1);
+  }
+
+  function spawnDrop(x, y, r, vx = 0, vy = 0) {
+    if (numDrops >= MAX_DROPS) return -1;
+    const i = numDrops++;
+    dxPos[i] = x;
+    dyPos[i] = y;
+    dxVel[i] = vx;
+    dyVel[i] = vy;
+    dRad[i]  = r;
+    dPin[i]  = 0.72 + Math.random() * 0.58;
+    dSeed[i] = Math.random() * 100.0;
+    return i;
+  }
+
+  function removeDrop(idx) {
+    const last = --numDrops;
+    if (idx !== last) {
+      dxPos[idx] = dxPos[last];
+      dyPos[idx] = dyPos[last];
+      dxVel[idx] = dxVel[last];
+      dyVel[idx] = dyVel[last];
+      dRad[idx]  = dRad[last];
+      dPin[idx]  = dPin[last];
+      dSeed[idx] = dSeed[last];
+    }
+  }
+
+  function initRainWindow() {
+    updateSimBounds();
+    numDrops = 0;
+    for (let i = 0; i < 340; i++) {
+      const r = 0.85 + Math.pow(Math.random(), 2.15) * 2.45;
+      spawnDrop(
+        2.0 + Math.random() * (simW - 4.0),
+        2.0 + Math.random() * (simH - 4.0),
+        r,
+        0, 0
+      );
+    }
+  }
+
+  initRainWindow();
+
+  /* ==========================================================================
+   * 2. STICK-SLIP RAINDROP, COALESCENCE & TILT-POUR PHYSICS
+   * ========================================================================== */
+  function glassMeanderForce(x, y, seed) {
+    return Math.sin(x * 0.42 + seed) * Math.cos(y * 0.38 - seed * 0.7) +
+           0.5 * Math.sin(x * 1.15 - y * 0.95 + seed * 1.3);
+  }
+
+  function stepRainPhysics(dt) {
+    const h = Math.min(dt, 0.033);
+    const gx = state.effGx;
+    const gy = state.effGy;
+    const tiltMag = Math.hypot(gx, gy);
+    state.tiltMagnitude = tiltMag;
+
+    // 1. Ambient & Tilt-Activated Raindrop Spawner
+    const ambientRate = 7.0;
+    const pourIntensity = Math.max(0.0, (tiltMag - 0.12) / 0.88);
+    const pourRate = pourIntensity * pourIntensity * 145.0;
+
+    if (Math.random() < ambientRate * h && numDrops < MAX_DROPS - 20) {
+      spawnDrop(Math.random() * simW, Math.random() * simH, 0.85 + Math.pow(Math.random(), 1.8) * 1.95);
+    }
+
+    const pourCount = Math.floor(pourRate * h + (Math.random() < (pourRate * h) % 1 ? 1 : 0));
+    if (pourCount > 0 && tiltMag > 0.12) {
+      const upDirX = -gx / tiltMag;
+      const upDirY = -gy / tiltMag;
+      const initSpeed = 12.0 + pourIntensity * 32.0;
+
+      for (let k = 0; k < pourCount; k++) {
+        if (numDrops >= MAX_DROPS - 10) break;
+        let sx, sy;
+        if (Math.random() < 0.68) {
+          const horizFlux = simW * Math.abs(upDirY);
+          const vertFlux = simH * Math.abs(upDirX);
+          if (Math.random() < horizFlux / (horizFlux + vertFlux + 1e-5)) {
+            sx = Math.random() * simW;
+            sy = upDirY > 0 ? simH - 1.5 - Math.random() * 3.0 : 1.5 + Math.random() * 3.0;
+          } else {
+            sx = upDirX > 0 ? simW - 1.5 - Math.random() * 3.0 : 1.5 + Math.random() * 3.0;
+            sy = Math.random() * simH;
+          }
+        } else {
+          sx = Math.random() * simW;
+          sy = Math.random() * simH;
+        }
+        const r = 1.45 + Math.pow(Math.random(), 1.5) * 1.9;
+        spawnDrop(sx, sy, r, -upDirX * initSpeed, -upDirY * initSpeed);
+      }
+    }
+
+    // 2. Spatial Hash Grid for Coalescence
+    const totalCells = gridCols * gridRows;
+    for (let c = 0; c < totalCells; c++) gridHead[c] = -1;
+
+    for (let i = 0; i < numDrops; i++) {
+      let cx = (dxPos[i] / CELL_SIZE) | 0;
+      let cy = (dyPos[i] / CELL_SIZE) | 0;
+      if (cx < 0) cx = 0; else if (cx >= gridCols) cx = gridCols - 1;
+      if (cy < 0) cy = 0; else if (cy >= gridRows) cy = gridRows - 1;
+      const cIdx = cy * gridCols + cx;
+      gridNext[i] = gridHead[cIdx];
+      gridHead[cIdx] = i;
+    }
+
+    // 3. Coalescence & Capillary Snap-Attraction
+    for (let i = 0; i < numDrops; i++) {
+      if (dRad[i] <= 0.0) continue;
+      const xi = dxPos[i];
+      const yi = dyPos[i];
+      const ri = dRad[i];
+
+      let cx = (xi / CELL_SIZE) | 0;
+      let cy = (yi / CELL_SIZE) | 0;
+      if (cx < 0) cx = 0; else if (cx >= gridCols) cx = gridCols - 1;
+      if (cy < 0) cy = 0; else if (cy >= gridRows) cy = gridRows - 1;
+
+      const minCx = cx > 0 ? cx - 1 : 0;
+      const maxCx = cx + 1 < gridCols ? cx + 1 : gridCols - 1;
+      const minCy = cy > 0 ? cy - 1 : 0;
+      const maxCy = cy + 1 < gridRows ? cy + 1 : gridRows - 1;
+
+      for (let ny = minCy; ny <= maxCy; ny++) {
+        const rowOff = ny * gridCols;
+        for (let nx = minCx; nx <= maxCx; nx++) {
+          let j = gridHead[rowOff + nx];
+          while (j !== -1) {
+            if (j > i && dRad[j] > 0.0) {
+              const rj = dRad[j];
+              const dx = dxPos[j] - xi;
+              const dy = dyPos[j] - yi;
+              const dSq = dx * dx + dy * dy;
+              const touchDist = (ri + rj) * 0.92;
+              const attractDist = (ri + rj) * 1.45;
+
+              if (dSq < touchDist * touchDist) {
+                const m1 = Math.pow(ri, 2.6);
+                const m2 = Math.pow(rj, 2.6);
+                const mSum = m1 + m2;
+                const newR = Math.min(4.2, Math.pow(mSum, 1.0 / 2.6));
+                const survivor = ri >= rj ? i : j;
+                const absorbed = ri >= rj ? j : i;
+
+                dxPos[survivor] = (xi * m1 + dxPos[j] * m2) / mSum;
+                dyPos[survivor] = (yi * m1 + dyPos[j] * m2) / mSum;
+                dxVel[survivor] = (dxVel[i] * m1 + dxVel[j] * m2) / mSum + gx * 8.5;
+                dyVel[survivor] = (dyVel[i] * m1 + dyVel[j] * m2) / mSum + gy * 8.5;
+                dRad[survivor] = newR;
+                dPin[survivor] *= 0.82;
+                dRad[absorbed] = -1.0;
+
+                if (absorbed === i) break;
+              } else if (dSq < attractDist * attractDist && dSq > 1e-5) {
+                const d = Math.sqrt(dSq);
+                const pull = 28.0 / (d + 0.5);
+                const ux = dx / d;
+                const uy = dy / d;
+                dxVel[i] += ux * pull * h;
+                dyVel[i] += uy * pull * h;
+                dxVel[j] -= ux * pull * h;
+                dyVel[j] -= uy * pull * h;
+              }
+            }
+            j = gridNext[j];
+          }
+          if (dRad[i] <= 0.0) break;
+        }
+        if (dRad[i] <= 0.0) break;
+      }
+    }
+
+    for (let i = numDrops - 1; i >= 0; i--) {
+      if (dRad[i] <= 0.0) removeDrop(i);
+    }
+
+    // 4. Stick-Slip Pinning, Meandering & Trail Pinch-Off
+    const tangentX = tiltMag > 0.01 ? -gy / tiltMag : 1.0;
+    const tangentY = tiltMag > 0.01 ?  gx / tiltMag : 0.0;
+
+    for (let i = numDrops - 1; i >= 0; i--) {
+      let x = dxPos[i];
+      let y = dyPos[i];
+      let vx = dxVel[i];
+      let vy = dyVel[i];
+      let r = dRad[i];
+
+      if (state.pointers.size > 0) {
+        for (const pt of state.pointers.values()) {
+          const pdx = x - pt.x;
+          const pdy = y - pt.y;
+          const pSq = pdx * pdx + pdy * pdy;
+          const brushR = 8.5;
+          if (pSq < brushR * brushR && pSq > 1e-4) {
+            const pd = Math.sqrt(pSq);
+            const push = 1.0 - pd / brushR;
+            vx += (pdx / pd) * push * 45.0 + pt.vx * push * 0.65;
+            vy += (pdy / pd) * push * 45.0 + pt.vy * push * 0.65;
+          }
+        }
+      }
+
+      const weightForce = Math.pow(r, 2.2) * tiltMag * 48.0;
+      const pinThreshold = dPin[i] * r * 5.2;
+      const speed = Math.hypot(vx, vy);
+
+      if (weightForce > pinThreshold || speed > 4.5) {
+        const netAccel = Math.max(0.0, weightForce - pinThreshold * 0.35);
+        vx += gx * netAccel * h * 2.6;
+        vy += gy * netAccel * h * 2.6;
+
+        const meander = glassMeanderForce(x, y, dSeed[i]) * Math.min(1.0, speed * 0.04) * 26.0;
+        vx += tangentX * meander * h;
+        vy += tangentY * meander * h;
+
+        const drag = Math.exp(-h * (2.6 / Math.max(0.9, r * 0.7)));
+        vx *= drag;
+        vy *= drag;
+
+        if (r > 1.85 && speed > 14.0 && Math.random() < h * 5.5 && numDrops < MAX_DROPS - 5) {
+          const trailR = 0.68 + Math.random() * 0.42;
+          const speedInv = 1.0 / speed;
+          const bx = x - vx * speedInv * (r * 1.15);
+          const by = y - vy * speedInv * (r * 1.15);
+          spawnDrop(bx, by, trailR, vx * 0.08, vy * 0.08);
+          r = Math.max(1.2, Math.pow(Math.max(1.0, Math.pow(r, 2.6) - Math.pow(trailR, 2.6)), 1.0 / 2.6));
+          dRad[i] = r;
+        }
+      } else {
+        vx *= 0.82;
+        vy *= 0.82;
+      }
+
+      x += vx * h;
+      y += vy * h;
+
+      const margin = 4.0;
+      if (x < -margin || x > simW + margin || y < -margin || y > simH + margin) {
+        removeDrop(i);
+        continue;
+      }
+
+      dxPos[i] = x;
+      dyPos[i] = y;
+      dxVel[i] = vx;
+      dyVel[i] = vy;
+    }
+
+    // 5. Damped Spring Screen Shake & Lightning Decay
+    const sK = 180.0;
+    const sDamp = 12.0;
+    const axShake = -sK * state.screenShakeX - sDamp * state.shakeVelX;
+    const ayShake = -sK * state.screenShakeY - sDamp * state.shakeVelY;
+    state.shakeVelX += axShake * h;
+    state.shakeVelY += ayShake * h;
+    state.screenShakeX += state.shakeVelX * h;
+    state.screenShakeY += state.shakeVelY * h;
+
+    state.lightningFlash *= Math.exp(-h * 4.5);
+    state.nextLightning -= h;
+    if (state.nextLightning <= 0) {
+      state.lightningFlash = 0.95 + Math.random() * 0.45;
+      state.nextLightning = 9.0 + Math.random() * 17.0;
+    }
+  }
+
+  /* ==========================================================================
+   * 3. TWO-PHONE BUMP EXPLOSION & CROSS-TAB SYNC
+   * ========================================================================== */
+  let bumpChannel = null;
+  const instanceId = 'rn_' + Math.random().toString(36).slice(2, 9);
+  try {
+    if ('BroadcastChannel' in window) {
+      bumpChannel = new BroadcastChannel('rain_glass_bump_v2');
+      bumpChannel.onmessage = (ev) => {
+        const msg = ev.data;
+        if (!msg || msg.id === instanceId || msg.t !== 'RAIN_BUMP') return;
+        state.paletteIndex = msg.pal !== undefined ? msg.pal : (state.paletteIndex + 1) % 4;
+        executeBumpExplosion(-msg.ex, -msg.ey, msg.g || 2.8);
+      };
+    }
+  } catch (_) {}
+
+  function executeBumpExplosion(edgeX, edgeY, forceG = 2.8) {
+    const nowSec = performance.now() * 0.001;
+    const f = Math.max(0.9, Math.min(3.8, forceG));
+
+    state.shockOrigin.x = 0.5 + edgeX * 0.48;
+    state.shockOrigin.y = 0.5 + edgeY * 0.48;
+    state.shockDir.x = -edgeX;
+    state.shockDir.y = -edgeY;
+    state.shockTime = nowSec;
+    state.shockIntensity = Math.min(1.6, 0.95 + f * 0.25);
+    state.lightningFlash = 1.45;
+    state.paletteIndex = (state.paletteIndex + 1) % 4;
+
+    state.shakeVelX = -edgeX * 0.42 * state.shockIntensity;
+    state.shakeVelY = -edgeY * 0.42 * state.shockIntensity;
+
+    // Shatter existing large drops into starburst sprays & blast all drops inward
+    const currentCount = numDrops;
+    const blastSpeed = 52.0 + f * 18.0;
+    for (let i = 0; i < currentCount; i++) {
+      const r = dRad[i];
+      dPin[i] = 0.15;
+      const baseAngle = Math.atan2(-edgeY, -edgeX) + (Math.random() - 0.5) * 1.45;
+      const spd = blastSpeed * (0.55 + Math.random() * 0.75);
+      dxVel[i] += Math.cos(baseAngle) * spd;
+      dyVel[i] += Math.sin(baseAngle) * spd;
+
+      if (r > 1.75 && numDrops < MAX_DROPS - 6) {
+        const shards = 3 + ((Math.random() * 3) | 0);
+        dRad[i] = r * 0.62;
+        for (let s = 0; s < shards; s++) {
+          const sAngle = baseAngle + (Math.random() - 0.5) * 1.9;
+          const sSpd = spd * (0.7 + Math.random() * 0.8);
+          spawnDrop(
+            dxPos[i] + (Math.random() - 0.5) * 2.0,
+            dyPos[i] + (Math.random() - 0.5) * 2.0,
+            r * (0.38 + Math.random() * 0.22),
+            Math.cos(sAngle) * sSpd,
+            Math.sin(sAngle) * sSpd
+          );
+        }
+      }
+    }
+
+    // Erupt heavy splashing wave of drops from the bumped bezel inward
+    const waveCount = Math.min(95, MAX_DROPS - numDrops);
+    for (let k = 0; k < waveCount; k++) {
+      const spread = 0.04 + Math.random() * 0.92;
+      const sx = edgeX !== 0
+        ? (edgeX > 0 ? simW - 1.5 - Math.random() * 5.0 : 1.5 + Math.random() * 5.0)
+        : spread * simW;
+      const sy = edgeY !== 0
+        ? (edgeY > 0 ? simH - 1.5 - Math.random() * 5.0 : 1.5 + Math.random() * 5.0)
+        : spread * simH;
+      const jetSpd = 45.0 + Math.random() * 65.0;
+      const fanAngle = Math.atan2(-edgeY, -edgeX) + (Math.random() - 0.5) * 0.95;
+      const r = 1.6 + Math.pow(Math.random(), 1.3) * 2.3;
+      const idx = spawnDrop(sx, sy, r, Math.cos(fanAngle) * jetSpd, Math.sin(fanAngle) * jetSpd);
+      if (idx !== -1) dPin[idx] = 0.2;
+    }
+
+    if (navigator.vibrate) {
+      try { navigator.vibrate([45, 20, 35]); } catch (_) {}
+    }
+  }
+
+  function triggerBump(edgeX, edgeY, forceG = 2.8) {
+    const now = performance.now();
+    if (now - state.lastBumpMs < 260) return;
+    state.lastBumpMs = now;
+
+    executeBumpExplosion(edgeX, edgeY, forceG);
+
+    if (bumpChannel) {
+      try {
+        bumpChannel.postMessage({
+          t: 'RAIN_BUMP',
+          id: instanceId,
+          ex: edgeX,
+          ey: edgeY,
+          g: Number(forceG.toFixed(2)),
+          pal: state.paletteIndex
+        });
+      } catch (_) {}
+    }
+  }
+
+  /* ==========================================================================
+   * 4. WEBGL2 MULTI-PASS SNELL REFRACTION & CONDENSATION MIST ENGINE
+   * ========================================================================== */
+  const canvas = document.getElementById('glCanvas');
+  const gl = canvas.getContext('webgl2', {
+    antialias: false,
+    depth: false,
+    stencil: false,
+    powerPreference: 'high-performance'
+  });
+
+  if (!gl) return;
+
+  const extFloat =
+    gl.getExtension('EXT_color_buffer_float') ||
+    gl.getExtension('EXT_color_buffer_half_float');
+  gl.getExtension('OES_texture_float_linear');
+  let useFloatDrop = !!extFloat;
+
+  const vsQuad = `#version 300 es
+in vec2 aQuad;
+out vec2 vUv;
+void main() {
+  vUv = aQuad * 0.5 + 0.5;
+  gl_Position = vec4(aQuad, 0.0, 1.0);
+}`;
+
+  const fsMistFade = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 outMist;
+uniform float uRegenRate;
+void main() {
+  outMist = vec4(uRegenRate, 0.0, 0.0, 1.0);
+}`;
+
+  const vsDropSplat = `#version 300 es
+in vec2 aPos;
+in vec2 aVel;
+in float aRad;
+
+uniform vec2 uSimSize;
+uniform float uPointScale;
+
+out vec2 vVel;
+out float vRad;
+
+void main() {
+  vec2 ndc = (aPos / uSimSize) * 2.0 - 1.0;
+  gl_Position = vec4(ndc, 0.0, 1.0);
+  float speed = length(aVel);
+  float stretch = 1.0 + clamp(speed * 0.025, 0.0, 1.15);
+  gl_PointSize = aRad * uPointScale * stretch;
+  vVel = aVel;
+  vRad = aRad;
+}`;
+
+  const fsDropSplat = `#version 300 es
+precision highp float;
+in vec2 vVel;
+in float vRad;
+uniform int uPassMode;
+uniform int uFloatDrop;
+out vec4 outData;
+
+void main() {
+  vec2 p = vec2(gl_PointCoord.x * 2.0 - 1.0, 1.0 - gl_PointCoord.y * 2.0);
+  float speed = length(vVel);
+  float stretch = 1.0 + clamp(speed * 0.025, 0.0, 1.15);
+  p *= stretch;
+
+  vec2 dir = (speed > 0.5) ? (vVel / speed) : vec2(0.0, -1.0);
+  vec2 perp = vec2(-dir.y, dir.x);
+  float along = dot(p, dir);
+  float across = dot(p, perp);
+
+  float tailScale = (along < 0.0) ? (1.0 / stretch) : 1.05;
+  float scaledAlong = along * tailScale;
+  float taperWidth = 1.0 - clamp(-scaledAlong * 0.38, 0.0, 0.55) * clamp(speed * 0.04, 0.0, 1.0);
+  vec2 q = vec2(across / max(0.35, taperWidth), scaledAlong);
+
+  float r2 = dot(q, q);
+  if (r2 >= 1.0) discard;
+
+  if (uPassMode == 0) {
+    float wipe = smoothstep(0.88, 0.25, r2);
+    outData = vec4(wipe, wipe, wipe, 1.0);
+  } else {
+    float t = 1.0 - r2;
+    float h = t * t * sqrt(t) * 1.45;
+    float noseBulge = 1.0 + 0.32 * along * clamp(vRad * 0.35, 0.2, 1.0);
+    h *= noseBulge;
+
+    vec2 localGrad = -3.5 * q * (t * sqrt(t)) * noseBulge;
+    vec2 worldGrad = perp * (localGrad.x / max(0.35, taperWidth)) + dir * (localGrad.y * tailScale);
+
+    if (uFloatDrop == 1) {
+      outData = vec4(h, worldGrad.x, worldGrad.y, t * t);
+    } else {
+      outData = vec4(clamp(h * 0.5, 0.0, 1.0), clamp(worldGrad.x * 0.14 + 0.5, 0.0, 1.0), clamp(worldGrad.y * 0.14 + 0.5, 0.0, 1.0), 1.0);
+    }
+  }
+}`;
+
+  const fsComposite = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform sampler2D uDropTex;
+uniform sampler2D uMistTex;
+uniform vec2 uTexel;
+uniform float uAspect;
+uniform float uTime;
+uniform vec2 uGravity;
+uniform vec2 uShake;
+uniform vec4 uShock;
+uniform float uLightning;
+uniform int uPalette;
+uniform int uFloatDrop;
+
+float hash(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453123);
+}
+
+float noise(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash(i), hash(i + vec2(1.0, 0.0)), f.x),
+    mix(hash(i + vec2(0.0, 1.0)), hash(i + vec2(1.0, 1.0)), f.x),
+    f.y
+  );
+}
+
+vec4 sampleDrop(vec2 uv) {
+  vec4 d = texture(uDropTex, uv);
+  if (uFloatDrop == 0) {
+    d.x = d.x * 2.0;
+    d.yz = (d.yz - 0.5) / 0.14;
+  }
+  return d;
+}
+
+vec3 sampleStormBackground(vec2 uv, float blurLevel) {
+  vec2 p = (uv - 0.5) * vec2(uAspect, 1.0);
+  vec2 parallax = uGravity * 0.085;
+  p += parallax;
+
+  vec3 skyTop, skyBot, accentA, accentB, accentC;
+  if (uPalette == 0) {
+    skyTop  = vec3(0.025, 0.045, 0.095);
+    skyBot  = vec3(0.09, 0.07, 0.11);
+    accentA = vec3(1.00, 0.58, 0.16);
+    accentB = vec3(0.18, 0.72, 1.00);
+    accentC = vec3(1.00, 0.22, 0.35);
+  } else if (uPalette == 1) {
+    skyTop  = vec3(0.04, 0.02, 0.11);
+    skyBot  = vec3(0.02, 0.09, 0.14);
+    accentA = vec3(0.10, 0.95, 1.00);
+    accentB = vec3(1.00, 0.15, 0.65);
+    accentC = vec3(0.55, 0.30, 1.00);
+  } else if (uPalette == 2) {
+    skyTop  = vec3(0.05, 0.04, 0.07);
+    skyBot  = vec3(0.18, 0.09, 0.05);
+    accentA = vec3(1.00, 0.72, 0.22);
+    accentB = vec3(1.00, 0.35, 0.12);
+    accentC = vec3(0.30, 0.85, 0.75);
+  } else {
+    skyTop  = vec3(0.015, 0.06, 0.07);
+    skyBot  = vec3(0.04, 0.11, 0.09);
+    accentA = vec3(0.18, 1.00, 0.62);
+    accentB = vec3(0.22, 0.68, 1.00);
+    accentC = vec3(1.00, 0.68, 0.20);
+  }
+
+  vec3 col = mix(skyBot, skyTop, clamp(uv.y, 0.0, 1.0));
+
+  float clouds = noise(p * 2.4 + vec2(uTime * 0.03, uTime * 0.015)) * 0.65 +
+                 noise(p * 5.2 - vec2(uTime * 0.05, 0.0)) * 0.35;
+  col += mix(accentB, vec3(0.7, 0.85, 1.0), 0.5) * clouds * (0.09 + uLightning * 0.55);
+
+  float radiusAdd = blurLevel * 0.055;
+  for (int i = 0; i < 24; i++) {
+    float fi = float(i);
+    vec2 seed = vec2(fi * 17.3 + 3.1, fi * 29.7 + 7.4);
+    float depth = 0.4 + 0.6 * hash(seed);
+    vec2 center = vec2(
+      (hash(seed + 1.0) - 0.5) * uAspect * 1.45,
+      (hash(seed + 2.0) - 0.5) * 1.35
+    );
+    center += parallax * depth * 0.9;
+    center.x += sin(uTime * (0.15 + 0.1 * depth) + fi) * 0.04;
+
+    float bokehR = (0.042 + 0.075 * hash(seed + 3.0)) + radiusAdd;
+    float d = length(p - center);
+
+    float disc = smoothstep(bokehR, bokehR * (0.55 - 0.35 * (1.0 - blurLevel)), d);
+    float rim  = smoothstep(bokehR * 0.5, bokehR * 0.88, d) * disc * (1.0 - blurLevel * 0.7);
+
+    vec3 bCol = (i % 3 == 0) ? accentA : ((i % 3 == 1) ? accentB : accentC);
+    float flicker = 0.85 + 0.15 * sin(uTime * 2.2 + fi * 4.1);
+    col += bCol * (disc * 0.34 + rim * 0.42) * flicker;
+  }
+
+  vec2 streakUv = p * vec2(18.0, 3.5) + vec2(uTime * 1.2, uTime * 7.5);
+  float distantRain = smoothstep(0.78, 0.98, noise(streakUv)) * (1.0 - blurLevel * 0.6);
+  col += vec3(0.45, 0.62, 0.82) * distantRain * (0.08 + uLightning * 0.22);
+
+  return col;
+}
+
+vec3 microCondensationNormal(vec2 uv, float mistAmount) {
+  if (mistAmount < 0.05) return vec3(0.0);
+  vec2 p = uv * vec2(uAspect, 1.0) * 85.0;
+  vec2 cell = floor(p);
+  vec2 local = fract(p) - 0.5;
+  vec2 jitter = (vec2(hash(cell), hash(cell + 43.1)) - 0.5) * 0.45;
+  vec2 d = local - jitter;
+  float r = 0.22 + 0.18 * hash(cell + 19.7);
+  float dist = length(d);
+  if (dist < r) {
+    vec2 n2 = d / r;
+    float z = sqrt(max(0.01, 1.0 - dot(n2, n2)));
+    return vec3(-n2 * mistAmount, z);
+  }
+  return vec3(0.0);
+}
+
+void main() {
+  vec2 uv = clamp(vUv + uShake, 0.001, 0.999);
+
+  float shockAge = uTime - uShock.z;
+  vec2 shockNormal = vec2(0.0);
+  float shockGlow = 0.0;
+  if (shockAge >= 0.0 && shockAge < 1.85) {
+    vec2 dS = (uv - uShock.xy) * vec2(uAspect, 1.0);
+    float distS = length(dS) + 1e-4;
+    float front1 = distS - shockAge * 1.55;
+    float front2 = distS - shockAge * 0.95;
+    float env1 = exp(-front1 * front1 * 85.0) * exp(-shockAge * 1.45) * uShock.w;
+    float env2 = exp(-front2 * front2 * 55.0) * exp(-shockAge * 1.85) * uShock.w * 0.65;
+    float wave = sin(front1 * 48.0) * env1 + sin(front2 * 34.0) * env2;
+    shockNormal = (dS / distS) * wave * 0.42;
+    shockGlow = (env1 + env2) * 0.85;
+  }
+
+  vec4 dC = sampleDrop(uv);
+  vec4 dL = sampleDrop(uv - vec2(uTexel.x, 0.0));
+  vec4 dR = sampleDrop(uv + vec2(uTexel.x, 0.0));
+  vec4 dB = sampleDrop(uv - vec2(0.0, uTexel.y));
+  vec4 dT = sampleDrop(uv + vec2(0.0, uTexel.y));
+
+  vec4 dropField = dC * 0.44 + (dL + dR + dB + dT) * 0.14;
+  float H = dropField.x;
+  vec2 gradH = dropField.yz;
+
+  float mist = texture(uMistTex, uv).r;
+  float mistL = texture(uMistTex, uv - vec2(uTexel.x * 2.0, 0.0)).r;
+  float mistR = texture(uMistTex, uv + vec2(uTexel.x * 2.0, 0.0)).r;
+  float mistB = texture(uMistTex, uv - vec2(0.0, uTexel.y * 2.0)).r;
+  float mistT = texture(uMistTex, uv + vec2(0.0, uTexel.y * 2.0)).r;
+  vec2 trailRidgeNormal = vec2(mistR - mistL, mistT - mistB) * 0.06;
+
+  vec3 microN = microCondensationNormal(uv, mist);
+
+  vec2 glassRefractUv = uv + trailRidgeNormal + microN.xy * 0.032 + shockNormal * 0.08;
+  vec2 frostJitter = (vec2(hash(uv * 500.0 + uTime), hash(uv * 500.0 + 19.3)) - 0.5) * mist * 0.012;
+  vec3 bgCol = sampleStormBackground(glassRefractUv + frostJitter, mist * 0.85);
+
+  bgCol = mix(bgCol, bgCol * 0.88 + vec3(0.065, 0.08, 0.105), mist * 0.52);
+  if (microN.z > 0.0) {
+    float mSpec = pow(max(0.0, dot(normalize(vec3(microN.xy, microN.z)), normalize(vec3(0.3, 0.5, 0.8)))), 24.0);
+    bgCol += vec3(0.45, 0.58, 0.75) * mSpec * mist * 0.35;
+  }
+
+  vec2 gravDir = (length(uGravity) > 0.05) ? normalize(uGravity) : vec2(0.0, -1.0);
+  float aboveDropH = sampleDrop(uv - gravDir * uTexel * 5.0).x;
+  float dropShadow = smoothstep(0.18, 0.65, aboveDropH) * (1.0 - smoothstep(0.12, 0.25, H));
+  bgCol *= (1.0 - 0.42 * dropShadow);
+
+  float dropMask = smoothstep(0.14, 0.22, H);
+  if (dropMask > 0.001) {
+    float thickness = clamp((H - 0.14) / 1.2, 0.02, 1.0);
+    vec2 slope = -gradH * 0.52 + shockNormal * 0.35;
+    vec3 N = normalize(vec3(slope.x, slope.y, 1.0));
+    vec3 V = vec3(0.0, 0.0, 1.0);
+
+    vec2 lensUv = uv - N.xy * (0.16 + 0.14 * thickness);
+    vec3 refractedCol;
+    refractedCol.r = sampleStormBackground(lensUv + N.xy * 0.006, 0.0).r;
+    refractedCol.g = sampleStormBackground(lensUv, 0.0).g;
+    refractedCol.b = sampleStormBackground(lensUv - N.xy * 0.006, 0.0).b;
+
+    float bellyFocus = clamp(dot(N.xy, gravDir), 0.0, 1.0) * smoothstep(0.15, 0.75, thickness);
+    refractedCol *= (1.08 + 0.65 * bellyFocus);
+
+    float NoV = max(0.001, dot(N, V));
+    float fresnel = 0.02 + 0.98 * pow(1.0 - NoV, 4.5);
+
+    vec3 L1 = normalize(vec3(-0.35 - uGravity.x * 0.3, 0.55 - uGravity.y * 0.3, 0.76));
+    vec3 H1 = normalize(L1 + V);
+    float spec1 = pow(max(0.0, dot(N, H1)), 96.0);
+
+    vec3 L2 = normalize(vec3(0.45, -0.40, 0.80));
+    vec3 H2 = normalize(L2 + V);
+    float spec2 = pow(max(0.0, dot(N, H2)), 42.0);
+
+    float upperRimDark = smoothstep(0.0, 0.42, NoV);
+    vec3 dropCol = refractedCol * (0.42 + 0.58 * upperRimDark);
+    dropCol = mix(dropCol, vec3(0.75, 0.88, 1.0), fresnel * 0.58);
+    dropCol += vec3(1.5, 1.6, 1.75) * spec1 + vec3(0.7, 0.85, 1.0) * spec2 * 0.42;
+
+    bgCol = mix(bgCol, dropCol, dropMask);
+  }
+
+  if (shockGlow > 0.001) {
+    bgCol += vec3(0.45, 0.82, 1.0) * shockGlow * (0.35 + 0.65 * dropMask);
+  }
+
+  bgCol = (bgCol * (2.51 * bgCol + 0.03)) / (bgCol * (2.43 * bgCol + 0.59) + 0.14);
+  bgCol = pow(clamp(bgCol, 0.0, 1.0), vec3(1.0 / 2.2));
+  fragColor = vec4(bgCol, 1.0);
+}`;
+
+  function createProgram(vsSrc, fsSrc) {
+    const vs = gl.createShader(gl.VERTEX_SHADER);
+    gl.shaderSource(vs, vsSrc);
+    gl.compileShader(vs);
+    if (!gl.getShaderParameter(vs, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(vs));
+
+    const fs = gl.createShader(gl.FRAGMENT_SHADER);
+    gl.shaderSource(fs, fsSrc);
+    gl.compileShader(fs);
+    if (!gl.getShaderParameter(fs, gl.COMPILE_STATUS)) console.error(gl.getShaderInfoLog(fs));
+
+    const p = gl.createProgram();
+    gl.attachShader(p, vs);
+    gl.attachShader(p, fs);
+    gl.linkProgram(p);
+    return p;
+  }
+
+  const progMistFade  = createProgram(vsQuad, fsMistFade);
+  const progDropSplat = createProgram(vsDropSplat, fsDropSplat);
+  const progComposite = createProgram(vsQuad, fsComposite);
+
+  const splatVao = gl.createVertexArray();
+  gl.bindVertexArray(splatVao);
+  const splatData = new Float32Array(MAX_DROPS * 5);
+  const splatVbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, splatVbo);
+  gl.bufferData(gl.ARRAY_BUFFER, splatData.byteLength, gl.DYNAMIC_DRAW);
+
+  const locPos = gl.getAttribLocation(progDropSplat, 'aPos');
+  const locVel = gl.getAttribLocation(progDropSplat, 'aVel');
+  const locRad = gl.getAttribLocation(progDropSplat, 'aRad');
+  gl.enableVertexAttribArray(locPos);
+  gl.vertexAttribPointer(locPos, 2, gl.FLOAT, false, 20, 0);
+  gl.enableVertexAttribArray(locVel);
+  gl.vertexAttribPointer(locVel, 2, gl.FLOAT, false, 20, 8);
+  gl.enableVertexAttribArray(locRad);
+  gl.vertexAttribPointer(locRad, 1, gl.FLOAT, false, 20, 16);
+
+  const quadVao = gl.createVertexArray();
+  gl.bindVertexArray(quadVao);
+  const quadVbo = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quadVbo);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+  const locQuad = gl.getAttribLocation(progComposite, 'aQuad');
+  gl.enableVertexAttribArray(locQuad);
+  gl.vertexAttribPointer(locQuad, 2, gl.FLOAT, false, 0, 0);
+  gl.bindVertexArray(null);
+
+  const uMist = {
+    uRegenRate: gl.getUniformLocation(progMistFade, 'uRegenRate')
+  };
+
+  const uSplat = {
+    uSimSize: gl.getUniformLocation(progDropSplat, 'uSimSize'),
+    uPointScale: gl.getUniformLocation(progDropSplat, 'uPointScale'),
+    uPassMode: gl.getUniformLocation(progDropSplat, 'uPassMode'),
+    uFloatDrop: gl.getUniformLocation(progDropSplat, 'uFloatDrop')
+  };
+
+  const uComp = {
+    uDropTex: gl.getUniformLocation(progComposite, 'uDropTex'),
+    uMistTex: gl.getUniformLocation(progComposite, 'uMistTex'),
+    uTexel: gl.getUniformLocation(progComposite, 'uTexel'),
+    uAspect: gl.getUniformLocation(progComposite, 'uAspect'),
+    uTime: gl.getUniformLocation(progComposite, 'uTime'),
+    uGravity: gl.getUniformLocation(progComposite, 'uGravity'),
+    uShake: gl.getUniformLocation(progComposite, 'uShake'),
+    uShock: gl.getUniformLocation(progComposite, 'uShock'),
+    uLightning: gl.getUniformLocation(progComposite, 'uLightning'),
+    uPalette: gl.getUniformLocation(progComposite, 'uPalette'),
+    uFloatDrop: gl.getUniformLocation(progComposite, 'uFloatDrop')
+  };
+
+  let dropFbo = null, dropTex = null;
+  let mistFbo = null, mistTex = null;
+  let bufW = 512, bufH = 512;
+
+  function setupFBOs(w, h) {
+    bufW = Math.max(256, Math.floor(w * 0.72));
+    bufH = Math.max(256, Math.floor(h * 0.72));
+
+    if (dropTex) gl.deleteTexture(dropTex);
+    if (dropFbo) gl.deleteFramebuffer(dropFbo);
+    if (mistTex) gl.deleteTexture(mistTex);
+    if (mistFbo) gl.deleteFramebuffer(mistFbo);
+
+    dropFbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, dropFbo);
+    dropTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, dropTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+    if (useFloatDrop) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, bufW, bufH, 0, gl.RGBA, gl.HALF_FLOAT, null);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, dropTex, 0);
+      if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) !== gl.FRAMEBUFFER_COMPLETE) {
+        useFloatDrop = false;
+      }
+    }
+    if (!useFloatDrop) {
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, bufW, bufH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, dropTex, 0);
+    }
+
+    mistFbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, mistFbo);
+    mistTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, mistTex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, bufW, bufH, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, mistTex, 0);
+    gl.clearColor(0.84, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.0);
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    updateSimBounds();
+    setupFBOs(canvas.width, canvas.height);
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  /* ==========================================================================
+   * 5. MULTI-SOURCE SENSOR ENGINE (devicemotion + Accelerometer + orientation)
+   * ========================================================================== */
+  const iosTapLayer = document.getElementById('iosTapLayer');
+  const statusPill = document.getElementById('statusPill');
+
+  const isLikelyIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+  let accelSign = isLikelyIOS ? 1 : -1;
+  let signConfidenceVotes = 0;
+  let hasOrientation = false;
+  let lastBeta = 90;
+  let lastGamma = 0;
+  let prevBeta = 90;
+  let prevGamma = 0;
+
+  let accelEventCount = 0;
+  let orientEventCount = 0;
+  let sensorSource = 'none';
+  let permStateStr = 'unknown';
+  let genericAccelStarted = false;
+
+  let gSmoothInit = false;
+  let gSmoothX = 0;
+  let gSmoothY = -9.81;
+  let gSmoothZ = 0;
+  let prevRawX = 0;
+  let prevRawY = -9.81;
+  let prevRawZ = 0;
+
+  function flashStatus(msg) {
+    statusPill.textContent = msg;
+    statusPill.classList.add('show');
+    clearTimeout(flashStatus._t);
+    flashStatus._t = setTimeout(() => statusPill.classList.remove('show'), 5000);
+  }
+
+  function getScreenAngle() {
+    if (screen.orientation && typeof screen.orientation.angle === 'number') return screen.orientation.angle;
+    if (typeof window.orientation === 'number') return window.orientation;
+    return 0;
+  }
+
+  function deviceToSimVector(dx, dy) {
+    const angle = ((getScreenAngle() % 360) + 360) % 360;
+    if (angle === 90) return { sx: -dy, sy: dx };
+    if (angle === 270) return { sx: dy, sy: -dx };
+    if (angle === 180) return { sx: -dx, sy: -dy };
+    return { sx: dx, sy: dy };
+  }
+
+  function processAccelSample(ax, ay, az, sign, srcLabel) {
+    accelEventCount++;
+    sensorSource = srcLabel;
+    state.motionActive = true;
+
+    const scr = deviceToSimVector(ax * sign, ay * sign);
+    const rx = scr.sx;
+    const ry = scr.sy;
+    const rz = az * sign;
+
+    if (!gSmoothInit) {
+      gSmoothInit = true;
+      gSmoothX = rx; gSmoothY = ry; gSmoothZ = rz;
+      prevRawX = rx; prevRawY = ry; prevRawZ = rz;
+      return;
+    }
+
+    const linX = rx - gSmoothX;
+    const linY = ry - gSmoothY;
+    const linZ = rz - gSmoothZ;
+    const linMag = Math.hypot(linX, linY, linZ);
+
+    const jerkX = rx - prevRawX;
+    const jerkY = ry - prevRawY;
+    const jerkZ = rz - prevRawZ;
+    const jerkMag = Math.hypot(jerkX, jerkY, jerkZ);
+
+    prevRawX = rx; prevRawY = ry; prevRawZ = rz;
+
+    const alpha = 0.14;
+    gSmoothX += (rx - gSmoothX) * alpha;
+    gSmoothY += (ry - gSmoothY) * alpha;
+    gSmoothZ += (rz - gSmoothZ) * alpha;
+
+    const INV_G = 1 / 9.81;
+    state.gx = Math.max(-1.25, Math.min(1.25, gSmoothX * INV_G * 1.15));
+    state.gy = Math.max(-1.25, Math.min(1.25, gSmoothY * INV_G * 1.15));
+
+    const clampLin = (v) => Math.max(-1.8, Math.min(1.8, v * INV_G * 0.95));
+    state.ix = state.ix * 0.54 + clampLin(linX) * 0.46;
+    state.iy = state.iy * 0.54 + clampLin(linY) * 0.46;
+
+    // 2-Phone Bump Detector
+    const linThresh = 10.5;
+    const jerkThresh = 8.1;
+    if (linMag > linThresh && jerkMag > jerkThresh) {
+      const len2 = Math.hypot(linX, linY);
+      const ex = len2 > 2.5 ? linX / len2 : 0;
+      const ey = len2 > 2.5 ? linY / len2 : -1;
+      const forceG = Math.min(3.6, (linMag + jerkMag * 0.65) / (linThresh * 0.72));
+      triggerBump(ex, ey, forceG);
+    }
+  }
+
+  function handleOrientation(ev) {
+    if (ev.beta == null || ev.gamma == null) return;
+    orientEventCount++;
+    hasOrientation = true;
+    lastBeta = ev.beta;
+    lastGamma = ev.gamma;
+
+    if (accelEventCount === 0) {
+      sensorSource = 'deviceorientation';
+      state.motionActive = true;
+      const b = (ev.beta * Math.PI) / 180;
+      const g = (ev.gamma * Math.PI) / 180;
+      const devX = Math.sin(g) * (Math.abs(Math.cos(b)) > 0.2 ? Math.cos(b) : 0.45);
+      const devY = -Math.sin(b);
+      const scr = deviceToSimVector(devX, devY);
+      state.gx = Math.max(-1.25, Math.min(1.25, scr.sx * 1.25));
+      state.gy = Math.max(-1.25, Math.min(1.25, scr.sy * 1.25));
+
+      const db = ev.beta - prevBeta;
+      const dg = ev.gamma - prevGamma;
+      prevBeta = ev.beta;
+      prevGamma = ev.gamma;
+      const angJerk = Math.hypot(db, dg);
+      if (angJerk > 17.0 && orientEventCount > 3) {
+        const len = Math.max(0.01, Math.hypot(dg, -db));
+        triggerBump(dg / len, -db / len, Math.min(3.0, angJerk / 15));
+      }
+    }
+  }
+
+  function handleMotion(ev) {
+    const ag = ev.accelerationIncludingGravity;
+    if (ag && ag.x != null && ag.y != null) {
+      const az = ag.z != null ? ag.z : 0;
+
+      if (hasOrientation && Math.abs(signConfidenceVotes) < 12 && Math.hypot(ag.x, ag.y, az) > 5.0) {
+        const b = (lastBeta * Math.PI) / 180;
+        const g = (lastGamma * Math.PI) / 180;
+        if (Math.abs(Math.cos(b)) > 0.35 && (Math.abs(lastBeta) > 3 || Math.abs(lastGamma) > 3)) {
+          const ogx = Math.cos(b) * Math.sin(g);
+          const ogy = -Math.sin(b);
+          const ogz = -Math.cos(b) * Math.cos(g);
+          const dot = ag.x * ogx + ag.y * ogy + az * ogz;
+          if (Math.abs(dot) > 3.5) {
+            if (dot > 0) signConfidenceVotes++;
+            else signConfidenceVotes--;
+            if (signConfidenceVotes >= 5) accelSign = 1;
+            if (signConfidenceVotes <= -5) accelSign = -1;
+          }
+        }
+      }
+
+      processAccelSample(ag.x, ag.y, az, accelSign, 'devicemotion');
+      return;
+    }
+
+    const lin = ev.acceleration;
+    if (lin && lin.x != null && lin.y != null) {
+      accelEventCount++;
+      sensorSource = 'devicemotion(lin)';
+      state.motionActive = true;
+      const scr = deviceToSimVector(lin.x * accelSign, lin.y * accelSign);
+      const INV_G = 1 / 9.81;
+      state.ix = state.ix * 0.5 + Math.max(-1.8, Math.min(1.8, scr.sx * INV_G)) * 0.5;
+      state.iy = state.iy * 0.5 + Math.max(-1.8, Math.min(1.8, scr.sy * INV_G)) * 0.5;
+      const mag = Math.hypot(scr.sx, scr.sy, (lin.z || 0));
+      if (mag > 10.5) {
+        const len2 = Math.hypot(scr.sx, scr.sy);
+        triggerBump(len2 > 1 ? scr.sx / len2 : 0, len2 > 1 ? scr.sy / len2 : -1, Math.min(3.4, (mag / 10.5) * 1.6));
+      }
+    }
+  }
+
+  function startGenericAccelFallback() {
+    if (genericAccelStarted || typeof Accelerometer === 'undefined') return;
+    genericAccelStarted = true;
+    try {
+      const accel = new Accelerometer({ frequency: 60 });
+      accel.addEventListener('reading', () => {
+        if (sensorSource === 'none' || sensorSource === 'Accelerometer') {
+          processAccelSample(accel.x || 0, accel.y || 0, accel.z || 0, -1, 'Accelerometer');
+        }
+      });
+      accel.addEventListener('error', (ev) => {
+        if (ev.error && ev.error.name === 'NotAllowedError') {
+          permStateStr = 'denied';
+          flashStatus('Motion sensors blocked in browser Site Settings');
+        }
+      });
+      accel.start();
+    } catch (_) {}
+  }
+
+  function attachSensorListeners() {
+    if (!state.listenersAttached) {
+      window.addEventListener('deviceorientation', handleOrientation, { passive: true });
+      window.addEventListener('devicemotion', handleMotion, { passive: true });
+      state.listenersAttached = true;
+    }
+    if (navigator.permissions && typeof navigator.permissions.query === 'function') {
+      try {
+        navigator.permissions.query({ name: 'accelerometer' }).then((st) => {
+          permStateStr = st.state;
+          if (st.state === 'denied' && !state.motionActive) {
+            flashStatus('Motion sensors blocked in Chrome Site Settings');
+          }
+        }).catch(() => {});
+      } catch (_) {}
+    }
+    if (window.isSecureContext) startGenericAccelFallback();
+  }
+
+  const hasMotionReq =
+    typeof DeviceMotionEvent !== 'undefined' &&
+    typeof DeviceMotionEvent.requestPermission === 'function';
+  const hasOrientReq =
+    typeof DeviceOrientationEvent !== 'undefined' &&
+    typeof DeviceOrientationEvent.requestPermission === 'function';
+
+  if (hasMotionReq || hasOrientReq) {
+    iosTapLayer.classList.add('show');
+    iosTapLayer.addEventListener('click', () => {
+      try {
+        const p = hasMotionReq
+          ? DeviceMotionEvent.requestPermission()
+          : DeviceOrientationEvent.requestPermission();
+        Promise.resolve(p).then(
+          (res) => {
+            iosTapLayer.classList.remove('show');
+            if (res === 'granted') {
+              attachSensorListeners();
+            } else if (!window.isSecureContext || window.location.protocol === 'file:') {
+              flashStatus('Motion sensors require opening via https://');
+            } else {
+              flashStatus('Motion permission declined — reopen tab to prompt again');
+            }
+          },
+          () => {
+            iosTapLayer.classList.remove('show');
+            if (!window.isSecureContext || window.location.protocol === 'file:') {
+              flashStatus('Motion sensors require opening via https://');
+            }
+          }
+        );
+      } catch (_) {
+        iosTapLayer.classList.remove('show');
+      }
+    }, { once: true });
+  } else {
+    attachSensorListeners();
+    setTimeout(() => {
+      if (!state.motionActive && /Android|Mobi/i.test(navigator.userAgent)) {
+        const proto = window.location.protocol;
+        if (!window.isSecureContext || proto === 'content:' || proto === 'file:') {
+          flashStatus('Motion sensors require opening via https://');
+        } else if (permStateStr === 'denied') {
+          flashStatus('Allow Motion sensors in browser Site Settings');
+        }
+      }
+    }, 1500);
+  }
+
+  /* ==========================================================================
+   * 6. POINTER, TOUCH WIPING & KEYBOARD INTERACTION
+   * ========================================================================== */
+  function clientToSim(clientX, clientY) {
+    return {
+      x: (clientX / Math.max(1, window.innerWidth)) * simW,
+      y: (1.0 - clientY / Math.max(1, window.innerHeight)) * simH
+    };
+  }
+
+  let lastTapTime = 0;
+
+  canvas.addEventListener('pointerdown', (e) => {
+    const pos = clientToSim(e.clientX, e.clientY);
+    state.pointers.set(e.pointerId, { x: pos.x, y: pos.y, vx: 0, vy: 0 });
+
+    for (let k = 0; k < 5; k++) {
+      spawnDrop(
+        pos.x + (Math.random() - 0.5) * 4.5,
+        pos.y + (Math.random() - 0.5) * 4.5,
+        1.3 + Math.random() * 1.5
+      );
+    }
+
+    const now = performance.now();
+    if (now - lastTapTime < 280) {
+      const nx = (e.clientX / Math.max(1, window.innerWidth)) * 2.0 - 1.0;
+      const ny = (1.0 - e.clientY / Math.max(1, window.innerHeight)) * 2.0 - 1.0;
+      if (Math.abs(nx) > Math.abs(ny)) {
+        triggerBump(nx > 0 ? 1 : -1, 0, 3.0);
+      } else {
+        triggerBump(0, ny > 0 ? 1 : -1, 3.0);
+      }
+    }
+    lastTapTime = now;
+  });
+
+  canvas.addEventListener('pointermove', (e) => {
+    const pos = clientToSim(e.clientX, e.clientY);
+    if (state.pointers.has(e.pointerId)) {
+      const pt = state.pointers.get(e.pointerId);
+      pt.vx = (pos.x - pt.x) * 35.0;
+      pt.vy = (pos.y - pt.y) * 35.0;
+      pt.x = pos.x;
+      pt.y = pos.y;
+      if (Math.hypot(pt.vx, pt.vy) > 12.0 && Math.random() < 0.45 && numDrops < MAX_DROPS - 10) {
+        spawnDrop(
+          pos.x + (Math.random() - 0.5) * 3.0,
+          pos.y + (Math.random() - 0.5) * 3.0,
+          1.1 + Math.random() * 1.1,
+          pt.vx * 0.22,
+          pt.vy * 0.22
+        );
+      }
+    } else if (!state.motionActive) {
+      state.pointerActive = true;
+      const nx = (e.clientX / Math.max(1, window.innerWidth)) * 2.0 - 1.0;
+      const ny = (1.0 - e.clientY / Math.max(1, window.innerHeight)) * 2.0 - 1.0;
+      state.pointerGx = nx * 0.95;
+      state.pointerGy = ny * 0.95;
+    }
+  });
+
+  function clearPointer(e) {
+    state.pointers.delete(e.pointerId);
+  }
+  window.addEventListener('pointerup', clearPointer);
+  window.addEventListener('pointercancel', clearPointer);
+
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      const ex = Math.abs(state.effGx) >= Math.abs(state.effGy) ? (state.effGx >= 0 ? 1 : -1) : 0;
+      const ey = ex === 0 ? (state.effGy >= 0 ? 1 : -1) : 0;
+      triggerBump(ex, ey, 3.0);
+    }
+  });
+
+  /* ==========================================================================
+   * 7. MAIN RENDER & SIMULATION LOOP
+   * ========================================================================== */
+  let lastTime = performance.now();
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) lastTime = performance.now();
+  });
+
+  function frame(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - lastTime) * 0.001));
+    lastTime = now;
+    const timeSec = now * 0.001;
+
+    if (!state.motionActive) {
+      if (state.pointerActive) {
+        state.gx += (state.pointerGx - state.gx) * 0.14;
+        state.gy += (state.pointerGy - state.gy) * 0.14;
+      }
+      state.ix *= 0.88;
+      state.iy *= 0.88;
+    } else {
+      state.ix *= Math.pow(0.05, dt);
+      state.iy *= Math.pow(0.05, dt);
+    }
+
+    state.effGx = Math.max(-1.4, Math.min(1.4, state.gx + state.ix));
+    state.effGy = Math.max(-1.4, Math.min(1.4, state.gy + state.iy));
+
+    stepRainPhysics(dt);
+
+    for (const pt of state.pointers.values()) {
+      pt.vx *= 0.8;
+      pt.vy *= 0.8;
+    }
+
+    const n = numDrops;
+    for (let i = 0; i < n; i++) {
+      const base = i * 5;
+      splatData[base]     = dxPos[i];
+      splatData[base + 1] = dyPos[i];
+      splatData[base + 2] = dxVel[i];
+      splatData[base + 3] = dyVel[i];
+      splatData[base + 4] = dRad[i];
+    }
+
+    const pointScale = (bufW / simW) * 2.15;
+
+    // Pass 1: Mist accumulation & trail wiping
+    gl.bindFramebuffer(gl.FRAMEBUFFER, mistFbo);
+    gl.viewport(0, 0, bufW, bufH);
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.ONE, gl.ONE);
+    gl.useProgram(progMistFade);
+    gl.bindVertexArray(quadVao);
+    gl.uniform1f(uMist.uRegenRate, 0.0014);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    gl.blendFunc(gl.ZERO, gl.ONE_MINUS_SRC_COLOR);
+    gl.useProgram(progDropSplat);
+    gl.bindVertexArray(splatVao);
+    gl.bindBuffer(gl.ARRAY_BUFFER, splatVbo);
+    gl.bufferSubData(gl.ARRAY_BUFFER, 0, splatData.subarray(0, n * 5));
+    gl.uniform2f(uSplat.uSimSize, simW, simH);
+    gl.uniform1f(uSplat.uPointScale, pointScale * 0.85);
+    gl.uniform1i(uSplat.uPassMode, 0);
+    gl.uniform1i(uSplat.uFloatDrop, useFloatDrop ? 1 : 0);
+    gl.drawArrays(gl.POINTS, 0, n);
+
+    // Pass 2: Splat 3D Asymmetric Pendant Raindrop Height & Normals
+    gl.bindFramebuffer(gl.FRAMEBUFFER, dropFbo);
+    gl.viewport(0, 0, bufW, bufH);
+    gl.clearColor(0.0, useFloatDrop ? 0.0 : 0.5, useFloatDrop ? 0.0 : 0.5, 0.0);
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    if (useFloatDrop) {
+      gl.blendFunc(gl.ONE, gl.ONE);
+    } else {
+      gl.disable(gl.BLEND);
+    }
+    gl.uniform1f(uSplat.uPointScale, pointScale);
+    gl.uniform1i(uSplat.uPassMode, 1);
+    gl.drawArrays(gl.POINTS, 0, n);
+    gl.disable(gl.BLEND);
+
+    // Pass 3: Snell Refraction, Condensation Mist & Shockwave Composite
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+
+    gl.useProgram(progComposite);
+    gl.bindVertexArray(quadVao);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, dropTex);
+    gl.uniform1i(uComp.uDropTex, 0);
+
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, mistTex);
+    gl.uniform1i(uComp.uMistTex, 1);
+
+    gl.uniform2f(uComp.uTexel, 1.0 / bufW, 1.0 / bufH);
+    gl.uniform1f(uComp.uAspect, canvas.width / Math.max(1, canvas.height));
+    gl.uniform1f(uComp.uTime, timeSec);
+    gl.uniform2f(uComp.uGravity, state.effGx, state.effGy);
+    gl.uniform2f(uComp.uShake, state.screenShakeX, state.screenShakeY);
+    gl.uniform4f(uComp.uShock, state.shockOrigin.x, state.shockOrigin.y, state.shockTime, state.shockIntensity);
+    gl.uniform1f(uComp.uLightning, state.lightningFlash);
+    gl.uniform1i(uComp.uPalette, state.paletteIndex);
+    gl.uniform1i(uComp.uFloatDrop, useFloatDrop ? 1 : 0);
+
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
