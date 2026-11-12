@@ -94,10 +94,48 @@
     #statusPill.show {
       opacity: 1;
     }
+
+    .back {
+      position: fixed;
+      top: max(18px, env(safe-area-inset-top));
+      left: max(18px, env(safe-area-inset-left));
+      z-index: 30;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(10, 16, 26, 0.42);
+      border: 1px solid rgba(180, 220, 255, 0.18);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      color: rgba(215, 232, 248, 0.72);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      font-size: 10.5px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      touch-action: manipulation;
+      transition: color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .back:hover,
+    .back:focus-visible {
+      color: rgba(240, 248, 255, 0.96);
+      background: rgba(15, 22, 34, 0.72);
+      border-color: rgba(180, 220, 255, 0.36);
+      outline: none;
+    }
+
+    .back::before {
+      content: "\2190";
+      letter-spacing: 0;
+    }
   </style>
 </head>
 <body>
   <canvas id="glCanvas"></canvas>
+  <a class="back" href="index.html">return to log</a>
   <button id="iosTapLayer" type="button" aria-label="Enable motion sensors">
     <span id="iosPrompt">Tap anywhere to enable tilt &amp; bump</span>
   </button>
@@ -119,9 +157,10 @@
   const dyPos = new Float32Array(MAX_DROPS);
   const dxVel = new Float32Array(MAX_DROPS);
   const dyVel = new Float32Array(MAX_DROPS);
-  const dRad  = new Float32Array(MAX_DROPS);
-  const dPin  = new Float32Array(MAX_DROPS);
-  const dSeed = new Float32Array(MAX_DROPS);
+  const dRad     = new Float32Array(MAX_DROPS);
+  const dPin     = new Float32Array(MAX_DROPS);
+  const dSeed    = new Float32Array(MAX_DROPS);
+  const dWaveHit = new Int32Array(MAX_DROPS);
   let numDrops = 0;
 
   // Spatial Hash Grid for O(N) raindrop coalescence
@@ -138,21 +177,31 @@
 
     // Screen-plane gravity (+x right, +y UP)
     gx: 0.0,
-    gy: -0.22,
+    gy: -0.34,
     // Inertial force from moving/swinging the phone
     ix: 0.0,
     iy: 0.0,
     effGx: 0.0,
-    effGy: -0.22,
-    tiltMagnitude: 0.22,
+    effGy: -0.34,
+    tiltMagnitude: 0.34,
 
-    // Bump shockwave & lightning
+    // Bump shockwave & kinetic wave state
     shockOrigin: { x: 0.5, y: 0.5 },
     shockDir: { x: 0.0, y: -1.0 },
     shockTime: -100.0,
     shockIntensity: 0.0,
+    bumpWaveId: 0,
+    waveActive: false,
+    waveOriginX: 50.0,
+    waveOriginY: 80.0,
+    waveDirX: 0.0,
+    waveDirY: -1.0,
+    waveRadius: 0.0,
+    waveMaxRadius: 240.0,
+    waveSpeed: 230.0,
+    waveForce: 2.5,
+    waveAge: 0.0,
     lightningFlash: 0.0,
-    nextLightning: 10.0,
     screenShakeX: 0.0,
     screenShakeY: 0.0,
     shakeVelX: 0.0,
@@ -163,7 +212,7 @@
     pointers: new Map(),
     pointerActive: false,
     pointerGx: 0.0,
-    pointerGy: -0.22,
+    pointerGy: -0.34,
 
     lastBumpMs: 0
   };
@@ -181,7 +230,7 @@
     gridRows = Math.min(MAX_GRID - 1, Math.ceil(simH / CELL_SIZE) + 1);
   }
 
-  function spawnDrop(x, y, r, vx = 0, vy = 0) {
+  function spawnDrop(x, y, r, vx = 0, vy = 0, pin = null) {
     if (numDrops >= MAX_DROPS) return -1;
     const i = numDrops++;
     dxPos[i] = x;
@@ -189,8 +238,16 @@
     dxVel[i] = vx;
     dyVel[i] = vy;
     dRad[i]  = r;
-    dPin[i]  = 0.72 + Math.random() * 0.58;
+    if (pin !== null) {
+      dPin[i] = pin;
+    } else if (r > 1.7 && Math.random() < 0.34) {
+      // Lower surface tension so a subset of heavier drops creep slowly down the pane
+      dPin[i] = 0.24 + Math.random() * 0.26;
+    } else {
+      dPin[i] = 0.68 + Math.random() * 0.68;
+    }
     dSeed[i] = Math.random() * 100.0;
+    dWaveHit[i] = 0;
     return i;
   }
 
@@ -204,6 +261,7 @@
       dRad[idx]  = dRad[last];
       dPin[idx]  = dPin[last];
       dSeed[idx] = dSeed[last];
+      dWaveHit[idx] = dWaveHit[last];
     }
   }
 
@@ -211,12 +269,13 @@
     updateSimBounds();
     numDrops = 0;
     for (let i = 0; i < 340; i++) {
-      const r = 0.85 + Math.pow(Math.random(), 2.15) * 2.45;
+      const r = 0.8 + Math.pow(Math.random(), 2.0) * 2.35;
+      const pin = (i < 42 && r > 1.75) ? (0.24 + Math.random() * 0.22) : null;
       spawnDrop(
         2.0 + Math.random() * (simW - 4.0),
         2.0 + Math.random() * (simH - 4.0),
         r,
-        0, 0
+        0, 0, pin
       );
     }
   }
@@ -238,44 +297,100 @@
     const tiltMag = Math.hypot(gx, gy);
     state.tiltMagnitude = tiltMag;
 
-    // 1. Ambient & Tilt-Activated Raindrop Spawner
-    const ambientRate = 7.0;
-    const pourIntensity = Math.max(0.0, (tiltMag - 0.12) / 0.88);
-    const pourRate = pourIntensity * pourIntensity * 145.0;
-
-    if (Math.random() < ambientRate * h && numDrops < MAX_DROPS - 20) {
-      spawnDrop(Math.random() * simW, Math.random() * simH, 0.85 + Math.pow(Math.random(), 1.8) * 1.95);
+    // 1. Calm Mist Condenser & Slow Window Runner Spawner
+    const ambientRate = 6.5;
+    if (Math.random() < ambientRate * h && numDrops < 720) {
+      spawnDrop(Math.random() * simW, Math.random() * simH, 0.72 + Math.pow(Math.random(), 2.0) * 1.15);
     }
 
-    const pourCount = Math.floor(pourRate * h + (Math.random() < (pourRate * h) % 1 ? 1 : 0));
-    if (pourCount > 0 && tiltMag > 0.12) {
+    const flowIntensity = Math.min(1.3, Math.max(0.0, (tiltMag - 0.08) / 0.92));
+    const streamRate = tiltMag > 0.08 ? (2.6 + flowIntensity * 7.2) : 0.0;
+    const streamCount = Math.floor(streamRate * h + (Math.random() < (streamRate * h) % 1 ? 1 : 0));
+    if (streamCount > 0 && tiltMag > 0.08) {
       const upDirX = -gx / tiltMag;
       const upDirY = -gy / tiltMag;
-      const initSpeed = 12.0 + pourIntensity * 32.0;
+      const initSpeed = 1.6 + flowIntensity * 4.5;
 
-      for (let k = 0; k < pourCount; k++) {
-        if (numDrops >= MAX_DROPS - 10) break;
+      for (let k = 0; k < streamCount; k++) {
+        if (numDrops >= MAX_DROPS - 120) break;
         let sx, sy;
-        if (Math.random() < 0.68) {
+        if (Math.random() < 0.85) {
           const horizFlux = simW * Math.abs(upDirY);
           const vertFlux = simH * Math.abs(upDirX);
           if (Math.random() < horizFlux / (horizFlux + vertFlux + 1e-5)) {
             sx = Math.random() * simW;
-            sy = upDirY > 0 ? simH - 1.5 - Math.random() * 3.0 : 1.5 + Math.random() * 3.0;
+            sy = upDirY > 0 ? simH - 1.5 - Math.random() * 4.0 : 1.5 + Math.random() * 4.0;
           } else {
-            sx = upDirX > 0 ? simW - 1.5 - Math.random() * 3.0 : 1.5 + Math.random() * 3.0;
+            sx = upDirX > 0 ? simW - 1.5 - Math.random() * 4.0 : 1.5 + Math.random() * 4.0;
             sy = Math.random() * simH;
           }
         } else {
           sx = Math.random() * simW;
           sy = Math.random() * simH;
         }
-        const r = 1.45 + Math.pow(Math.random(), 1.5) * 1.9;
-        spawnDrop(sx, sy, r, -upDirX * initSpeed, -upDirY * initSpeed);
+        const r = 1.65 + Math.pow(Math.random(), 1.45) * 1.4;
+        spawnDrop(sx, sy, r, -upDirX * initSpeed, -upDirY * initSpeed, 0.24 + Math.random() * 0.28);
       }
     }
 
-    // 2. Spatial Hash Grid for Coalescence
+    // 2. Expanding Kinetic Shockwave Front (propagates across pane without light flash)
+    if (state.waveActive) {
+      state.waveAge += h;
+      state.waveRadius += state.waveSpeed * h;
+      const waveId = state.bumpWaveId;
+      const wCount = numDrops;
+      const ox = state.waveOriginX;
+      const oy = state.waveOriginY;
+      const wr = state.waveRadius;
+      const invMaxR = 1.0 / Math.max(1.0, state.waveMaxRadius);
+      const dirBiasX = state.waveDirX * 0.55;
+      const dirBiasY = state.waveDirY * 0.55;
+
+      for (let i = 0; i < wCount; i++) {
+        if (dWaveHit[i] === waveId) continue;
+        const dx = dxPos[i] - ox;
+        const dy = dyPos[i] - oy;
+        const dist = Math.hypot(dx, dy);
+        if (dist > wr) continue;
+
+        dWaveHit[i] = waveId;
+        const ux = dist > 0.5 ? dx / dist : state.waveDirX;
+        const uy = dist > 0.5 ? dy / dist : state.waveDirY;
+        const baseAng = Math.atan2(uy + dirBiasY, ux + dirBiasX) + (Math.random() - 0.5) * 0.85;
+        const atten = 0.55 + 0.45 * Math.exp(-dist * invMaxR * 1.6);
+        const spd = (20.0 + state.waveForce * 7.5) * atten * (0.68 + Math.random() * 0.64);
+
+        dPin[i] = Math.max(0.24, dPin[i] * 0.48);
+        dxVel[i] += Math.cos(baseAng) * spd;
+        dyVel[i] += Math.sin(baseAng) * spd;
+
+        const r = dRad[i];
+        if (r > 1.72 && numDrops < MAX_DROPS - 8) {
+          const shards = 2 + ((Math.random() * 3) | 0);
+          dRad[i] = Math.max(1.15, r * 0.66);
+          for (let s = 0; s < shards; s++) {
+            if (numDrops >= MAX_DROPS - 4) break;
+            const sAng = baseAng + (Math.random() - 0.5) * 1.85;
+            const sSpd = spd * (0.78 + Math.random() * 0.58);
+            const shardIdx = spawnDrop(
+              dxPos[i] + Math.cos(sAng) * (r * 0.65),
+              dyPos[i] + Math.sin(sAng) * (r * 0.65),
+              0.72 + Math.random() * 0.55,
+              Math.cos(sAng) * sSpd,
+              Math.sin(sAng) * sSpd,
+              0.36 + Math.random() * 0.34
+            );
+            if (shardIdx !== -1) dWaveHit[shardIdx] = waveId;
+          }
+        }
+      }
+
+      if (state.waveRadius >= state.waveMaxRadius) {
+        state.waveActive = false;
+      }
+    }
+
+    // 3. Spatial Hash Grid for Coalescence
     const totalCells = gridCols * gridRows;
     for (let c = 0; c < totalCells; c++) gridHead[c] = -1;
 
@@ -289,7 +404,7 @@
       gridHead[cIdx] = i;
     }
 
-    // 3. Coalescence & Capillary Snap-Attraction
+    // 4. Coalescence & Capillary Snap-Attraction
     for (let i = 0; i < numDrops; i++) {
       if (dRad[i] <= 0.0) continue;
       const xi = dxPos[i];
@@ -329,16 +444,16 @@
 
                 dxPos[survivor] = (xi * m1 + dxPos[j] * m2) / mSum;
                 dyPos[survivor] = (yi * m1 + dyPos[j] * m2) / mSum;
-                dxVel[survivor] = (dxVel[i] * m1 + dxVel[j] * m2) / mSum + gx * 8.5;
-                dyVel[survivor] = (dyVel[i] * m1 + dyVel[j] * m2) / mSum + gy * 8.5;
+                dxVel[survivor] = (dxVel[i] * m1 + dxVel[j] * m2) / mSum + gx * 1.6;
+                dyVel[survivor] = (dyVel[i] * m1 + dyVel[j] * m2) / mSum + gy * 1.6;
                 dRad[survivor] = newR;
-                dPin[survivor] *= 0.82;
+                dPin[survivor] = Math.max(0.24, dPin[survivor] * 0.85);
                 dRad[absorbed] = -1.0;
 
                 if (absorbed === i) break;
               } else if (dSq < attractDist * attractDist && dSq > 1e-5) {
                 const d = Math.sqrt(dSq);
-                const pull = 28.0 / (d + 0.5);
+                const pull = 16.0 / (d + 0.5);
                 const ux = dx / d;
                 const uy = dy / d;
                 dxVel[i] += ux * pull * h;
@@ -359,9 +474,11 @@
       if (dRad[i] <= 0.0) removeDrop(i);
     }
 
-    // 4. Stick-Slip Pinning, Meandering & Trail Pinch-Off
+    // 5. Stick-Slip Pinning, Slow Window Trickle & Trail Pinch-Off
     const tangentX = tiltMag > 0.01 ? -gy / tiltMag : 1.0;
     const tangentY = tiltMag > 0.01 ?  gx / tiltMag : 0.0;
+    const gravDirX = tiltMag > 1e-4 ? gx / tiltMag : 0.0;
+    const gravDirY = tiltMag > 1e-4 ? gy / tiltMag : -1.0;
 
     for (let i = numDrops - 1; i >= 0; i--) {
       let x = dxPos[i];
@@ -379,31 +496,33 @@
           if (pSq < brushR * brushR && pSq > 1e-4) {
             const pd = Math.sqrt(pSq);
             const push = 1.0 - pd / brushR;
-            vx += (pdx / pd) * push * 45.0 + pt.vx * push * 0.65;
-            vy += (pdy / pd) * push * 45.0 + pt.vy * push * 0.65;
+            vx += (pdx / pd) * push * 22.0 + pt.vx * push * 0.45;
+            vy += (pdy / pd) * push * 22.0 + pt.vy * push * 0.45;
           }
         }
       }
 
-      const weightForce = Math.pow(r, 2.2) * tiltMag * 48.0;
-      const pinThreshold = dPin[i] * r * 5.2;
+      const stickyMod = 1.0 + 0.32 * glassMeanderForce(x * 0.7, y * 0.7, dSeed[i]);
+      const weightForce = Math.pow(r, 2.25) * tiltMag * 2.2;
+      const pinThreshold = dPin[i] * r * 3.9 * Math.max(0.55, stickyMod);
       const speed = Math.hypot(vx, vy);
 
-      if (weightForce > pinThreshold || speed > 4.5) {
-        const netAccel = Math.max(0.0, weightForce - pinThreshold * 0.35);
-        vx += gx * netAccel * h * 2.6;
-        vy += gy * netAccel * h * 2.6;
+      if (weightForce > pinThreshold || speed > 2.2) {
+        const netAccel = Math.max(0.0, weightForce - pinThreshold * 0.42);
+        vx += gravDirX * netAccel * h * 0.85;
+        vy += gravDirY * netAccel * h * 0.85;
 
-        const meander = glassMeanderForce(x, y, dSeed[i]) * Math.min(1.0, speed * 0.04) * 26.0;
+        const meander = glassMeanderForce(x, y, dSeed[i]) * Math.min(1.0, speed * 0.08) * 7.5;
         vx += tangentX * meander * h;
         vy += tangentY * meander * h;
 
-        const drag = Math.exp(-h * (2.6 / Math.max(0.9, r * 0.7)));
+        const dragRate = 1.65 / Math.max(0.9, r * 0.6);
+        const drag = Math.exp(-h * dragRate);
         vx *= drag;
         vy *= drag;
 
-        if (r > 1.85 && speed > 14.0 && Math.random() < h * 5.5 && numDrops < MAX_DROPS - 5) {
-          const trailR = 0.68 + Math.random() * 0.42;
+        if (r > 1.75 && speed > 5.5 && Math.random() < h * 2.2 && numDrops < MAX_DROPS - 10) {
+          const trailR = 0.62 + Math.random() * 0.36;
           const speedInv = 1.0 / speed;
           const bx = x - vx * speedInv * (r * 1.15);
           const by = y - vy * speedInv * (r * 1.15);
@@ -412,8 +531,9 @@
           dRad[i] = r;
         }
       } else {
-        vx *= 0.82;
-        vy *= 0.82;
+        const stopDamp = Math.exp(-h * 10.0);
+        vx *= stopDamp;
+        vy *= stopDamp;
       }
 
       x += vx * h;
@@ -431,22 +551,16 @@
       dyVel[i] = vy;
     }
 
-    // 5. Damped Spring Screen Shake & Lightning Decay
-    const sK = 180.0;
-    const sDamp = 12.0;
+    // 6. Damped Spring Screen Shake (no lightning flash)
+    const sK = 190.0;
+    const sDamp = 15.0;
     const axShake = -sK * state.screenShakeX - sDamp * state.shakeVelX;
     const ayShake = -sK * state.screenShakeY - sDamp * state.shakeVelY;
     state.shakeVelX += axShake * h;
     state.shakeVelY += ayShake * h;
     state.screenShakeX += state.shakeVelX * h;
     state.screenShakeY += state.shakeVelY * h;
-
-    state.lightningFlash *= Math.exp(-h * 4.5);
-    state.nextLightning -= h;
-    if (state.nextLightning <= 0) {
-      state.lightningFlash = 0.95 + Math.random() * 0.45;
-      state.nextLightning = 9.0 + Math.random() * 17.0;
-    }
+    state.lightningFlash = 0.0;
   }
 
   /* ==========================================================================
@@ -460,7 +574,6 @@
       bumpChannel.onmessage = (ev) => {
         const msg = ev.data;
         if (!msg || msg.id === instanceId || msg.t !== 'RAIN_BUMP') return;
-        state.paletteIndex = msg.pal !== undefined ? msg.pal : (state.paletteIndex + 1) % 4;
         executeBumpExplosion(-msg.ex, -msg.ey, msg.g || 2.8);
       };
     }
@@ -469,62 +582,55 @@
   function executeBumpExplosion(edgeX, edgeY, forceG = 2.8) {
     const nowSec = performance.now() * 0.001;
     const f = Math.max(0.9, Math.min(3.8, forceG));
+    const edgeLen = Math.hypot(edgeX, edgeY) || 1.0;
+    const inDirX = -edgeX / edgeLen;
+    const inDirY = -edgeY / edgeLen;
+    const originSimX = (0.5 + (edgeX / edgeLen) * 0.48) * simW;
+    const originSimY = (0.5 + (edgeY / edgeLen) * 0.48) * simH;
 
-    state.shockOrigin.x = 0.5 + edgeX * 0.48;
-    state.shockOrigin.y = 0.5 + edgeY * 0.48;
-    state.shockDir.x = -edgeX;
-    state.shockDir.y = -edgeY;
+    state.shockOrigin.x = originSimX / simW;
+    state.shockOrigin.y = originSimY / simH;
+    state.shockDir.x = inDirX;
+    state.shockDir.y = inDirY;
     state.shockTime = nowSec;
-    state.shockIntensity = Math.min(1.6, 0.95 + f * 0.25);
-    state.lightningFlash = 1.45;
-    state.paletteIndex = (state.paletteIndex + 1) % 4;
+    state.shockIntensity = Math.min(1.5, 0.9 + f * 0.22);
+    state.lightningFlash = 0.0;
 
-    state.shakeVelX = -edgeX * 0.42 * state.shockIntensity;
-    state.shakeVelY = -edgeY * 0.42 * state.shockIntensity;
+    state.shakeVelX = inDirX * 0.36 * state.shockIntensity;
+    state.shakeVelY = inDirY * 0.36 * state.shockIntensity;
 
-    // Shatter existing large drops into starburst sprays & blast all drops inward
-    const currentCount = numDrops;
-    const blastSpeed = 52.0 + f * 18.0;
-    for (let i = 0; i < currentCount; i++) {
-      const r = dRad[i];
-      dPin[i] = 0.15;
-      const baseAngle = Math.atan2(-edgeY, -edgeX) + (Math.random() - 0.5) * 1.45;
-      const spd = blastSpeed * (0.55 + Math.random() * 0.75);
-      dxVel[i] += Math.cos(baseAngle) * spd;
-      dyVel[i] += Math.sin(baseAngle) * spd;
+    // Launch expanding wave so raindrops visibly scatter across the glass over ~0.5s
+    state.bumpWaveId++;
+    state.waveActive = true;
+    state.waveOriginX = originSimX;
+    state.waveOriginY = originSimY;
+    state.waveDirX = inDirX;
+    state.waveDirY = inDirY;
+    state.waveRadius = 10.0;
+    state.waveMaxRadius = Math.hypot(simW, simH) * 1.15;
+    state.waveSpeed = 230.0;
+    state.waveForce = f;
+    state.waveAge = 0.0;
 
-      if (r > 1.75 && numDrops < MAX_DROPS - 6) {
-        const shards = 3 + ((Math.random() * 3) | 0);
-        dRad[i] = r * 0.62;
-        for (let s = 0; s < shards; s++) {
-          const sAngle = baseAngle + (Math.random() - 0.5) * 1.9;
-          const sSpd = spd * (0.7 + Math.random() * 0.8);
-          spawnDrop(
-            dxPos[i] + (Math.random() - 0.5) * 2.0,
-            dyPos[i] + (Math.random() - 0.5) * 2.0,
-            r * (0.38 + Math.random() * 0.22),
-            Math.cos(sAngle) * sSpd,
-            Math.sin(sAngle) * sSpd
-          );
-        }
-      }
-    }
-
-    // Erupt heavy splashing wave of drops from the bumped bezel inward
-    const waveCount = Math.min(95, MAX_DROPS - numDrops);
+    // Splash spray erupting inward from the bumped bezel so droplets arc across the pane
+    const waveId = state.bumpWaveId;
+    const waveCount = Math.min(72, MAX_DROPS - numDrops - 20);
     for (let k = 0; k < waveCount; k++) {
-      const spread = 0.04 + Math.random() * 0.92;
-      const sx = edgeX !== 0
-        ? (edgeX > 0 ? simW - 1.5 - Math.random() * 5.0 : 1.5 + Math.random() * 5.0)
-        : spread * simW;
-      const sy = edgeY !== 0
-        ? (edgeY > 0 ? simH - 1.5 - Math.random() * 5.0 : 1.5 + Math.random() * 5.0)
-        : spread * simH;
-      const jetSpd = 45.0 + Math.random() * 65.0;
-      const fanAngle = Math.atan2(-edgeY, -edgeX) + (Math.random() - 0.5) * 0.95;
-      const r = 1.6 + Math.pow(Math.random(), 1.3) * 2.3;
-      const idx = spawnDrop(sx, sy, r, Math.cos(fanAngle) * jetSpd, Math.sin(fanAngle) * jetSpd);
-      if (idx !== -1) dPin[idx] = 0.2;
+      const spread = 0.06 + Math.random() * 0.88;
+      let sx, sy;
+      if (Math.abs(edgeX) >= Math.abs(edgeY)) {
+        sx = edgeX >= 0 ? simW - 2.0 - Math.random() * 4.5 : 2.0 + Math.random() * 4.5;
+        sy = spread * simH;
+      } else {
+        sx = spread * simW;
+        sy = edgeY >= 0 ? simH - 2.0 - Math.random() * 4.5 : 2.0 + Math.random() * 4.5;
+      }
+      const jetSpd = 22.0 + Math.random() * 34.0;
+      const fanAngle = Math.atan2(inDirY, inDirX) + (Math.random() - 0.5) * 1.15;
+      const r = 0.9 + Math.pow(Math.random(), 1.35) * 2.05;
+      const pin = r > 1.75 ? (0.3 + Math.random() * 0.22) : (0.45 + Math.random() * 0.35);
+      const idx = spawnDrop(sx, sy, r, Math.cos(fanAngle) * jetSpd, Math.sin(fanAngle) * jetSpd, pin);
+      if (idx !== -1) dWaveHit[idx] = waveId;
     }
 
     if (navigator.vibrate) {
@@ -788,17 +894,15 @@ void main() {
 
   float shockAge = uTime - uShock.z;
   vec2 shockNormal = vec2(0.0);
-  float shockGlow = 0.0;
-  if (shockAge >= 0.0 && shockAge < 1.85) {
+  if (shockAge >= 0.0 && shockAge < 1.35) {
     vec2 dS = (uv - uShock.xy) * vec2(uAspect, 1.0);
     float distS = length(dS) + 1e-4;
-    float front1 = distS - shockAge * 1.55;
-    float front2 = distS - shockAge * 0.95;
-    float env1 = exp(-front1 * front1 * 85.0) * exp(-shockAge * 1.45) * uShock.w;
-    float env2 = exp(-front2 * front2 * 55.0) * exp(-shockAge * 1.85) * uShock.w * 0.65;
-    float wave = sin(front1 * 48.0) * env1 + sin(front2 * 34.0) * env2;
-    shockNormal = (dS / distS) * wave * 0.42;
-    shockGlow = (env1 + env2) * 0.85;
+    float front1 = distS - shockAge * 1.45;
+    float front2 = distS - shockAge * 0.92;
+    float env1 = exp(-front1 * front1 * 90.0) * exp(-shockAge * 1.9) * uShock.w;
+    float env2 = exp(-front2 * front2 * 60.0) * exp(-shockAge * 2.2) * uShock.w * 0.6;
+    float wave = sin(front1 * 52.0) * env1 + sin(front2 * 36.0) * env2;
+    shockNormal = (dS / distS) * wave * 0.38;
   }
 
   vec4 dC = sampleDrop(uv);
@@ -868,10 +972,6 @@ void main() {
     dropCol += vec3(1.5, 1.6, 1.75) * spec1 + vec3(0.7, 0.85, 1.0) * spec2 * 0.42;
 
     bgCol = mix(bgCol, dropCol, dropMask);
-  }
-
-  if (shockGlow > 0.001) {
-    bgCol += vec3(0.45, 0.82, 1.0) * shockGlow * (0.35 + 0.65 * dropMask);
   }
 
   bgCol = (bgCol * (2.51 * bgCol + 0.03)) / (bgCol * (2.43 * bgCol + 0.59) + 0.14);
@@ -1104,13 +1204,13 @@ void main() {
     state.gx = Math.max(-1.25, Math.min(1.25, gSmoothX * INV_G * 1.15));
     state.gy = Math.max(-1.25, Math.min(1.25, gSmoothY * INV_G * 1.15));
 
-    const clampLin = (v) => Math.max(-1.8, Math.min(1.8, v * INV_G * 0.95));
-    state.ix = state.ix * 0.54 + clampLin(linX) * 0.46;
-    state.iy = state.iy * 0.54 + clampLin(linY) * 0.46;
+    const clampLin = (v) => Math.max(-1.35, Math.min(1.35, v * INV_G * 0.55));
+    state.ix = state.ix * 0.58 + clampLin(linX) * 0.42;
+    state.iy = state.iy * 0.58 + clampLin(linY) * 0.42;
 
     // 2-Phone Bump Detector
-    const linThresh = 10.5;
-    const jerkThresh = 8.1;
+    const linThresh = 9.0;
+    const jerkThresh = 6.8;
     if (linMag > linThresh && jerkMag > jerkThresh) {
       const len2 = Math.hypot(linX, linY);
       const ex = len2 > 2.5 ? linX / len2 : 0;
