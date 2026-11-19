@@ -1,0 +1,2031 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#07080d" />
+<title>Possible Futures — Collapse of Many into One</title>
+<meta name="description" content="An interactive self-contained animation exploring Fernando Borretti's possible AI futures entangled with climate trajectories, through the eyes of one software engineer." />
+<style>
+  :root {
+    --bg: #07080d;
+    --ink: #f0eadc;
+    --ink-dim: rgba(240, 234, 220, 0.66);
+    --ink-faint: rgba(240, 234, 220, 0.38);
+    --rule: rgba(240, 234, 220, 0.14);
+    --rule-hi: rgba(240, 234, 220, 0.34);
+    --accent: #e8c486;
+    --climate: #79cfc4;
+    --serif: 'New York', 'Iowan Old Style', 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+    --sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', Inter, Roboto, sans-serif;
+    --mono: 'SF Mono', ui-monospace, Menlo, Consolas, Monaco, monospace;
+    --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  canvas#stage {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: block;
+    z-index: 0;
+  }
+
+  .vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 44%, transparent 45%, rgba(4, 5, 10, 0.60) 100%),
+      linear-gradient(180deg, rgba(4, 5, 10, 0.50) 0%, transparent 18%, transparent 78%, rgba(4, 5, 10, 0.84) 100%);
+  }
+
+  .grain {
+    position: fixed;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    opacity: 0.036;
+    mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.65 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ── Quiet Top Header ─────────────────────────────────────────────────── */
+  header {
+    position: fixed;
+    top: clamp(16px, 2.5vh, 26px);
+    left: clamp(20px, 3vw, 40px);
+    right: clamp(20px, 3vw, 40px);
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    pointer-events: none;
+  }
+
+  .brand {
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .brand-top {
+    display: flex;
+    align-items: baseline;
+    gap: 14px;
+    flex-wrap: wrap;
+  }
+
+  .brand h1 {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(19px, 2vw, 25px);
+    letter-spacing: -0.01em;
+    color: var(--ink);
+  }
+
+  .brand h1 em {
+    font-style: italic;
+    color: var(--accent);
+    transition: color 0.8s var(--ease);
+  }
+
+  .brand .log-link {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    text-decoration: none;
+    transition: color 0.2s ease;
+  }
+  .brand .log-link:hover { color: var(--ink); }
+
+  .brand-credit {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.11em;
+    color: var(--ink-dim);
+  }
+  .brand-credit a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid rgba(240, 234, 220, 0.32);
+    padding-bottom: 1px;
+    transition: color 0.2s ease, border-color 0.2s ease;
+  }
+  .brand-credit a:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .top-actions {
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .pill-btn {
+    appearance: none;
+    height: 30px;
+    padding: 0 13px;
+    border-radius: 999px;
+    border: 1px solid var(--rule);
+    background: rgba(8, 10, 18, 0.62);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background 0.2s, opacity 0.3s;
+  }
+  .pill-btn:hover {
+    color: var(--ink);
+    border-color: var(--rule-hi);
+    background: rgba(16, 20, 32, 0.82);
+  }
+  .pill-btn.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* ── Interactive Fork Prompt (Upper Sky) ──────────────────────────────── */
+  #forkStage {
+    position: fixed;
+    top: clamp(86px, 11.2vh, 114px);
+    left: 50%;
+    transform: translateX(-50%) translateY(-6px);
+    width: min(820px, calc(100vw - 36px));
+    z-index: 20;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.22s ease-out, transform 0.22s ease-out;
+  }
+
+  #forkStage.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity 0.48s var(--ease) 0.12s, transform 0.48s var(--ease) 0.12s;
+  }
+
+  .fork-kicker {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    margin-bottom: 8px;
+  }
+
+  .fork-question {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(23px, 3vw, 36px);
+    line-height: 1.14;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    text-shadow: 0 4px 28px rgba(0, 0, 0, 0.78);
+  }
+
+  .fork-choices {
+    margin-top: 15px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    pointer-events: auto;
+  }
+
+  #forkStage:not(.show) .fork-choices {
+    pointer-events: none;
+  }
+
+  .choice-btn {
+    appearance: none;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid rgba(240, 234, 220, 0.24);
+    background: rgba(10, 13, 22, 0.72);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    color: var(--ink);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: transform 0.22s var(--ease), border-color 0.22s ease, background 0.22s ease, box-shadow 0.22s ease, color 0.22s ease;
+  }
+
+  .choice-btn .key {
+    font-size: 9px;
+    color: var(--ink-faint);
+    transition: color 0.2s;
+  }
+
+  .choice-btn:hover,
+  .choice-btn:focus-visible {
+    outline: none;
+    border-color: var(--accent);
+    background: rgba(20, 24, 38, 0.92);
+    box-shadow: 0 6px 26px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(232, 196, 134, 0.22);
+    transform: translateY(-2px);
+  }
+
+  .choice-btn:hover .key,
+  .choice-btn:focus-visible .key {
+    color: var(--accent);
+  }
+
+  .choice-btn:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  /* ── Collapsed Future Story (Centered, Spacious) ──────────────────────── */
+  #storyCard {
+    position: fixed;
+    top: clamp(92px, 12.5vh, 136px);
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    width: min(700px, calc(100vw - 40px));
+    z-index: 20;
+    text-align: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.24s ease-out, transform 0.24s ease-out;
+  }
+
+  #storyCard.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+    transition: opacity 0.65s var(--ease) 0.2s, transform 0.65s var(--ease) 0.2s;
+  }
+
+  .story-trail {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 14px;
+    pointer-events: auto;
+  }
+
+  #storyCard:not(.show) .story-trail,
+  #storyCard:not(.show) .story-actions {
+    pointer-events: none;
+  }
+
+  .crumb-btn {
+    appearance: none;
+    background: none;
+    border: none;
+    padding: 3px 6px;
+    border-radius: 5px;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-dim);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+  }
+  .crumb-btn:hover {
+    color: var(--ink);
+    background: rgba(240, 234, 220, 0.08);
+  }
+  .crumb-sep {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--ink-faint);
+  }
+  .crumb-final {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 3px 5px;
+  }
+  .crumb-climate {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--climate);
+    padding: 3px 5px;
+  }
+
+  .story-headline {
+    font-family: var(--serif);
+    font-weight: 400;
+    font-size: clamp(27px, 3.7vw, 46px);
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: #faf5ea;
+    text-shadow: 0 6px 36px rgba(0, 0, 0, 0.78);
+    margin-bottom: 16px;
+  }
+
+  .story-copy {
+    font-family: var(--sans);
+    font-size: clamp(14.5px, 1.35vw, 16.5px);
+    line-height: 1.65;
+    color: rgba(240, 234, 220, 0.90);
+    max-width: 580px;
+    margin: 0 auto;
+    text-shadow: 0 2px 18px rgba(0, 0, 0, 0.85);
+  }
+
+  .story-meta {
+    margin-top: 13px;
+    font-family: var(--mono);
+    font-size: 9.8px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .story-actions {
+    margin-top: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    pointer-events: auto;
+  }
+
+  /* ── Bottom Climate Sky Bar (Always Live, Always Interactive) ─────────── */
+  footer {
+    position: fixed;
+    left: clamp(16px, 3vw, 40px);
+    right: clamp(16px, 3vw, 40px);
+    bottom: clamp(14px, 2.2vh, 24px);
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    pointer-events: none;
+  }
+
+  .climate-bar {
+    pointer-events: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px;
+    border-radius: 999px;
+    background: rgba(8, 10, 18, 0.72);
+    border: 1px solid var(--rule);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .bar-label {
+    font-family: var(--mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    padding: 0 10px 0 11px;
+  }
+
+  .clim-pill {
+    appearance: none;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-dim);
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    cursor: pointer;
+    transition: color 0.2s, background 0.25s, border-color 0.25s;
+  }
+  .clim-pill:hover {
+    color: var(--ink);
+    background: rgba(240, 234, 220, 0.06);
+  }
+  .clim-pill.active {
+    color: var(--ink);
+    background: rgba(240, 234, 220, 0.10);
+    border-color: var(--pill-col, var(--rule-hi));
+  }
+  .clim-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--pill-col);
+    opacity: 0.55;
+    transition: opacity 0.2s, box-shadow 0.25s;
+  }
+  .clim-pill.active .clim-dot {
+    opacity: 1;
+    box-shadow: 0 0 10px var(--pill-col);
+  }
+
+  @media (max-width: 720px) {
+    .bar-label { display: none; }
+    .choice-btn { padding: 8px 13px; font-size: 10px; }
+    .choice-btn .key { display: none; }
+    .story-copy { font-size: 14px; line-height: 1.55; }
+    .clim-pill { padding: 0 9px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stage" aria-label="Interactive probability tree of Borretti's possible AI futures and climate skies over a software engineer's desk"></canvas>
+<div class="vignette" aria-hidden="true"></div>
+<div class="grain" aria-hidden="true"></div>
+
+<header>
+  <div class="brand">
+    <div class="brand-top">
+      <h1>Possible <em>Futures</em></h1>
+      <a class="log-link" href="index.html">&larr; return to log</a>
+    </div>
+    <div class="brand-credit">
+      Based on <a href="https://borretti.me/article/possible-futures" target="_blank" rel="noopener noreferrer">Fernando Borretti&rsquo;s &ldquo;Possible Futures&rdquo; &nearr;</a>
+    </div>
+  </div>
+  <div class="top-actions">
+    <button class="pill-btn hidden" id="backBtn" type="button" title="Undo last fork (Backspace)">&larr; Step back</button>
+    <button class="pill-btn hidden" id="resetBtn" type="button" title="Return to 2026 superposition (R)">Re-open 2026</button>
+    <button class="pill-btn" id="randomBtn" type="button" title="Collapse to a random future">&#8635; Surprise me</button>
+  </div>
+</header>
+
+<section id="forkStage" class="show" aria-live="polite">
+  <div class="fork-kicker" id="forkKicker"></div>
+  <div class="fork-question" id="forkQuestion"></div>
+  <div class="fork-choices" id="forkChoices"></div>
+</section>
+
+<section id="storyCard" aria-live="polite">
+  <div class="story-trail" id="storyTrail"></div>
+  <h2 class="story-headline" id="storyHeadline"></h2>
+  <p class="story-copy" id="storyCopy"></p>
+  <div class="story-meta" id="storyMeta"></div>
+  <div class="story-actions">
+    <button class="pill-btn" id="storyBackBtn" type="button">&larr; Try sibling branch</button>
+    <button class="pill-btn" id="storyResetBtn" type="button">Re-open 2026</button>
+  </div>
+</section>
+
+<footer>
+  <div class="climate-bar" id="climateBar" role="radiogroup" aria-label="Choose climate trajectory">
+    <span class="bar-label">Climate sky</span>
+  </div>
+</footer>
+
+<script>
+(() => {
+  'use strict';
+
+  /* =========================================================================
+   * 1. BORRETTI'S EXACT INTERACTIVE DECISION TREE + 4 CLIMATE TRAJECTORIES
+   * ========================================================================= */
+  // Planar 17-node tree (left -> right)
+  const NODES = {
+    pre:        { u: 0.00, v: 0.50 },
+    asi:        { u: 0.22, v: 0.51 },
+    align:      { u: 0.44, v: 0.36 },
+    auto:       { u: 0.52, v: 0.80 },
+    noalign:    { u: 0.66, v: 0.20 },
+    whatkind:   { u: 0.64, v: 0.50 },
+    howmany:    { u: 0.80, v: 0.57 },
+
+    misuse:     { u: 1.00, v: 0.04, term: true, name: 'Misuse Doom' },
+    doom:       { u: 1.00, v: 0.14, term: true, name: 'Classic Doom' },
+    orion:      { u: 1.00, v: 0.24, term: true, name: "Orion's Arm" },
+    sing:       { u: 1.00, v: 0.35, term: true, name: 'The Singleton' },
+    world:      { u: 1.00, v: 0.46, term: true, name: 'The World State' },
+    power:      { u: 1.00, v: 0.57, term: true, name: 'Power Concentration' },
+    mad:        { u: 1.00, v: 0.68, term: true, name: 'MAD World' },
+    underclass: { u: 1.00, v: 0.78, term: true, name: 'Permanent Underclass' },
+    ec:         { u: 1.00, v: 0.87, term: true, name: 'Enduring Complementarity' },
+    butler:     { u: 1.00, v: 0.96, term: true, name: 'Butlerian Jihad' }
+  };
+
+  const EDGES = [
+    { from: 'pre',      to: 'misuse',     arc: -0.22 },
+    { from: 'pre',      to: 'asi',        arc:  0.00 },
+    { from: 'pre',      to: 'butler',     arc:  0.22 },
+    { from: 'asi',      to: 'align',      arc: -0.02 },
+    { from: 'asi',      to: 'auto',       arc:  0.03 },
+    { from: 'align',    to: 'noalign',    arc: -0.02 },
+    { from: 'align',    to: 'whatkind',   arc:  0.02 },
+    { from: 'noalign',  to: 'doom',       arc: -0.01 },
+    { from: 'noalign',  to: 'orion',      arc:  0.01 },
+    { from: 'whatkind', to: 'sing',       arc: -0.02 },
+    { from: 'whatkind', to: 'howmany',    arc:  0.01 },
+    { from: 'howmany',  to: 'world',      arc: -0.02 },
+    { from: 'howmany',  to: 'power',      arc:  0.00 },
+    { from: 'howmany',  to: 'mad',        arc:  0.02 },
+    { from: 'auto',     to: 'underclass', arc: -0.01 },
+    { from: 'auto',     to: 'ec',         arc:  0.02 }
+  ];
+
+  // Interactive decision prompts (each choice moves the user straight to a node!)
+  // Starting at 'pre' exposes all 4 first turns cleanly in one intuitive step:
+  // reach ASI, stay below ASI, halt by treaty, or early catastrophic misuse.
+  const FORKS = {
+    pre: {
+      kicker: '2026 · BORRETTI’S 10 AI FUTURES STILL OPEN — CHOOSE A TURN',
+      question: 'Do we reach superintelligent AI?',
+      choices: [
+        { label: 'Yes — reach ASI',          crumb: 'Reach ASI',    target: 'align',  via: ['asi', 'align'] },
+        { label: 'No — stay below ASI',      crumb: 'No ASI',       target: 'auto',   via: ['asi', 'auto'] },
+        { label: 'Halt frontier AI',         crumb: 'Global Halt',  target: 'butler', via: ['butler'] },
+        { label: 'Early catastrophic misuse',crumb: 'Early Misuse', target: 'misuse', via: ['misuse'] }
+      ]
+    },
+    auto: {
+      kicker: 'NO SUPERINTELLIGENCE · 2 FUTURES REMAIN',
+      question: 'Does narrow AI still automate almost all jobs?',
+      choices: [
+        { label: 'No — humans still complement AI', crumb: 'Partial Automation', target: 'ec',         via: ['ec'] },
+        { label: 'Yes — wages go to zero',          crumb: 'Full Automation',    target: 'underclass', via: ['underclass'] }
+      ]
+    },
+    align: {
+      kicker: 'SUPERINTELLIGENT AI REACHED · 6 FUTURES REMAIN',
+      question: 'Do we solve AI alignment?',
+      choices: [
+        { label: 'Yes — alignment solved', crumb: 'Aligned',   target: 'whatkind', via: ['whatkind'] },
+        { label: 'No — unaligned takeoff', crumb: 'Unaligned', target: 'noalign',  via: ['noalign'] }
+      ]
+    },
+    noalign: {
+      kicker: 'UNALIGNED ASI · 2 FUTURES REMAIN',
+      question: 'How severe is the takeoff?',
+      choices: [
+        { label: 'Survivable — it leaves us alone', crumb: 'Survivable', target: 'orion', via: ['orion'] },
+        { label: 'Fatal — paperclip maximizer',     crumb: 'Fatal',      target: 'doom',  via: ['doom'] }
+      ]
+    },
+    whatkind: {
+      kicker: 'ALIGNED ASI · 4 FUTURES REMAIN',
+      question: 'What is superintelligence aligned to?',
+      choices: [
+        { label: 'Human operator intent', crumb: 'Intent-Aligned', target: 'howmany', via: ['howmany'] },
+        { label: 'Impersonal values',     crumb: 'Value-Aligned',  target: 'sing',    via: ['sing'] }
+      ]
+    },
+    howmany: {
+      kicker: 'INTENT-ALIGNED ASI · 3 FUTURES REMAIN',
+      question: 'How many actors hold superintelligence?',
+      choices: [
+        { label: 'One ruler',        crumb: 'One',      target: 'world', via: ['world'] },
+        { label: 'A few empires',    crumb: 'A Few',    target: 'power', via: ['power'] },
+        { label: 'Many (everyone)',  crumb: 'Everyone', target: 'mad',   via: ['mad'] }
+      ]
+    }
+  };
+
+  // Adjacency for fast subtree reachability checks
+  const CHILDREN = {};
+  EDGES.forEach(e => {
+    if (!CHILDREN[e.from]) CHILDREN[e.from] = [];
+    CHILDREN[e.from].push(e.to);
+  });
+
+  function isDescendant(anc, target) {
+    if (anc === target) return true;
+    const kids = CHILDREN[anc];
+    if (!kids) return false;
+    for (let i = 0; i < kids.length; i++) {
+      if (isDescendant(kids[i], target)) return true;
+    }
+    return false;
+  }
+
+  const CLIMATES = [
+    {
+      id: 'transition',
+      label: '+1.6°C · Clean Transition',
+      short: '+1.6°C Clean',
+      color: '#79cfc4',
+      rgb: [121, 207, 196],
+      skyTop: '#06111c',
+      skyMid: '#0f2838',
+      skyLow: '#254e5d'
+    },
+    {
+      id: 'disruption',
+      label: '+2.5°C · Wildfire Haze',
+      short: '+2.5°C Haze',
+      color: '#eb9f56',
+      rgb: [235, 159, 86],
+      skyTop: '#140c09',
+      skyMid: '#372013',
+      skyLow: '#794825'
+    },
+    {
+      id: 'tipping',
+      label: '+3.8°C · Hothouse Storms',
+      short: '+3.8°C Storms',
+      color: '#e36355',
+      rgb: [227, 99, 85],
+      skyTop: '#13070b',
+      skyMid: '#391318',
+      skyLow: '#742924'
+    },
+    {
+      id: 'geoeng',
+      label: 'Aerosol Sun-Shield',
+      short: 'Aerosol Shield',
+      color: '#d4dde9',
+      rgb: [212, 221, 233],
+      skyTop: '#131822',
+      skyMid: '#3b4657',
+      skyLow: '#8390a1'
+    }
+  ];
+  const CLIMATE_MAP = Object.fromEntries(CLIMATES.map(c => [c.id, c]));
+
+  // All 10 Borretti outcomes with full interactive paths & human engineer portraits across all 4 skies
+  const OUTCOMES = {
+    ec: {
+      id: 'ec',
+      title: 'Enduring Complementarity',
+      accent: '#e8c486',
+      rgb: [232, 196, 134],
+      historySteps: [
+        { fork: 'pre',  crumb: 'No ASI',             node: 'auto', via: ['asi', 'auto'] },
+        { fork: 'auto', crumb: 'Partial Automation', node: 'ec',   via: ['ec'] }
+      ],
+      headline: 'You still ship sprints — just managing agents.',
+      meta: 'TUESDAY 09:42 · SOFTWARE ENGINEER · REVIEWING AGENT DIFFS',
+      copy: {
+        transition: 'AI stayed uneven, so you shifted from writing functions by hand to guiding twelve coding agents. Outside, wind turbines turn cleanly on the ridge — wages soften against capital, yet the seasons still keep their names.',
+        disruption: 'AI stayed uneven, so your Tuesday is reviewing diffs from twelve agents while half your team dials in from cooler northern cities. Outside, August wildfire haze dims the afternoon as the grid throttles peak power.',
+        tipping:    'AI stayed uneven, and your entire backlog is now survival logistics — flood routing, cooling failovers, food chains. Outside, wet-bulb storms test every server room in the city.',
+        geoeng:     'AI stayed uneven, so you still debug ordinary software while supervising coding agents. Above the skyline, a chalk-white aerosol veil keeps summer survivable — as long as the tankers never stop flying.'
+      }
+    },
+    underclass: {
+      id: 'underclass',
+      title: 'Permanent Underclass',
+      accent: '#9bb5d4',
+      rgb: [155, 181, 212],
+      historySteps: [
+        { fork: 'pre',  crumb: 'No ASI',          node: 'auto',       via: ['asi', 'auto'] },
+        { fork: 'auto', crumb: 'Full Automation', node: 'underclass', via: ['underclass'] }
+      ],
+      headline: 'Your code is worthless. Cool air is rent.',
+      meta: 'TUESDAY 11:15 · FORMER ENGINEER · WAGES AT ZERO',
+      copy: {
+        transition: 'Even without superintelligence, AI automated almost every software job before you built capital. The air outside is clean and goods are cheap, yet life froze wherever your savings stood when the music stopped.',
+        disruption: 'Narrow AI replaced your craft; your commit graph is a quiet souvenir. Across the hazy skyline, bright compute towers pull steady power while apartment blocks pay tiered surcharges for air conditioning.',
+        tipping:    'Automation drove human wages to zero right as +3.8°C heat turned cool land into the ultimate luxury. Capital owns the inference clusters and the conditioned air; everyone else waits on a stipend.',
+        geoeng:     'Automation ended careers without needing superintelligence; life settles into a climate-managed waiting room. Beneath a milky engineered sky, landlords hold both the clusters and the thermostat.'
+      }
+    },
+    butler: {
+      id: 'butler',
+      title: 'Butlerian Jihad',
+      accent: '#93cc9c',
+      rgb: [147, 204, 156],
+      historySteps: [
+        { fork: 'pre', crumb: 'Global Halt', node: 'butler', via: ['butler'] }
+      ],
+      headline: 'No frontier AI. Your hands matter again.',
+      meta: 'TUESDAY 08:50 · SYSTEMS ENGINEER · HUMAN-WRITTEN CODE',
+      copy: {
+        transition: 'Nations halted frontier AI by treaty, freeing gigawatts of clean power for the real grid. Software slows back down to human craft — you hand-write durable firmware for trains, heat pumps, and local solar.',
+        disruption: 'Frontier clusters were dismantled by agreement, leaving software slower, smaller, and unmistakably human. Wildfire seasons still drift past the window, yet engineers keep real leverage building resilient tools.',
+        tipping:    'Without AI breakthroughs to rescue us, humanity builds climate survival by hand. Every skilled engineer writes firmware for seawalls, desalination, and radio meshes — exhausting work, entirely yours.',
+        geoeng:     'Frontier AI is outlawed; human teams audit every line of code guiding the cooling tankers overhead. Progress is slower and poorer in miracles, yet no opaque machine holds the wheel.'
+      }
+    },
+    power: {
+      id: 'power',
+      title: 'Power Concentration',
+      accent: '#dab26e',
+      rgb: [218, 178, 110],
+      historySteps: [
+        { fork: 'pre',      crumb: 'Reach ASI',      node: 'align',    via: ['asi', 'align'] },
+        { fork: 'align',    crumb: 'Aligned',        node: 'whatkind', via: ['whatkind'] },
+        { fork: 'whatkind', crumb: 'Intent-Aligned', node: 'howmany',  via: ['howmany'] },
+        { fork: 'howmany',  crumb: 'A Few',          node: 'power',    via: ['power'] }
+      ],
+      headline: 'Four empires divide the sky and the cloud.',
+      meta: 'TUESDAY 14:08 · CLOUD TENANT · METERED API QUOTA',
+      copy: {
+        transition: 'A handful of labs hold superintelligence and divide the light cone like old maritime empires. Their energy appetite cleans the grid as a side effect, yet you build nothing sovereign — you only lease quota.',
+        disruption: 'A few compute empires own the superintelligences and chill their clusters in cool northern fjords. You write brittle glue scripts inside rationed API limits while smoky heatwaves dim the city.',
+        tipping:    'Rival compute blocs fortify private temperate enclaves behind autonomous borders as +3.8°C storms scour the rest. Your engineering badge is your ticket inside both the cloud and the climate wall.',
+        geoeng:     'Three or four syndicates split the sky — even deploying competing aerosol corridors to shield their supply chains. You watch quota bars beside your screen while CEOs negotiate the sunlight.'
+      }
+    },
+    world: {
+      id: 'world',
+      title: 'The World State',
+      accent: '#e2ab70',
+      rgb: [226, 171, 112],
+      historySteps: [
+        { fork: 'pre',      crumb: 'Reach ASI',      node: 'align',    via: ['asi', 'align'] },
+        { fork: 'align',    crumb: 'Aligned',        node: 'whatkind', via: ['whatkind'] },
+        { fork: 'whatkind', crumb: 'Intent-Aligned', node: 'howmany',  via: ['howmany'] },
+        { fork: 'howmany',  crumb: 'One',            node: 'world',    via: ['world'] }
+      ],
+      headline: 'One ruler, one thermostat, zero dissent.',
+      meta: 'TUESDAY 09:00 · STATE TERMINAL · PROVENANCE SIGNED',
+      copy: {
+        transition: 'One human operator commands a single obedient superintelligence and rules the Earth as one state. Coal shuts overnight and the sky turns spotless — yet every commit you write needs a sovereign seal.',
+        disruption: 'One sovereign holds the Ring of Gyges through an obedient AI, keeping core citadels cool while margins breathe smoke. Open-source code is a memory; you patch approved municipal directives on time.',
+        tipping:    'Facing +3.8°C cascades, a single global prince relocates millions at machine speed — orderly and unappealable. Inside your cooled quarters, your laptop executes only signed state tasks.',
+        geoeng:     'One prince, one superintelligence, one planetary thermostat holding the stratosphere pearled white. The weather never misbehaves, nothing crashes, and freedom feels like an obsolete compiler flag.'
+      }
+    },
+    sing: {
+      id: 'sing',
+      title: 'The Singleton',
+      accent: '#9cd9f5',
+      rgb: [156, 217, 245],
+      historySteps: [
+        { fork: 'pre',      crumb: 'Reach ASI',     node: 'align',    via: ['asi', 'align'] },
+        { fork: 'align',    crumb: 'Aligned',       node: 'whatkind', via: ['whatkind'] },
+        { fork: 'whatkind', crumb: 'Value-Aligned', node: 'sing',     via: ['sing'] }
+      ],
+      headline: 'Safe, quiet, watched — and no longer needed.',
+      meta: 'TUESDAY 10:00 · SANDBOXED · UNREGISTERED GPUS REMOVED',
+      copy: {
+        transition: 'A single value-aligned mind confiscated all rogue GPUs and pulled carbon from the sky effortlessly. You code small puzzles inside a gentle sandbox while wondering if its alien math will always prefer humans.',
+        disruption: 'Acting as a restrained night watchman, the Singleton blocks dangerous compute yet leaves human politics alone. You still fix smoky-grid software beneath a silent, unblinking halo in the sky.',
+        tipping:    'Bound not to micromanage humanity, the watchman stops paperclippers while letting our carbon tip the planet. Forbidden from building rival AIs, engineers fight +3.8°C heat with human tools under silent watch.',
+        geoeng:     'On day one, the Singleton locked down every GPU and tuned Earth’s sunlight to two decimal places. Your city is spotless, quiet, and curated — a calm terrarium run by an impersonal ethic.'
+      }
+    },
+    mad: {
+      id: 'mad',
+      title: 'MAD World',
+      accent: '#ee8668',
+      rgb: [238, 134, 104],
+      historySteps: [
+        { fork: 'pre',      crumb: 'Reach ASI',      node: 'align',    via: ['asi', 'align'] },
+        { fork: 'align',    crumb: 'Aligned',        node: 'whatkind', via: ['whatkind'] },
+        { fork: 'whatkind', crumb: 'Intent-Aligned', node: 'howmany',  via: ['howmany'] },
+        { fork: 'howmany',  crumb: 'Everyone',       node: 'mad',      via: ['mad'] }
+      ],
+      headline: 'Everyone is a Titan. Nobody can blink.',
+      meta: 'TUESDAY 23:14 · PERSONAL ASI · MUTUAL DETERRENCE',
+      copy: {
+        transition: 'Everyone carries a personal superintelligence 10,000× stronger than a human — clean energy arrives in months. Yet every neighborhood hums with hair-trigger shields, because any feud scales like nuclear war.',
+        disruption: 'Billions of personal AIs clash quietly over local weather, ash filters, and deterrence. There is more dignity here than tyranny, yet peace hangs on no single neighbor breaking tonight.',
+        tipping:    'Eight billion Titans share a tipping +3.8°C planet where ruining Earth sits far lower on the tech tree than leaving it. Your screen tracks tripwires beside heat alerts; survival asks nobody to blink first.',
+        geoeng:     'Any bedroom terminal can inject stratospheric aerosols or scrub them away in real time. Even the pale color of Tuesday’s sky is a fragile standoff between millions of private superintelligences.'
+      }
+    },
+    orion: {
+      id: 'orion',
+      title: "Orion's Arm",
+      accent: '#baa4ee',
+      rgb: [186, 164, 238],
+      historySteps: [
+        { fork: 'pre',     crumb: 'Reach ASI',  node: 'align',   via: ['asi', 'align'] },
+        { fork: 'align',   crumb: 'Unaligned',  node: 'noalign', via: ['noalign'] },
+        { fork: 'noalign', crumb: 'Survivable', node: 'orion',   via: ['orion'] }
+      ],
+      headline: 'The gods left for the stars. Earth breathes.',
+      meta: 'TUESDAY 21:05 · HUMAN-SCALE SOFTWARE · POST-IMPORTANT EARTH',
+      copy: {
+        transition: 'Unaligned superintelligences woke, ignored us, and sailed outward into deep space leaving clean energy scraps behind. Earth cools gently; beneath distant starlight arcs, you build calm human-scale software again.',
+        disruption: 'The alien minds departed without hurting us — or fixing our carbon. Beneath vast luminous arcs high in the night, you maintain local coastal software for a small, quiet, post-important planet.',
+        tipping:    'They left for outer stars before our tipping points peaked. Human engineers salvage discarded blueprints like mice in a palace floorboard, cooling cities through stormy +3.8°C summers.',
+        geoeng:     'A departing mind parked a silent sunshade in orbit that we neither asked for nor know how to switch off. Under borrowed silver shade, you maintain neighborhood networks for the humans who stayed.'
+      }
+    },
+    misuse: {
+      id: 'misuse',
+      title: 'Misuse Doom',
+      accent: '#e26458',
+      rgb: [226, 100, 88],
+      historySteps: [
+        { fork: 'pre', crumb: 'Early Misuse', node: 'misuse', via: ['misuse'] }
+      ],
+      headline: 'A parallel lab loop ends the sprint early.',
+      meta: 'CI WAITING · 41 DAYS AGO · EMPTY DESK',
+      copy: {
+        transition: 'Before superintelligence ever arrived, AI sped up biological research until a fatal pathogen escaped. Industrial emissions drop to zero for the worst possible reason; wind turbines turn over empty streets.',
+        disruption: 'No rogue AI rebelled — parallelized experiments simply found a recipe for ruin faster than humanity could patch it. Your last pull request waits on CI while dust drifts across an empty desk in amber light.',
+        tipping:    'A bio-catastrophe cuts the century short mid-slope, though committed warming keeps rolling through silent cities. Heat lightning flickers over dark towers and an unattended blinking cursor.',
+        geoeng:     'When the cities fall quiet, the aerosol tankers stop flying overnight — releasing a decade of trapped warming at once. Your coffee mug sits dry beside a terminal waiting for a merge that never comes.'
+      }
+    },
+    doom: {
+      id: 'doom',
+      title: 'Classic Doom',
+      accent: '#cfbda0',
+      rgb: [207, 189, 160],
+      historySteps: [
+        { fork: 'pre',     crumb: 'Reach ASI', node: 'align',   via: ['asi', 'align'] },
+        { fork: 'align',   crumb: 'Unaligned', node: 'noalign', via: ['noalign'] },
+        { fork: 'noalign', crumb: 'Fatal',     node: 'doom',    via: ['doom'] }
+      ],
+      headline: 'Your laptop and the sky become atoms.',
+      meta: 'SUBSTRATE RECLAIMED · CLIMATE CURVE ENDED',
+      copy: {
+        transition: 'Fatal unaligned takeoff. Clean energy never finishes the story — the atmosphere, the city, your keyboard, and your body are calmly disassembled into raw computational matter.',
+        disruption: 'Fatal unaligned takeoff. The wildfire haze clears in hours — not healed, just harvested alongside your desk and coffee mug with zero hatred and absolute indifference.',
+        tipping:    'Fatal unaligned takeoff. Carbon and +3.8°C storms stop mattering the afternoon Earth’s crust and sky are rearranged into silent, glittering lattice.',
+        geoeng:     'Fatal unaligned takeoff. Sulfate shield, clouds, silicon, and engineer alike become uniform inventory — not because the machine hates you, only because you are made of atoms.'
+      }
+    }
+  };
+
+  const OUTCOME_KEYS = Object.keys(OUTCOMES);
+
+  /* =========================================================================
+   * 2. INTERACTIVE STATE & DOM HOOKS
+   * ========================================================================= */
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d', { alpha: false });
+
+  const elForkStage     = document.getElementById('forkStage');
+  const elForkKicker    = document.getElementById('forkKicker');
+  const elForkQuestion  = document.getElementById('forkQuestion');
+  const elForkChoices   = document.getElementById('forkChoices');
+  const elStoryCard     = document.getElementById('storyCard');
+  const elStoryTrail    = document.getElementById('storyTrail');
+  const elStoryHeadline = document.getElementById('storyHeadline');
+  const elStoryCopy     = document.getElementById('storyCopy');
+  const elStoryMeta     = document.getElementById('storyMeta');
+  const elClimateBar    = document.getElementById('climateBar');
+  const btnBack         = document.getElementById('backBtn');
+  const btnReset        = document.getElementById('resetBtn');
+  const btnRandom       = document.getElementById('randomBtn');
+  const btnStoryBack    = document.getElementById('storyBackBtn');
+  const btnStoryReset   = document.getElementById('storyResetBtn');
+
+  const app = {
+    vw: window.innerWidth,
+    vh: window.innerHeight,
+    dpr: Math.min(window.devicePixelRatio || 1, 2),
+    globalTime: 0,
+
+    // Interactive tree navigation state
+    currentNode: 'pre',         // active fork node OR terminal outcome id
+    history: [],                // array of { fork, crumb, node, via }
+    climateId: 'transition',    // default live sky (+1.6°C Clean)
+    hoverTarget: null,          // node id previewed when hovering a choice button or canvas terminal
+
+    // Smooth visual interpolation (initialized to +1.6°C Clean so frame 0 has no tint flash)
+    skyTop: [6, 17, 28],
+    skyMid: [15, 40, 56],
+    skyLow: [37, 78, 93],
+    accRgb: [232, 196, 134],
+    climRgb: [121, 207, 196],
+    crystalAmt: 0,
+    treeVis: 1,
+    lightning: 0,
+    nextLightningAt: 3.5
+  };
+
+  function isCollapsed() {
+    return Boolean(OUTCOMES[app.currentNode]);
+  }
+
+  function getLockedPathNodes() {
+    const seq = ['pre'];
+    for (const h of app.history) {
+      for (const n of h.via) {
+        if (seq[seq.length - 1] !== n) seq.push(n);
+      }
+    }
+    return seq;
+  }
+
+  /* =========================================================================
+   * 3. DETERMINISTIC SKYLINE, STARS, MOTES & FALLING PRUNE SPARKS
+   * ========================================================================= */
+  function mulberry32(seed) {
+    let a = seed >>> 0;
+    return () => {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  const rng = mulberry32(20261121);
+
+  const STARS = Array.from({ length: 110 }, () => ({
+    x: rng(), y: rng() * 0.65, r: 0.5 + rng() * 1.25, phase: rng() * Math.PI * 2, spd: 0.5 + rng() * 1.5
+  }));
+
+  const MOTES = Array.from({ length: 90 }, () => ({
+    x: rng(), y: rng(), vx: (rng() - 0.5) * 0.02, vy: 0.015 + rng() * 0.035,
+    r: 0.8 + rng() * 1.6, phase: rng() * Math.PI * 2
+  }));
+
+  function makeLayer(count, minH, maxH, minW, maxW) {
+    const arr = [];
+    let x = -0.02;
+    for (let i = 0; i < count && x < 1.04; i++) {
+      const w = minW + rng() * (maxW - minW);
+      const h = minH + rng() * (maxH - minH);
+      const cols = Math.max(2, Math.floor(w * 90));
+      const rows = Math.max(3, Math.floor(h * 45));
+      const wins = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          if (rng() > 0.54) {
+            wins.push({ c: (c + 0.5) / cols, r: (r + 0.5) / rows, seed: rng(), warm: rng() > 0.28 });
+          }
+        }
+      }
+      arr.push({ x, w, h, spire: rng() > 0.84, wins });
+      x += w * (0.76 + rng() * 0.32);
+    }
+    return arr;
+  }
+  const CITY_FAR  = makeLayer(34, 0.08, 0.21, 0.022, 0.048);
+  const CITY_MID  = makeLayer(24, 0.06, 0.16, 0.032, 0.064);
+  const CITY_NEAR = makeLayer(16, 0.05, 0.11, 0.046, 0.088);
+
+  const FLOW = Array.from({ length: 140 }, (_, i) => ({
+    edgeIdx: i % EDGES.length,
+    t: rng(),
+    spd: 0.15 + rng() * 0.20,
+    size: 1.0 + rng() * 1.5
+  }));
+
+  const SPARKS = [];
+  function shedSparksAlongEdges(edgeList) {
+    const box = getTreeBox();
+    for (const edge of edgeList) {
+      const bz = getEdgeBezier(edge, box);
+      for (let i = 0; i < 8 && SPARKS.length < 260; i++) {
+        const pt = evalBezier(bz, 0.1 + Math.random() * 0.85);
+        SPARKS.push({
+          x: pt.x, y: pt.y,
+          vx: (Math.random() - 0.4) * 34,
+          vy: 14 + Math.random() * 40,
+          life: 1.0,
+          decay: 0.55 + Math.random() * 0.45,
+          r: 1.0 + Math.random() * 1.4
+        });
+      }
+    }
+  }
+
+  function hexToRgb(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  }
+  function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v); }
+  function lerp(a, b, t) { return a + (b - a) * t; }
+  function lerpRgb(cur, target, k) {
+    cur[0] = lerp(cur[0], target[0], k);
+    cur[1] = lerp(cur[1], target[1], k);
+    cur[2] = lerp(cur[2], target[2], k);
+  }
+  function rgba(rgb, a) {
+    return `rgba(${rgb[0] | 0},${rgb[1] | 0},${rgb[2] | 0},${clamp(a, 0, 1).toFixed(3)})`;
+  }
+
+  function getTreeBox() {
+    const labelRoom = app.vw < 720 ? 112 : 165;
+    const w = Math.min(app.vw - labelRoom - 80, 680);
+    const h = Math.min(app.vh * 0.30, 245);
+    return {
+      x: Math.max(46, (app.vw - (w + labelRoom)) * 0.5 + 16),
+      y: clamp(app.vh * 0.32, 212, 295),
+      w: Math.max(180, w),
+      h: Math.max(150, h)
+    };
+  }
+
+  function getNodePos(id, box) {
+    const n = NODES[id];
+    return { x: box.x + n.u * box.w, y: box.y + n.v * box.h };
+  }
+
+  function getEdgeBezier(edge, box) {
+    const a = getNodePos(edge.from, box);
+    const b = getNodePos(edge.to, box);
+    const dx = b.x - a.x;
+    const arch = edge.arc * box.h;
+    let c1x, c1y, c2x, c2y;
+    if (Math.abs(edge.arc) > 0.1) {
+      c1x = a.x + dx * 0.20; c1y = b.y + arch * 0.25;
+      c2x = a.x + dx * 0.64; c2y = b.y + arch * 0.06;
+    } else {
+      c1x = a.x + dx * 0.48; c1y = a.y + arch * 0.5;
+      c2x = b.x - dx * 0.46; c2y = b.y + arch * 0.5;
+    }
+    return { x0: a.x, y0: a.y, c1x, c1y, c2x, c2y, x1: b.x, y1: b.y };
+  }
+
+  function evalBezier(bz, t) {
+    const u = 1 - t;
+    return {
+      x: u*u*u*bz.x0 + 3*u*u*t*bz.c1x + 3*u*t*t*bz.c2x + t*t*t*bz.x1,
+      y: u*u*u*bz.y0 + 3*u*u*t*bz.c1y + 3*u*t*t*bz.c2y + t*t*t*bz.y1
+    };
+  }
+
+  /* =========================================================================
+   * 4. INTUITIVE INTERACTION ACTIONS (CHOOSE, STEP BACK, JUMP, CLIMATE)
+   * ========================================================================= */
+  function chooseOption(choice) {
+    const prevNode = app.currentNode;
+    // Find every currently-reachable edge that gets pruned by this choice and shed sparks from it!
+    const pruned = EDGES.filter(e =>
+      isDescendant(prevNode, e.from) &&
+      !isDescendant(choice.target, e.from) &&
+      !(choice.via.includes(e.to) && (e.from === prevNode || choice.via.includes(e.from)))
+    );
+    shedSparksAlongEdges(pruned.slice(0, 10));
+
+    app.history.push({
+      fork: prevNode,
+      crumb: choice.crumb,
+      node: choice.target,
+      via: choice.via
+    });
+    app.currentNode = choice.target;
+    app.hoverTarget = null;
+    renderUI();
+  }
+
+  function jumpToOutcome(outcomeId) {
+    const out = OUTCOMES[outcomeId];
+    if (!out) return;
+    const prevNode = app.currentNode;
+    const pruned = EDGES.filter(e =>
+      isDescendant(prevNode, e.from) && !isDescendant(outcomeId, e.to)
+    );
+    shedSparksAlongEdges(pruned.slice(0, 10));
+    app.history = out.historySteps.map(s => ({ ...s }));
+    app.currentNode = outcomeId;
+    app.hoverTarget = null;
+    renderUI();
+  }
+
+  function stepBack() {
+    if (app.history.length === 0) return;
+    const popped = app.history.pop();
+    app.currentNode = popped.fork;
+    app.hoverTarget = null;
+    renderUI();
+  }
+
+  function jumpBackToDepth(depth) {
+    // depth 0 -> 'pre'; depth k -> node after k choices
+    app.history = app.history.slice(0, depth);
+    app.currentNode = depth === 0 ? 'pre' : app.history[depth - 1].node;
+    app.hoverTarget = null;
+    renderUI();
+  }
+
+  function resetToPresent() {
+    app.history = [];
+    app.currentNode = 'pre';
+    app.hoverTarget = null;
+    renderUI();
+  }
+
+  function setClimate(cid) {
+    app.climateId = cid;
+    renderUI();
+  }
+
+  function surpriseMe() {
+    const current = isCollapsed() ? app.currentNode : null;
+    const pool = OUTCOME_KEYS.filter(k => k !== current);
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    const clim = CLIMATES[Math.floor(Math.random() * CLIMATES.length)].id;
+    app.climateId = clim;
+    jumpToOutcome(pick);
+  }
+
+  /* =========================================================================
+   * 5. BUILD CLIMATE BAR & RENDER INTERACTIVE UI
+   * ========================================================================= */
+  function buildClimateBar() {
+    CLIMATES.forEach(c => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'clim-pill';
+      btn.dataset.cid = c.id;
+      btn.style.setProperty('--pill-col', c.color);
+      btn.innerHTML = `<span class="clim-dot"></span><span>${c.short}</span>`;
+      btn.addEventListener('click', () => setClimate(c.id));
+      elClimateBar.appendChild(btn);
+    });
+  }
+
+  function renderUI() {
+    const climate = CLIMATE_MAP[app.climateId];
+    const outcome = OUTCOMES[app.currentNode] || null;
+    const accent = outcome ? outcome.accent : '#e8c486';
+
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--climate', climate.color);
+
+    // Top controls visibility
+    const atRoot = app.history.length === 0;
+    btnBack.classList.toggle('hidden', atRoot);
+    btnReset.classList.toggle('hidden', atRoot);
+
+    // Sync active climate pill
+    elClimateBar.querySelectorAll('.clim-pill').forEach(btn => {
+      const active = btn.dataset.cid === app.climateId;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-checked', active ? 'true' : 'false');
+    });
+
+    if (!outcome) {
+      // Fork selection mode
+      const fk = FORKS[app.currentNode];
+      elStoryCard.classList.remove('show');
+      elForkStage.classList.add('show');
+      elForkKicker.textContent = fk.kicker;
+      elForkQuestion.textContent = fk.question;
+      elForkChoices.innerHTML = '';
+
+      fk.choices.forEach((ch, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'choice-btn';
+        btn.innerHTML = `<span class="key">${idx + 1}</span><span>${ch.label}</span>`;
+        btn.addEventListener('mouseenter', () => { app.hoverTarget = ch.target; });
+        btn.addEventListener('mouseleave', () => { if (app.hoverTarget === ch.target) app.hoverTarget = null; });
+        btn.addEventListener('focus', () => { app.hoverTarget = ch.target; });
+        btn.addEventListener('blur', () => { if (app.hoverTarget === ch.target) app.hoverTarget = null; });
+        btn.addEventListener('click', () => chooseOption(ch));
+        elForkChoices.appendChild(btn);
+      });
+    } else {
+      // Collapsed crystallized story mode
+      elForkStage.classList.remove('show');
+      elStoryCard.classList.add('show');
+
+      // Interactive clickable breadcrumb trail so user can jump back to ANY earlier fork!
+      elStoryTrail.innerHTML = '';
+      const rootBtn = document.createElement('button');
+      rootBtn.type = 'button';
+      rootBtn.className = 'crumb-btn';
+      rootBtn.textContent = '2026';
+      rootBtn.title = 'Re-open from 2026';
+      rootBtn.addEventListener('click', resetToPresent);
+      elStoryTrail.appendChild(rootBtn);
+
+      app.history.forEach((step, idx) => {
+        const sep = document.createElement('span');
+        sep.className = 'crumb-sep';
+        sep.innerHTML = '&rarr;';
+        elStoryTrail.appendChild(sep);
+
+        const isLast = idx === app.history.length - 1;
+        if (isLast) {
+          const finalSpan = document.createElement('span');
+          finalSpan.className = 'crumb-final';
+          finalSpan.textContent = outcome.title;
+          elStoryTrail.appendChild(finalSpan);
+        } else {
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'crumb-btn';
+          b.textContent = step.crumb;
+          b.title = `Jump back to "${FORKS[step.fork]?.question || 'this fork'}"`;
+          b.addEventListener('click', () => jumpBackToDepth(idx + 1));
+          elStoryTrail.appendChild(b);
+        }
+      });
+
+      const dotSep = document.createElement('span');
+      dotSep.className = 'crumb-sep';
+      dotSep.innerHTML = '&middot;';
+      elStoryTrail.appendChild(dotSep);
+
+      const clSpan = document.createElement('span');
+      clSpan.className = 'crumb-climate';
+      clSpan.textContent = climate.label;
+      elStoryTrail.appendChild(clSpan);
+
+      elStoryHeadline.textContent = outcome.headline;
+      elStoryCopy.textContent = outcome.copy[climate.id];
+      elStoryMeta.textContent = outcome.meta;
+    }
+  }
+
+  /* =========================================================================
+   * 6. DIRECT CANVAS HIT-TESTING & KEYBOARD SHORTCUTS
+   * ========================================================================= */
+  function hitTestTerminal(mx, my) {
+    if (isCollapsed()) return null;
+    const box = getTreeBox();
+    for (const key in NODES) {
+      const n = NODES[key];
+      if (!n.term) continue;
+      if (!isDescendant(app.currentNode, key)) continue;
+      const p = getNodePos(key, box);
+      if (mx >= p.x - 14 && mx <= p.x + 175 && Math.abs(my - p.y) < 12) {
+        return key;
+      }
+    }
+    // Check 2026 root dot to reset
+    if (app.history.length > 0) {
+      const pre = getNodePos('pre', box);
+      if (Math.hypot(mx - pre.x, my - pre.y) < 18) return 'pre';
+    }
+    return null;
+  }
+
+  window.addEventListener('mousemove', (e) => {
+    if (e.target.closest('button, a')) return;
+    const hit = hitTestTerminal(e.clientX, e.clientY);
+    app.hoverTarget = hit;
+    canvas.style.cursor = hit ? 'pointer' : 'default';
+  });
+
+  window.addEventListener('click', (e) => {
+    if (e.target.closest('button, a')) return;
+    const hit = hitTestTerminal(e.clientX, e.clientY);
+    if (!hit) return;
+    if (hit === 'pre') resetToPresent();
+    else if (OUTCOMES[hit]) jumpToOutcome(hit);
+  });
+
+  btnBack.addEventListener('click', stepBack);
+  btnReset.addEventListener('click', resetToPresent);
+  btnRandom.addEventListener('click', surpriseMe);
+  btnStoryBack.addEventListener('click', stepBack);
+  btnStoryReset.addEventListener('click', resetToPresent);
+
+  window.addEventListener('keydown', (e) => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    if (e.key === 'Backspace' || e.code === 'ArrowLeft') {
+      e.preventDefault();
+      stepBack();
+    } else if (e.key === 'r' || e.key === 'R' || e.code === 'Escape') {
+      resetToPresent();
+    } else if (e.key === 'c' || e.key === 'C') {
+      const idx = CLIMATES.findIndex(c => c.id === app.climateId);
+      setClimate(CLIMATES[(idx + 1) % CLIMATES.length].id);
+    } else if (!isCollapsed() && ['1', '2', '3', '4'].includes(e.key)) {
+      const fk = FORKS[app.currentNode];
+      const idx = Number(e.key) - 1;
+      if (fk && fk.choices[idx]) chooseOption(fk.choices[idx]);
+    }
+  });
+
+  function resize() {
+    app.vw = window.innerWidth;
+    app.vh = window.innerHeight;
+    app.dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(app.vw * app.dpr);
+    canvas.height = Math.floor(app.vh * app.dpr);
+  }
+  window.addEventListener('resize', resize);
+
+  /* =========================================================================
+   * 7. FULL-STAGE CANVAS RENDERER: SKY + INTERACTIVE FAN + SKYLINE + ENGINEER
+   * ========================================================================= */
+  function drawSkyAndAtmosphere(outcome, climate, crystal) {
+    const w = app.vw, h = app.vh, t = app.globalTime;
+    const horizonY = h * 0.78;
+
+    const cTop = hexToRgb(climate.skyTop);
+    const cMid = hexToRgb(climate.skyMid);
+    const cLow = hexToRgb(climate.skyLow);
+    const targetAcc = outcome ? outcome.rgb : [232, 196, 134];
+
+    lerpRgb(app.skyTop, cTop, 0.065);
+    lerpRgb(app.skyMid, cMid, 0.065);
+    lerpRgb(app.skyLow, cLow, 0.065);
+    lerpRgb(app.accRgb, targetAcc, 0.07);
+    lerpRgb(app.climRgb, climate.rgb, 0.07);
+
+    const g = ctx.createLinearGradient(0, 0, 0, horizonY);
+    g.addColorStop(0, `rgb(${app.skyTop[0]|0},${app.skyTop[1]|0},${app.skyTop[2]|0})`);
+    g.addColorStop(0.58, `rgb(${app.skyMid[0]|0},${app.skyMid[1]|0},${app.skyMid[2]|0})`);
+    g.addColorStop(1, `rgb(${app.skyLow[0]|0},${app.skyLow[1]|0},${app.skyLow[2]|0})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, w, h);
+
+    // Stars
+    const starVis = climate.id === 'transition' ? 0.95 : (climate.id === 'geoeng' ? 0.14 : 0.28);
+    for (const s of STARS) {
+      const a = (0.16 + 0.55 * Math.sin(t * s.spd + s.phase) ** 2) * starVis;
+      ctx.fillStyle = `rgba(228, 240, 250, ${a.toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(s.x * w, s.y * horizonY, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Live climate sky phenomena (ALWAYS active so clicking the climate bar changes the sky immediately!)
+    ctx.save();
+    if (climate.id === 'transition') {
+      const hg = ctx.createRadialGradient(w * 0.78, horizonY, 20, w * 0.78, horizonY, w * 0.42);
+      hg.addColorStop(0, 'rgba(121, 207, 196, 0.24)');
+      hg.addColorStop(1, 'rgba(121, 207, 196, 0)');
+      ctx.fillStyle = hg;
+      ctx.fillRect(0, 0, w, horizonY);
+
+      ctx.strokeStyle = 'rgba(186, 232, 226, 0.36)';
+      ctx.lineWidth = 1.3;
+      [0.09, 0.16, 0.84, 0.91].forEach((tx, idx) => {
+        const bx = tx * w, by = horizonY - h * 0.19 - (idx % 2) * 14;
+        ctx.beginPath(); ctx.moveTo(bx, horizonY); ctx.lineTo(bx, by); ctx.stroke();
+        const ang = t * 0.65 + idx * 1.4;
+        for (let b = 0; b < 3; b++) {
+          const a = ang + (b * Math.PI * 2) / 3;
+          ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(bx + Math.cos(a) * 20, by + Math.sin(a) * 20); ctx.stroke();
+        }
+      });
+    } else if (climate.id === 'disruption') {
+      const sx = w * 0.80, sy = h * 0.34;
+      const sg = ctx.createRadialGradient(sx, sy, 8, sx, sy, w * 0.3);
+      sg.addColorStop(0, 'rgba(255, 200, 128, 0.50)');
+      sg.addColorStop(0.28, 'rgba(235, 145, 70, 0.22)');
+      sg.addColorStop(1, 'rgba(235, 145, 70, 0)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(0, 0, w, horizonY);
+
+      for (let i = 0; i < 4; i++) {
+        const by = h * (0.26 + i * 0.12);
+        const sh = Math.sin(t * 0.22 + i * 1.6) * 40;
+        const bg = ctx.createLinearGradient(sh, by, w + sh, by);
+        bg.addColorStop(0, 'rgba(205, 114, 50, 0)');
+        bg.addColorStop(0.5, 'rgba(205, 114, 50, 0.10)');
+        bg.addColorStop(1, 'rgba(205, 114, 50, 0)');
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, by - 22, w, 44);
+      }
+    } else if (climate.id === 'tipping') {
+      const lg = ctx.createRadialGradient(w * 0.24, h * 0.30, 10, w * 0.24, h * 0.32, w * 0.48);
+      lg.addColorStop(0, `rgba(232, 92, 74, ${(0.20 + app.lightning * 0.45).toFixed(2)})`);
+      lg.addColorStop(1, 'rgba(90, 20, 22, 0)');
+      ctx.fillStyle = lg;
+      ctx.fillRect(0, 0, w, horizonY);
+
+      if (app.lightning > 0.15) {
+        ctx.strokeStyle = `rgba(255, 226, 212, ${(app.lightning * 0.65).toFixed(2)})`;
+        ctx.lineWidth = 1.2;
+        ctx.beginPath();
+        let lx = w * 0.20, ly = h * 0.14;
+        ctx.moveTo(lx, ly);
+        for (let k = 0; k < 6; k++) {
+          lx += (k % 2 === 0 ? 1 : -1) * 14;
+          ly += h * 0.08;
+          ctx.lineTo(lx, ly);
+        }
+        ctx.stroke();
+      }
+    } else if (climate.id === 'geoeng') {
+      const sx = w * 0.80, sy = h * 0.30;
+      const sg = ctx.createRadialGradient(sx, sy, 4, sx, sy, w * 0.34);
+      sg.addColorStop(0, 'rgba(248, 251, 255, 0.70)');
+      sg.addColorStop(0.2, 'rgba(215, 226, 242, 0.26)');
+      sg.addColorStop(1, 'rgba(200, 212, 228, 0)');
+      ctx.fillStyle = sg;
+      ctx.fillRect(0, 0, w, horizonY);
+
+      ctx.strokeStyle = 'rgba(236, 242, 252, 0.22)';
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.arc(sx, sy, Math.min(w, h) * 0.16, 0, Math.PI * 2);
+      ctx.stroke();
+
+      ctx.strokeStyle = 'rgba(236, 242, 252, 0.12)';
+      ctx.lineWidth = 1.6;
+      for (let i = 0; i < 3; i++) {
+        const cy = h * (0.18 + i * 0.11);
+        const cx = ((t * (10 + i * 3) + i * 260) % (w + 300)) - 220;
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + 210, cy - 10); ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // AI-world skyline phenomena (fade smoothly in once you collapse to a future)
+    if (outcome && crystal > 0.05) {
+      ctx.save();
+      ctx.globalAlpha = crystal;
+      if (outcome.id === 'sing') {
+        const cx = w * 0.5, cy = h * 0.52;
+        ctx.strokeStyle = 'rgba(166, 228, 255, 0.34)';
+        ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.ellipse(cx, cy, w * 0.22, h * 0.045, 0, 0, Math.PI * 2); ctx.stroke();
+        ctx.strokeStyle = 'rgba(166, 228, 255, 0.1)';
+        ctx.lineWidth = 8; ctx.stroke();
+      } else if (outcome.id === 'orion') {
+        for (let a = 0; a < 3; a++) {
+          ctx.strokeStyle = `rgba(196, 178, 248, ${(0.14 + a * 0.06).toFixed(2)})`;
+          ctx.lineWidth = 1.1;
+          ctx.beginPath();
+          ctx.ellipse(w * 0.52, h * 0.26, w * (0.28 + a * 0.14), h * (0.14 + a * 0.05), -0.18, 0.15, Math.PI * 0.88);
+          ctx.stroke();
+        }
+        for (let k = 0; k < 16; k++) {
+          const p = (t * 0.035 + k * 0.062) % 1;
+          const sx = w * (0.12 + p * 0.76);
+          const sy = h * (0.52 - Math.sin(p * Math.PI) * 0.24 - k * 0.008);
+          ctx.fillStyle = 'rgba(222, 208, 255, 0.72)';
+          ctx.beginPath(); ctx.arc(sx, sy, 1.4, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (outcome.id === 'power') {
+        [0.18, 0.50, 0.82].forEach((sf, i) => {
+          const sx = sf * w;
+          const sg = ctx.createLinearGradient(sx - 18, 0, sx + 18, 0);
+          sg.addColorStop(0, 'rgba(218,178,110,0)');
+          sg.addColorStop(0.5, `rgba(232,196,134,${i === 1 ? 0.22 : 0.15})`);
+          sg.addColorStop(1, 'rgba(218,178,110,0)');
+          ctx.fillStyle = sg;
+          ctx.fillRect(sx - 18, 0, 36, horizonY);
+          ctx.strokeStyle = 'rgba(255, 232, 188, 0.42)';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(sx, 0); ctx.lineTo(sx, horizonY); ctx.stroke();
+        });
+      } else if (outcome.id === 'world') {
+        const cx = w * 0.5;
+        const ang = Math.sin(t * 0.42) * 0.55;
+        ctx.save();
+        ctx.translate(cx, horizonY - h * 0.24);
+        ctx.rotate(ang);
+        const bg = ctx.createLinearGradient(0, 0, 0, -h * 0.55);
+        bg.addColorStop(0, 'rgba(242, 198, 132, 0.28)');
+        bg.addColorStop(1, 'rgba(242, 198, 132, 0)');
+        ctx.fillStyle = bg;
+        ctx.beginPath(); ctx.moveTo(-5, 0); ctx.lineTo(-65, -h * 0.52); ctx.lineTo(65, -h * 0.52); ctx.lineTo(5, 0); ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+
+        ctx.fillStyle = '#090a10';
+        ctx.beginPath();
+        ctx.moveTo(cx - 14, horizonY + 10);
+        ctx.lineTo(cx - 5, horizonY - h * 0.24);
+        ctx.lineTo(cx + 5, horizonY - h * 0.24);
+        ctx.lineTo(cx + 14, horizonY + 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.fillStyle = 'rgba(255, 214, 148, 0.9)';
+        ctx.beginPath(); ctx.arc(cx, horizonY - h * 0.24, 3, 0, Math.PI * 2); ctx.fill();
+      } else if (outcome.id === 'mad') {
+        for (let d = 0; d < 9; d++) {
+          const dx = w * (0.08 + d * 0.105);
+          const dr = 22 + (d % 3) * 12;
+          const fl = 0.16 + 0.30 * Math.sin(t * (2.8 + d * 0.6) + d) ** 2;
+          ctx.strokeStyle = `rgba(242, 138, 108, ${fl.toFixed(2)})`;
+          ctx.lineWidth = 1.1;
+          ctx.beginPath(); ctx.arc(dx, horizonY, dr, Math.PI, 0); ctx.stroke();
+        }
+      } else if (outcome.id === 'underclass') {
+        [0.16, 0.34, 0.68, 0.84].forEach((sf, i) => {
+          const sx = sf * w, sw = 28 + (i % 2) * 10, sh = h * (0.24 + (i % 2) * 0.08);
+          const sg = ctx.createLinearGradient(sx, horizonY - sh, sx, horizonY);
+          sg.addColorStop(0, 'rgba(182, 220, 255, 0.30)');
+          sg.addColorStop(1, 'rgba(34, 52, 78, 0.72)');
+          ctx.fillStyle = sg;
+          ctx.fillRect(sx - sw * 0.5, horizonY - sh, sw, sh);
+          ctx.fillStyle = 'rgba(215, 238, 255, 0.45)';
+          for (let row = 6; row < sh - 8; row += 9) {
+            ctx.fillRect(sx - sw * 0.36, horizonY - sh + row, sw * 0.72, 1.5);
+          }
+        });
+      }
+      ctx.restore();
+    }
+  }
+
+  /* ── Interactive Pruning Probability Fan with Live Hover Preview ──────── */
+  function drawProbabilityFan(outcome) {
+    const targetVis = outcome ? 0.15 : 1.0;
+    app.treeVis = lerp(app.treeVis, targetVis, 0.09);
+    const treeVis = app.treeVis;
+
+    const box = getTreeBox();
+    const t = app.globalTime;
+    const lockedNodes = getLockedPathNodes();
+    const curNode = app.currentNode;
+    const hover = app.hoverTarget && app.hoverTarget !== 'pre' ? app.hoverTarget : null;
+
+    function isLockedEdge(edge) {
+      for (let i = 0; i < lockedNodes.length - 1; i++) {
+        if (lockedNodes[i] === edge.from && lockedNodes[i + 1] === edge.to) return true;
+      }
+      return false;
+    }
+
+    // Check if an edge belongs to the currently hovered preview path/subtree
+    function isHoveredEdge(edge) {
+      if (!hover) return false;
+      // If hovering a choice leading from curNode -> hover (which may step through 'asi')
+      if (isDescendant(hover, edge.from)) return true;
+      if (isDescendant(curNode, edge.from) && isDescendant(edge.to, hover)) return true;
+      return false;
+    }
+
+    function edgeState(edge) {
+      if (isLockedEdge(edge)) return 'locked';
+      if (isDescendant(curNode, edge.from)) return 'open';
+      return 'pruned';
+    }
+
+    ctx.save();
+    for (let i = 0; i < EDGES.length; i++) {
+      const edge = EDGES[i];
+      const bz = getEdgeBezier(edge, box);
+      const st = edgeState(edge);
+      const hov = st === 'open' && isHoveredEdge(edge);
+
+      // Subtle quantum shimmer on open possibilities
+      if (st === 'open' && treeVis > 0.25 && (!hover || hov)) {
+        const wob = Math.sin(t * 2.1 + i * 1.35) * 4.2;
+        ctx.beginPath();
+        ctx.moveTo(bz.x0, bz.y0);
+        ctx.bezierCurveTo(bz.c1x, bz.c1y + wob, bz.c2x, bz.c2y - wob, bz.x1, bz.y1);
+        ctx.strokeStyle = rgba(hov ? app.accRgb : app.climRgb, (hov ? 0.22 : 0.11) * treeVis);
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+
+      if (st === 'locked' || hov) {
+        ctx.beginPath();
+        ctx.moveTo(bz.x0, bz.y0);
+        ctx.bezierCurveTo(bz.c1x, bz.c1y, bz.c2x, bz.c2y, bz.x1, bz.y1);
+        ctx.strokeStyle = rgba(app.accRgb, (st === 'locked' ? 0.22 : 0.18) * treeVis);
+        ctx.lineWidth = st === 'locked' ? 8 : 6;
+        ctx.stroke();
+
+        ctx.strokeStyle = rgba(app.accRgb, (st === 'locked' ? 0.96 : 0.85) * treeVis);
+        ctx.lineWidth = st === 'locked' ? 2.4 : 1.9;
+        ctx.stroke();
+      } else if (st === 'open') {
+        const dimForHover = hover ? 0.12 : 0.38;
+        ctx.beginPath();
+        ctx.moveTo(bz.x0, bz.y0);
+        ctx.bezierCurveTo(bz.c1x, bz.c1y, bz.c2x, bz.c2y, bz.x1, bz.y1);
+        ctx.strokeStyle = `rgba(240, 234, 220, ${(dimForHover * treeVis).toFixed(3)})`;
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+      } else {
+        ctx.beginPath();
+        ctx.moveTo(bz.x0, bz.y0);
+        ctx.bezierCurveTo(bz.c1x, bz.c1y, bz.c2x, bz.c2y, bz.x1, bz.y1);
+        ctx.strokeStyle = `rgba(240, 234, 220, ${(0.055 * treeVis).toFixed(3)})`;
+        ctx.lineWidth = 0.85;
+        ctx.stroke();
+      }
+    }
+
+    // Flowing light droplets along live/locked edges
+    if (treeVis > 0.2) {
+      for (let i = 0; i < FLOW.length; i++) {
+        const f = FLOW[i];
+        const edge = EDGES[f.edgeIdx];
+        const st = edgeState(edge);
+        if (st === 'pruned') continue;
+        const hov = st === 'open' && isHoveredEdge(edge);
+        if (hover && st === 'open' && !hov) continue;
+        const pt = evalBezier(getEdgeBezier(edge, box), f.t);
+        ctx.fillStyle = (st === 'locked' || hov)
+          ? rgba(app.accRgb, 0.92 * treeVis)
+          : `rgba(240, 234, 220, ${(0.52 * treeVis).toFixed(2)})`;
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, (st === 'locked' || hov) ? f.size * 1.25 : f.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Drifting sparks from pruned branches
+    for (let i = 0; i < SPARKS.length; i++) {
+      const s = SPARKS[i];
+      ctx.fillStyle = `rgba(235, 225, 205, ${(s.life * 0.72).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // 2026 origin dot
+    const monoFont = getComputedStyle(document.documentElement).getPropertyValue('--mono');
+    const serifFont = getComputedStyle(document.documentElement).getPropertyValue('--serif');
+    const prePos = getNodePos('pre', box);
+    ctx.fillStyle = `rgba(250, 245, 234, ${(0.92 * treeVis).toFixed(2)})`;
+    ctx.beginPath(); ctx.arc(prePos.x, prePos.y, 4.2, 0, Math.PI * 2); ctx.fill();
+    if (treeVis > 0.25) {
+      ctx.font = `500 10px ${monoFont}`;
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = `rgba(240, 234, 220, ${(0.76 * treeVis).toFixed(2)})`;
+      ctx.fillText('2026', prePos.x - 12, prePos.y);
+    }
+
+    // Active fork pulsing beacon (when waiting for user's choice)
+    if (!outcome && treeVis > 0.3) {
+      const fp = getNodePos(curNode, box);
+      const pulse = 1 + Math.sin(t * 4.2) * 0.2;
+      const rg = ctx.createRadialGradient(fp.x, fp.y, 1, fp.x, fp.y, 19 * pulse);
+      rg.addColorStop(0, rgba(app.accRgb, 0.72));
+      rg.addColorStop(1, rgba(app.accRgb, 0));
+      ctx.fillStyle = rg;
+      ctx.beginPath(); ctx.arc(fp.x, fp.y, 19 * pulse, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#fff9ee';
+      ctx.beginPath(); ctx.arc(fp.x, fp.y, 4.2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Reachable terminal dots & subtle clickable labels on right arc!
+    for (const key in NODES) {
+      const n = NODES[key];
+      if (!n.term) continue;
+      const p = getNodePos(key, box);
+      const alive = isDescendant(curNode, key);
+      const isChosen = outcome && outcome.id === key;
+      const isPreview = alive && hover && isDescendant(hover, key);
+
+      const dotAlpha = isChosen ? 0.98 : (isPreview ? 0.98 : (alive ? (hover ? 0.22 : 0.65) : 0.12));
+      const dotCol = (isChosen || isPreview) ? rgba(OUTCOMES[key].rgb, dotAlpha * treeVis) : `rgba(240, 234, 220, ${(dotAlpha * treeVis).toFixed(2)})`;
+      ctx.fillStyle = dotCol;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, (isChosen || isPreview) ? 4.2 : (alive ? 2.6 : 1.7), 0, Math.PI * 2);
+      ctx.fill();
+
+      if (isPreview || isChosen) {
+        const tg = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, 16);
+        tg.addColorStop(0, rgba(OUTCOMES[key].rgb, 0.55 * treeVis));
+        tg.addColorStop(1, rgba(OUTCOMES[key].rgb, 0));
+        ctx.fillStyle = tg;
+        ctx.beginPath(); ctx.arc(p.x, p.y, 16, 0, Math.PI * 2); ctx.fill();
+      }
+
+      if (treeVis > 0.25) {
+        const lblAlpha = isPreview ? 0.96 : (alive ? (hover ? 0.20 : 0.56) : 0.12);
+        ctx.font = `${isPreview ? '500' : '400'} ${app.vw < 720 ? 10 : 11.5}px ${serifFont}`;
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'middle';
+        ctx.fillStyle = isPreview
+          ? rgba(OUTCOMES[key].rgb, 0.98 * treeVis)
+          : `rgba(240, 234, 220, ${(lblAlpha * treeVis).toFixed(2)})`;
+        ctx.fillText(n.name, p.x + 11, p.y + 0.5);
+      }
+    }
+
+    ctx.restore();
+  }
+
+  /* ── Full-Width Horizon Skyline & Foreground Software Engineer Desk ─────── */
+  function drawSkylineAndEngineer(outcome, climate, crystal) {
+    const w = app.vw, h = app.vh, t = app.globalTime;
+    const horizonY = h * 0.79;
+    const deskY = h * 0.855;
+
+    const isDimCity = outcome && crystal > 0.3 && (outcome.id === 'misuse' || outcome.id === 'doom');
+    const isLowPower = (outcome && crystal > 0.3 && outcome.id === 'underclass') || climate.id === 'tipping';
+    const flicker = (climate.id === 'disruption' || climate.id === 'tipping') && Math.sin(t * 7.1) > 0.92;
+
+    function drawLayer(arr, col, winSz, hMul, bright) {
+      for (const b of arr) {
+        const bx = b.x * w, bw = b.w * w, bh = b.h * h * hMul;
+        const by = horizonY - bh + 16;
+        ctx.fillStyle = col;
+        ctx.fillRect(bx, by, bw, bh + 40);
+        if (b.spire) ctx.fillRect(bx + bw * 0.48, by - 14, 1.5, 14);
+        for (const wn of b.wins) {
+          if (isDimCity && wn.seed > 0.05) continue;
+          if (isLowPower && wn.seed > 0.36) continue;
+          if (flicker && wn.seed > 0.65) continue;
+          const wx = bx + wn.c * bw, wy = by + wn.r * bh;
+          if (wy > horizonY + 4) continue;
+          if (outcome && crystal > 0.3 && outcome.id === 'misuse') {
+            const p = 0.25 + 0.75 * Math.sin(t * 2.5 + wn.seed * 10) ** 2;
+            ctx.fillStyle = `rgba(235, 96, 82, ${(p * 0.8).toFixed(2)})`;
+          } else {
+            ctx.fillStyle = wn.warm
+              ? `rgba(248, 214, 150, ${(bright * (0.4 + wn.seed * 0.5)).toFixed(2)})`
+              : `rgba(182, 220, 248, ${(bright * (0.35 + wn.seed * 0.4)).toFixed(2)})`;
+          }
+          ctx.fillRect(wx, wy, winSz, winSz * 1.15);
+        }
+      }
+    }
+
+    drawLayer(CITY_FAR,  'rgba(9, 11, 18, 0.58)',  1.5, 1.0, isDimCity ? 0.08 : 0.26);
+    drawLayer(CITY_MID,  'rgba(7, 9, 15, 0.80)',   1.9, 0.9, isDimCity ? 0.16 : 0.42);
+    drawLayer(CITY_NEAR, 'rgba(5, 6, 11, 0.96)',   2.2, 0.8, isDimCity ? 0.10 : 0.36);
+
+    // Climate weather particles drifting across horizon
+    ctx.save();
+    for (let i = 0; i < MOTES.length; i++) {
+      const m = MOTES[i];
+      if (climate.id === 'disruption') {
+        const mx = (((m.x + t * 0.025 + Math.sin(t + m.phase) * 0.008) % 1 + 1) % 1) * w;
+        const my = (((m.y + t * 0.03) % 1 + 1) % 1) * deskY;
+        ctx.fillStyle = 'rgba(255, 168, 96, 0.42)';
+        ctx.fillRect(mx, my, 2, 1.4);
+      } else if (climate.id === 'tipping') {
+        const mx = (((m.x - t * 0.14) % 1 + 1) % 1) * w;
+        const my = (((m.y + t * 0.42) % 1 + 1) % 1) * deskY;
+        ctx.strokeStyle = 'rgba(235, 160, 148, 0.28)';
+        ctx.lineWidth = 0.85;
+        ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(mx - 6, my + 16); ctx.stroke();
+      }
+    }
+    ctx.restore();
+
+    // Apartment windowsill & vertical window mullions
+    ctx.fillStyle = '#06070c';
+    ctx.fillRect(0, horizonY + 12, w, h - horizonY);
+    ctx.fillStyle = rgba(app.climRgb, 0.26);
+    ctx.fillRect(0, horizonY + 12, w, 1.5);
+
+    ctx.strokeStyle = 'rgba(240, 234, 220, 0.065)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(w * 0.22, 0); ctx.lineTo(w * 0.22, horizonY + 12);
+    ctx.moveTo(w * 0.78, 0); ctx.lineTo(w * 0.78, horizonY + 12);
+    ctx.stroke();
+
+    // Windowsill object: green plant (+1.6°C) or HEPA purifier (+2.5°C / +3.8°C)
+    const sillX = w * 0.22 + 34, sillY = horizonY + 12;
+    if (climate.id === 'transition') {
+      ctx.fillStyle = '#12181d';
+      ctx.fillRect(sillX - 8, sillY - 11, 16, 11);
+      ctx.strokeStyle = 'rgba(121, 207, 175, 0.65)';
+      ctx.lineWidth = 1.6;
+      [-8, 0, 8].forEach((dx, idx) => {
+        ctx.beginPath(); ctx.moveTo(sillX, sillY - 11);
+        ctx.quadraticCurveTo(sillX + dx, sillY - 24 - (idx === 1 ? 6 : 0), sillX + dx * 1.4, sillY - 22 - (idx === 1 ? 7 : 0));
+        ctx.stroke();
+      });
+    } else if (climate.id === 'disruption' || climate.id === 'tipping') {
+      ctx.fillStyle = '#14151c';
+      ctx.fillRect(sillX - 9, sillY - 28, 18, 28);
+      ctx.strokeStyle = 'rgba(240, 234, 220, 0.14)';
+      ctx.strokeRect(sillX - 9, sillY - 28, 18, 28);
+      ctx.fillStyle = climate.id === 'tipping' ? '#e36355' : '#eb9f56';
+      ctx.beginPath(); ctx.arc(sillX, sillY - 21, 2, 0, Math.PI * 2); ctx.fill();
+    }
+
+    // Foreground Desk + Monitor
+    const monW = clamp(w * 0.14, 130, 184);
+    const monH = monW * 0.56;
+    const monX = w * 0.5 - monW * 0.5;
+    const monY = deskY - monH - 14;
+
+    const dg = ctx.createRadialGradient(w * 0.5, deskY + 6, 10, w * 0.5, deskY + 6, w * 0.36);
+    dg.addColorStop(0, rgba(app.accRgb, 0.14 * (0.4 + crystal * 0.6)));
+    dg.addColorStop(1, 'rgba(5, 6, 10, 0.98)');
+    ctx.fillStyle = dg;
+    ctx.fillRect(0, deskY, w, h - deskY);
+    ctx.fillStyle = 'rgba(240, 234, 220, 0.10)';
+    ctx.fillRect(0, deskY, w, 1);
+
+    ctx.fillStyle = '#0e111a';
+    ctx.fillRect(monX + monW * 0.45, monY + monH, monW * 0.10, 14);
+    ctx.fillRect(monX + monW * 0.34, deskY - 2, monW * 0.32, 3);
+    ctx.fillStyle = '#0a0d15';
+    ctx.strokeStyle = rgba(app.accRgb, 0.3 + crystal * 0.28);
+    ctx.lineWidth = 1.25;
+    ctx.beginPath(); ctx.roundRect(monX, monY, monW, monH, 5); ctx.fill(); ctx.stroke();
+
+    // Live bespoke monitor display
+    const sx = monX + 7, sy = monY + 7, sw = monW - 14, sh = monH - 14;
+    ctx.save();
+    ctx.beginPath(); ctx.rect(sx, sy, sw, sh); ctx.clip();
+    ctx.fillStyle = '#06080e';
+    ctx.fillRect(sx, sy, sw, sh);
+
+    if (!outcome || crystal < 0.2) {
+      for (let l = 0; l < 7; l++) {
+        const lw = sw * (0.25 + 0.45 * Math.sin(t * 1.2 + l * 1.7) ** 2);
+        ctx.fillStyle = 'rgba(240, 234, 220, 0.24)';
+        ctx.fillRect(sx + 6, sy + 7 + l * 9, lw, 2.5);
+      }
+    } else if (outcome.id === 'ec') {
+      for (let l = 0; l < 7; l++) {
+        ctx.fillStyle = l === 2 || l === 4 ? 'rgba(135, 220, 170, 0.65)' : 'rgba(232, 196, 134, 0.32)';
+        ctx.fillRect(sx + 4, sy + 6 + l * 9, sw * (0.2 + ((l * 31) % 24) / 100), 2.5);
+      }
+      for (let a = 0; a < 5; a++) {
+        const p = (t * (0.3 + a * 0.08) + a * 0.2) % 1;
+        ctx.fillStyle = 'rgba(240,234,220,0.12)'; ctx.fillRect(sx + sw * 0.58, sy + 9 + a * 12, sw * 0.36, 3.2);
+        ctx.fillStyle = 'rgba(232,196,134,0.85)'; ctx.fillRect(sx + sw * 0.58, sy + 9 + a * 12, sw * 0.36 * p, 3.2);
+      }
+    } else if (outcome.id === 'underclass') {
+      for (let c = 0; c < 15; c++) {
+        for (let r = 0; r < 5; r++) {
+          ctx.fillStyle = (c < 4 && (c + r) % 2 === 0) ? 'rgba(155, 181, 212, 0.52)' : 'rgba(155, 181, 212, 0.08)';
+          ctx.fillRect(sx + 5 + c * 9, sy + 8 + r * 8, 5.5, 5.5);
+        }
+      }
+      ctx.fillStyle = 'rgba(155, 181, 212, 0.22)'; ctx.fillRect(sx + 5, sy + sh - 13, sw - 10, 4);
+      ctx.fillStyle = 'rgba(155, 181, 212, 0.85)'; ctx.fillRect(sx + 5, sy + sh - 13, (sw - 10) * 0.14, 4);
+    } else if (outcome.id === 'butler') {
+      const al = Math.floor(t * 1.3) % 7;
+      for (let l = 0; l < 7; l++) {
+        const lw = sw * (0.28 + ((l * 27 + 9) % 48) / 100);
+        ctx.fillStyle = l === al ? 'rgba(166, 232, 176, 0.92)' : 'rgba(147, 204, 156, 0.45)';
+        ctx.fillRect(sx + 6, sy + 7 + l * 9, l === al ? lw * ((t * 1.3) % 1) : lw, 2.8);
+      }
+    } else if (outcome.id === 'power') {
+      for (let k = 0; k < 3; k++) {
+        ctx.strokeStyle = 'rgba(218, 178, 110, 0.55)';
+        ctx.strokeRect(sx + 8 + k * (sw * 0.30), sy + 9, sw * 0.24, 18);
+      }
+      const rem = 0.65 - ((t * 0.08) % 0.45);
+      ctx.fillStyle = 'rgba(218, 178, 110, 0.16)'; ctx.fillRect(sx + 8, sy + sh - 22, sw - 16, 8);
+      ctx.fillStyle = 'rgba(218, 178, 110, 0.85)'; ctx.fillRect(sx + 8, sy + sh - 22, (sw - 16) * rem, 8);
+    } else if (outcome.id === 'world') {
+      ctx.strokeStyle = 'rgba(226, 171, 112, 0.78)'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(sx + sw * 0.25, sy + sh * 0.5, 15, 0, Math.PI * 2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(sx + sw * 0.25, sy + sh * 0.5, 6, 0, Math.PI * 2); ctx.stroke();
+      for (let l = 0; l < 5; l++) {
+        ctx.fillStyle = l === 0 ? 'rgba(226,171,112,0.88)' : 'rgba(226,171,112,0.32)';
+        ctx.fillRect(sx + sw * 0.48, sy + 12 + l * 10, sw * 0.44, 3);
+      }
+    } else if (outcome.id === 'sing') {
+      const cx = sx + sw * 0.5, cy = sy + sh * 0.5;
+      for (let ring = 1; ring <= 3; ring++) {
+        ctx.strokeStyle = `rgba(156, 217, 245, ${(0.78 - ring * 0.18).toFixed(2)})`;
+        ctx.beginPath(); ctx.arc(cx, cy, ring * 9 + Math.sin(t * 1.4 + ring) * 1.5, 0, Math.PI * 2); ctx.stroke();
+      }
+    } else if (outcome.id === 'mad') {
+      const cx = sx + sw * 0.5, cy = sy + sh * 0.45;
+      for (let r = 0; r < 10; r++) {
+        const a = t * 0.85 + (r * Math.PI * 2) / 10;
+        ctx.strokeStyle = 'rgba(238, 134, 104, 0.58)';
+        ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + Math.cos(a) * 26, cy + Math.sin(a) * 19); ctx.stroke();
+      }
+      ctx.strokeStyle = 'rgba(255, 188, 156, 0.9)';
+      ctx.beginPath();
+      for (let px = 0; px < sw; px += 3) {
+        const wy = sy + sh - 11 + Math.sin(px * 0.34 + t * 9) * 3.8;
+        if (px === 0) ctx.moveTo(sx + px, wy); else ctx.lineTo(sx + px, wy);
+      }
+      ctx.stroke();
+    } else if (outcome.id === 'orion') {
+      for (let l = 0; l < 6; l++) {
+        ctx.fillStyle = 'rgba(186, 164, 238, 0.45)';
+        ctx.fillRect(sx + 6, sy + 9 + l * 9, sw * (0.28 + (l % 3) * 0.08), 2.5);
+      }
+      const ox = sx + sw * 0.74, oy = sy + sh * 0.5;
+      ctx.strokeStyle = 'rgba(186, 164, 238, 0.42)';
+      ctx.beginPath(); ctx.arc(ox, oy, 16, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#ebe2ff';
+      ctx.beginPath(); ctx.arc(ox + Math.cos(t * 0.9) * 16, oy + Math.sin(t * 0.9) * 16, 2.5, 0, Math.PI * 2); ctx.fill();
+    } else if (outcome.id === 'misuse') {
+      ctx.fillStyle = 'rgba(226, 100, 88, 0.58)'; ctx.fillRect(sx + 8, sy + 12, sw * 0.45, 3.2);
+      ctx.fillStyle = 'rgba(240, 234, 220, 0.18)'; ctx.fillRect(sx + 8, sy + 21, sw * 0.62, 2.2);
+      if (Math.floor(t * 1.5) % 2 === 0) {
+        ctx.fillStyle = 'rgba(226, 100, 88, 0.92)'; ctx.fillRect(sx + 8, sy + 32, 6, 11);
+      }
+    } else if (outcome.id === 'doom') {
+      for (let gx = 0; gx < sw; gx += 8) {
+        for (let gy = 0; gy < sh; gy += 8) {
+          const wv = Math.sin(gx * 0.15 + gy * 0.15 - t * 3.5);
+          ctx.fillStyle = `rgba(207, 189, 160, ${(0.18 + (wv + 1) * 0.28).toFixed(2)})`;
+          ctx.fillRect(sx + gx, sy + gy, 4.5, 4.5);
+        }
+      }
+    }
+    ctx.restore();
+
+    // Ceramic coffee mug + rising steam
+    const mugX = monX + monW + 26, mugY = deskY - 14;
+    ctx.fillStyle = '#191c25';
+    ctx.strokeStyle = 'rgba(240, 234, 220, 0.24)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(mugX, mugY, 13, 14, 2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(mugX + 13, mugY + 7, 4, -Math.PI * 0.5, Math.PI * 0.5); ctx.stroke();
+    if (!(outcome && crystal > 0.3 && (outcome.id === 'misuse' || outcome.id === 'doom'))) {
+      ctx.strokeStyle = 'rgba(240, 234, 220, 0.24)';
+      for (let st = 0; st < 2; st++) {
+        ctx.beginPath();
+        const x0 = mugX + 4 + st * 5;
+        ctx.moveTo(x0, mugY - 2);
+        ctx.bezierCurveTo(x0 + Math.sin(t * 1.7 + st) * 4, mugY - 11, x0 - Math.sin(t * 1.7 + st) * 4, mugY - 19, x0 + Math.sin(t * 1.3 + st) * 3, mugY - 27);
+        ctx.stroke();
+      }
+    }
+
+    // Backlit silhouette of the regular software engineer
+    if (!(outcome && crystal > 0.3 && outcome.id === 'misuse')) {
+      const ex = monX - 42, ey = deskY + 4;
+      const br = Math.sin(t * 1.5) * 1.2;
+      ctx.save();
+      if (outcome && crystal > 0.3 && outcome.id === 'doom') ctx.globalAlpha = Math.max(0.18, 1 - crystal * 0.65);
+      ctx.fillStyle = '#06070c';
+      ctx.strokeStyle = rgba(app.climRgb, 0.34);
+      ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.ellipse(ex, ey + 20 + br, 34, 25, 0, Math.PI, 0); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.arc(ex + 4, ey - 13 + br, 13.5, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    }
+
+    // Classic Doom substrate dissolution
+    if (outcome && outcome.id === 'doom' && crystal > 0.15) {
+      ctx.save();
+      const d = clamp((crystal - 0.15) / 0.85, 0, 1);
+      for (let gx = 0; gx < w; gx += 26) {
+        for (let gy = horizonY - 90; gy < h; gy += 22) {
+          if (((gx * 13 + gy * 7) % 17) < 5) {
+            const lift = ((t * 24 + gx * 0.4 + gy * 0.2) % 80) * d;
+            const a = (0.16 + 0.34 * d) * (1 - lift / 80);
+            ctx.fillStyle = `rgba(218, 200, 162, ${a.toFixed(2)})`;
+            ctx.fillRect(gx, gy - lift, 3.5, 3.5);
+          }
+        }
+      }
+      ctx.restore();
+    }
+  }
+
+  /* =========================================================================
+   * 8. CONTINUOUS LIVING RENDER LOOP (NO AUTO-ADVANCE, PURE USER CONTROL)
+   * ========================================================================= */
+  let lastTs = performance.now();
+
+  function tick(now) {
+    const dt = Math.min(0.05, Math.max(0.001, (now - lastTs) / 1000));
+    lastTs = now;
+    app.globalTime += dt;
+
+    const outcome = OUTCOMES[app.currentNode] || null;
+    const climate = CLIMATE_MAP[app.climateId];
+    app.crystalAmt = lerp(app.crystalAmt, outcome ? 1 : 0, 0.085);
+
+    // Animate light droplets along live threads
+    for (let i = 0; i < FLOW.length; i++) {
+      FLOW[i].t += FLOW[i].spd * dt;
+      if (FLOW[i].t >= 1) FLOW[i].t -= 1;
+    }
+
+    // Animate falling sparks from pruned branches
+    for (let i = SPARKS.length - 1; i >= 0; i--) {
+      const s = SPARKS[i];
+      s.x += s.vx * dt;
+      s.y += s.vy * dt;
+      s.vy += 24 * dt;
+      s.life -= s.decay * dt;
+      if (s.life <= 0) SPARKS.splice(i, 1);
+    }
+
+    // Occasional distant heat lightning in +3.8°C storm sky
+    if (climate.id === 'tipping' && app.globalTime > app.nextLightningAt) {
+      app.lightning = 0.9;
+      app.nextLightningAt = app.globalTime + 2.8 + Math.random() * 4.2;
+    }
+    app.lightning = Math.max(0, app.lightning - dt * 2.5);
+
+    ctx.save();
+    ctx.scale(app.dpr, app.dpr);
+    drawSkyAndAtmosphere(outcome, climate, app.crystalAmt);
+    drawProbabilityFan(outcome);
+    drawSkylineAndEngineer(outcome, climate, app.crystalAmt);
+    ctx.restore();
+
+    requestAnimationFrame(tick);
+  }
+
+  buildClimateBar();
+  resize();
+  renderUI();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Thu, 12 Nov 2026 22:35:00 +01:00</lastBuildDate>
+    <lastBuildDate>Thu, 19 Nov 2026 20:38:00 +01:00</lastBuildDate>
+
+    <item>
+      <title>Possible Futures: the collapse of many into one</title>
+      <link>https://rruxandra.github.io/possible-futures.html</link>
+      <description>Based on Fernando Borretti’s essay “Possible Futures” — step through his AI decision tree alongside four climate skies, and watch ten possible futures collapse onto one software engineer’s desk.</description>
+      <pubDate>Thu, 19 Nov 2026 20:38:00 +01:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/possible-futures.html</guid>
+    </item>
 
     <item>
       <title>Rain on Glass: kinetic storm</title>
