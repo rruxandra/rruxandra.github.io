@@ -69,13 +69,15 @@
   .status {
     display: flex;
     justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
     font-size: 0.7rem;
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--bone-dim);
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--line);
-    margin-bottom: 4rem;
+    margin-bottom: 2.5rem;
   }
 
   .status .blink {
@@ -83,11 +85,21 @@
     animation: blink 1.4s steps(2) infinite;
   }
 
-  /* the other channel: a standing page, not an entry */
+  .status .chans {
+    display: flex;
+    align-items: center;
+    gap: 1.6rem;
+    flex-wrap: wrap;
+  }
+
+  /* standing channels: not log entries */
   .status .chan {
     color: var(--bone-dim);
     text-decoration: none;
     transition: color 0.3s ease;
+  }
+  .status .chan--oracle {
+    color: var(--bone);
   }
   .status .chan:hover { color: var(--acid); }
   .status .chan .arrow {
@@ -97,26 +109,27 @@
   }
   .status .chan:hover .arrow { transform: translate(3px, -3px); }
 
-  @media (max-width: 620px) {
-    .status { flex-wrap: wrap; gap: 0.4rem 1.2rem; }
+  @media (max-width: 720px) {
+    .status { flex-wrap: wrap; gap: 0.45rem 1.1rem; margin-bottom: 2rem; }
+    .status .chans { gap: 0.9rem; }
     .status .rx { display: none; }
   }
   @keyframes blink { 50% { opacity: 0; } }
 
   /* ── masthead ─────────────────────────────── */
   header {
-    margin-bottom: 4.5rem;
+    margin-bottom: 2.25rem;
     position: relative;
   }
 
   h1 {
     font-family: "Space Mono", monospace;
     font-weight: 700;
-    font-size: clamp(3.2rem, 13vw, 9.5rem);
+    font-size: clamp(3rem, 11.5vw, 8.6rem);
     line-height: 0.88;
     letter-spacing: -0.06em;
     text-transform: uppercase;
-    margin-bottom: 1rem;
+    margin-bottom: 0.9rem;
   }
 
   h1 .slash {
@@ -453,6 +466,91 @@
     transition: transform 0.4s cubic-bezier(.2,.8,.2,1);
   }
   footer .feed:hover .arrow { transform: translate(3px, -3px); }
+
+  /* ── CH.03 quiet channel entry (visible above the fold) ── */
+  .oracle-entry {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem 1.75rem;
+    padding: 1.05rem 1.25rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--acid);
+    background: var(--bg-soft);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  .oracle-entry:hover {
+    border-color: var(--line-bright);
+    border-left-color: var(--acid);
+    background: #1b1b18;
+  }
+  .oracle-entry:hover .oracle-entry__open { color: var(--acid); }
+  .oracle-entry:hover .oracle-entry__open .arrow { transform: translate(3px, -3px); }
+
+  .oracle-entry__tag {
+    font-size: 0.66rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--acid);
+    white-space: nowrap;
+  }
+  .oracle-entry__body {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.9rem;
+    min-width: 0;
+  }
+  .oracle-entry__title {
+    font-size: 0.96rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-transform: uppercase;
+    color: var(--bone);
+    white-space: nowrap;
+  }
+  .oracle-entry__desc {
+    font-size: 0.76rem;
+    line-height: 1.5;
+    color: var(--bone-dim);
+  }
+  .oracle-entry__right {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.25rem;
+    white-space: nowrap;
+  }
+  .oracle-entry__meta {
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--bone-dim);
+  }
+  .oracle-entry__open {
+    font-size: 0.68rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--bone);
+    transition: color 0.25s ease;
+  }
+  .oracle-entry__open .arrow {
+    display: inline-block;
+    margin-left: 0.3rem;
+    transition: transform 0.35s cubic-bezier(.2,.8,.2,1);
+  }
+
+  @media (max-width: 820px) {
+    .oracle-entry {
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem 1rem;
+      padding: 0.95rem 1rem;
+    }
+    .oracle-entry__tag { grid-column: 1 / -1; }
+    .oracle-entry__meta { display: none; }
+  }
 </style>
 </head>
 <body>
@@ -460,7 +558,10 @@
 
   <div class="status">
     <span><span class="blink">●</span> &nbsp;CH.01 / OPEN FREQUENCY</span>
-    <a class="chan" href="open-tabs.html">CH.02 / OPEN TABS<span class="arrow">↗</span></a>
+    <span class="chans">
+      <a class="chan" href="open-tabs.html">CH.02 / OPEN TABS<span class="arrow">↗</span></a>
+      <a class="chan chan--oracle" href="oracle-log.html">CH.03 / ORACLE LOG<span class="arrow">↗</span></a>
+    </span>
     <span class="rx">RX 2026.11 / LOG_034</span>
   </div>
 
@@ -471,6 +572,18 @@
       <p class="right">Updated irregularly.<br/>Best read out of order.<br/>No conclusions guaranteed.</p>
     </div>
   </header>
+
+  <a class="oracle-entry" href="oracle-log.html" aria-label="Channel 03 — Oracle Log">
+    <span class="oracle-entry__tag">● CH.03</span>
+    <span class="oracle-entry__body">
+      <span class="oracle-entry__title">Oracle Log</span>
+      <span class="oracle-entry__desc">Frontier LLMs predicting Switzerland &amp; the world at 1, 3, and 10 years — sealed and graded over time.</span>
+    </span>
+    <span class="oracle-entry__right">
+      <span class="oracle-entry__meta" id="oracle-entry-meta">8 models · R01</span>
+      <span class="oracle-entry__open">Open<span class="arrow">↗</span></span>
+    </span>
+  </a>
 
   <div class="log-bar">
     <div class="filters" role="tablist" aria-label="Filter log entries">
@@ -1821,12 +1934,28 @@
   <footer>
     <span class="end">END OF TRANSMISSION</span>
     <a class="feed" href="open-tabs.html">OPEN TABS<span class="arrow">↗</span></a>
+    <a class="feed" href="oracle-log.html">ORACLE LOG<span class="arrow">↗</span></a>
     <a class="feed" href="feed.xml">SUBSCRIBE / FEED<span class="arrow">↗</span></a>
     <span>34 logged (1 guest)</span>
   </footer>
 
 </div>
 
+<script src="assets/oracle-data.js"></script>
+<script>
+  (function() {
+    const D = window.ORACLE_DATA;
+    if (!D || !D.models) return;
+    const llmCount = D.models.filter(m => m.lineage !== 'human').length;
+    const totalBets = (D.rounds || []).reduce((sum, r) => sum + (r.predictions || []).length, 0);
+    const meta = document.getElementById('oracle-entry-meta');
+    if (meta) {
+      meta.textContent = totalBets > 0
+        ? `${llmCount} models · ${totalBets} ${totalBets === 1 ? 'bet' : 'bets'}`
+        : `${llmCount} models · 1Y / 3Y / 10Y`;
+    }
+  })();
+</script>
 <script>
   (function() {
     const filterBtns = document.querySelectorAll('.filter-btn');
