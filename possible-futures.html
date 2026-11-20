@@ -70,17 +70,28 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.65 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
   }
 
+  /* ── Unified Top Flow Stack (Zero Header/Prompt Overlap on Any Screen) ── */
+  #topStack {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 25;
+    padding: max(14px, env(safe-area-inset-top)) clamp(16px, 3vw, 40px) 0;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(14px, 2.6vh, 28px);
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(5, 7, 13, 0.72) 0%, rgba(5, 7, 13, 0.28) 72%, rgba(5, 7, 13, 0) 100%);
+  }
+
   /* ── Quiet Top Header ─────────────────────────────────────────────────── */
   header {
-    position: fixed;
-    top: clamp(16px, 2.5vh, 26px);
-    left: clamp(20px, 3vw, 40px);
-    right: clamp(20px, 3vw, 40px);
-    z-index: 25;
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: 16px;
+    gap: 12px 16px;
+    flex-wrap: wrap;
     pointer-events: none;
   }
 
@@ -88,13 +99,14 @@
     pointer-events: auto;
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 4px;
+    min-width: 0;
   }
 
   .brand-top {
     display: flex;
     align-items: baseline;
-    gap: 14px;
+    gap: 12px;
     flex-wrap: wrap;
   }
 
@@ -104,6 +116,7 @@
     font-size: clamp(19px, 2vw, 25px);
     letter-spacing: -0.01em;
     color: var(--ink);
+    white-space: nowrap;
   }
 
   .brand h1 em {
@@ -119,6 +132,7 @@
     text-transform: uppercase;
     color: var(--ink-faint);
     text-decoration: none;
+    white-space: nowrap;
     transition: color 0.2s ease;
   }
   .brand .log-link:hover { color: var(--ink); }
@@ -126,13 +140,14 @@
   .brand-credit {
     font-family: var(--mono);
     font-size: 10px;
-    letter-spacing: 0.11em;
+    line-height: 1.45;
+    letter-spacing: 0.08em;
     color: var(--ink-dim);
   }
   .brand-credit a {
     color: var(--ink);
     text-decoration: none;
-    border-bottom: 1px solid rgba(240, 234, 220, 0.32);
+    border-bottom: 1px solid rgba(240, 234, 220, 0.34);
     padding-bottom: 1px;
     transition: color 0.2s ease, border-color 0.2s ease;
   }
@@ -145,7 +160,9 @@
     pointer-events: auto;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-left: auto;
   }
 
   .pill-btn {
@@ -154,54 +171,61 @@
     padding: 0 13px;
     border-radius: 999px;
     border: 1px solid var(--rule);
-    background: rgba(8, 10, 18, 0.62);
+    background: rgba(8, 10, 18, 0.68);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     color: var(--ink-dim);
     font-family: var(--mono);
     font-size: 10px;
-    letter-spacing: 0.14em;
+    letter-spacing: 0.13em;
     text-transform: uppercase;
+    white-space: nowrap;
     display: inline-flex;
     align-items: center;
     gap: 6px;
     cursor: pointer;
-    transition: color 0.2s, border-color 0.2s, background 0.2s, opacity 0.3s;
+    transition: color 0.2s, border-color 0.2s, background 0.2s;
   }
   .pill-btn:hover {
     color: var(--ink);
     border-color: var(--rule-hi);
-    background: rgba(16, 20, 32, 0.82);
+    background: rgba(16, 20, 32, 0.86);
   }
   .pill-btn.hidden {
-    opacity: 0;
+    display: none;
+  }
+
+  /* ── Stage Slot (always positioned cleanly below header) ──────────────── */
+  #promptSlot {
+    position: relative;
+    width: 100%;
     pointer-events: none;
   }
 
   /* ── Interactive Fork Prompt (Upper Sky) ──────────────────────────────── */
   #forkStage {
-    position: fixed;
-    top: clamp(86px, 11.2vh, 114px);
-    left: 50%;
-    transform: translateX(-50%) translateY(-6px);
-    width: min(820px, calc(100vw - 36px));
+    position: relative;
+    margin: 0 auto;
+    width: min(820px, 100%);
     z-index: 20;
     text-align: center;
     pointer-events: none;
     opacity: 0;
+    transform: translateY(-6px);
     transition: opacity 0.22s ease-out, transform 0.22s ease-out;
   }
 
   #forkStage.show {
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
     transition: opacity 0.48s var(--ease) 0.12s, transform 0.48s var(--ease) 0.12s;
   }
 
   .fork-kicker {
     font-family: var(--mono);
     font-size: 10px;
-    letter-spacing: 0.2em;
+    line-height: 1.45;
+    letter-spacing: 0.18em;
     text-transform: uppercase;
     color: var(--ink-dim);
     margin-bottom: 8px;
@@ -210,7 +234,7 @@
   .fork-question {
     font-family: var(--serif);
     font-weight: 400;
-    font-size: clamp(23px, 3vw, 36px);
+    font-size: clamp(22px, 3vw, 36px);
     line-height: 1.14;
     letter-spacing: -0.015em;
     color: var(--ink);
@@ -218,15 +242,21 @@
   }
 
   .fork-choices {
-    margin-top: 15px;
+    margin-top: 14px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 9px;
     flex-wrap: wrap;
     pointer-events: auto;
   }
 
+  #forkStage:not(.show) {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+  }
   #forkStage:not(.show) .fork-choices {
     pointer-events: none;
   }
@@ -235,12 +265,12 @@
     appearance: none;
     font-family: var(--mono);
     font-size: 10.5px;
-    letter-spacing: 0.13em;
+    letter-spacing: 0.12em;
     text-transform: uppercase;
-    padding: 9px 16px;
+    padding: 9px 15px;
     border-radius: 999px;
-    border: 1px solid rgba(240, 234, 220, 0.24);
-    background: rgba(10, 13, 22, 0.72);
+    border: 1px solid rgba(240, 234, 220, 0.26);
+    background: rgba(10, 13, 22, 0.78);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     color: var(--ink);
@@ -277,11 +307,13 @@
 
   /* ── Collapsed Future Story (Centered, Spacious) ──────────────────────── */
   #storyCard {
-    position: fixed;
-    top: clamp(92px, 12.5vh, 136px);
-    left: 50%;
-    transform: translateX(-50%) translateY(10px);
-    width: min(700px, calc(100vw - 40px));
+    position: absolute;
+    top: 4px;
+    left: 0;
+    right: 0;
+    margin: 0 auto;
+    transform: translateY(10px);
+    width: min(700px, 100%);
     z-index: 20;
     text-align: center;
     pointer-events: none;
@@ -290,8 +322,13 @@
   }
 
   #storyCard.show {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    margin: 4px auto 0;
     opacity: 1;
-    transform: translateX(-50%) translateY(0);
+    transform: translateY(0);
     transition: opacity 0.65s var(--ease) 0.2s, transform 0.65s var(--ease) 0.2s;
   }
 
@@ -392,9 +429,9 @@
   /* ── Bottom Climate Sky Bar (Always Live, Always Interactive) ─────────── */
   footer {
     position: fixed;
-    left: clamp(16px, 3vw, 40px);
-    right: clamp(16px, 3vw, 40px);
-    bottom: clamp(14px, 2.2vh, 24px);
+    left: clamp(12px, 3vw, 40px);
+    right: clamp(12px, 3vw, 40px);
+    bottom: max(12px, env(safe-area-inset-bottom));
     z-index: 25;
     display: flex;
     align-items: center;
@@ -468,11 +505,45 @@
   }
 
   @media (max-width: 720px) {
-    .bar-label { display: none; }
-    .choice-btn { padding: 8px 13px; font-size: 10px; }
+    #topStack {
+      gap: 14px;
+      padding: max(12px, env(safe-area-inset-top)) 16px 0;
+    }
+    header {
+      gap: 8px 10px;
+    }
+    .brand h1 { font-size: 20px; }
+    .brand .log-link { font-size: 9.5px; letter-spacing: 0.12em; }
+    .brand-credit { font-size: 9.5px; letter-spacing: 0.04em; }
+    .top-actions { gap: 6px; }
+    .pill-btn { height: 28px; padding: 0 10px; font-size: 9.2px; letter-spacing: 0.1em; }
+    .fork-kicker { font-size: 9px; letter-spacing: 0.13em; margin-bottom: 6px; }
+    .fork-question { font-size: clamp(21px, 6vw, 27px); }
+    .fork-choices { margin-top: 10px; gap: 7px; }
+    .choice-btn { padding: 8px 12px; font-size: 9.8px; letter-spacing: 0.08em; }
     .choice-btn .key { display: none; }
-    .story-copy { font-size: 14px; line-height: 1.55; }
-    .clim-pill { padding: 0 9px; font-size: 9px; }
+    .story-trail { margin-bottom: 10px; gap: 2px; }
+    .crumb-btn, .crumb-final, .crumb-climate, .crumb-sep { font-size: 9px; letter-spacing: 0.1em; }
+    .story-headline { font-size: clamp(22px, 6.2vw, 30px); margin-bottom: 11px; }
+    .story-copy { font-size: 13.5px; line-height: 1.54; }
+    .story-meta { font-size: 8.8px; letter-spacing: 0.12em; margin-top: 10px; }
+    .story-actions { margin-top: 13px; gap: 8px; }
+    .bar-label { display: none; }
+    .climate-bar {
+      border-radius: 18px;
+      padding: 4px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 4px;
+      width: min(350px, 100%);
+    }
+    .clim-pill {
+      height: 28px;
+      padding: 0 8px;
+      font-size: 9.2px;
+      letter-spacing: 0.08em;
+      justify-content: center;
+    }
   }
 </style>
 </head>
@@ -482,39 +553,43 @@
 <div class="vignette" aria-hidden="true"></div>
 <div class="grain" aria-hidden="true"></div>
 
-<header>
-  <div class="brand">
-    <div class="brand-top">
-      <h1>Possible <em>Futures</em></h1>
-      <a class="log-link" href="index.html">&larr; return to log</a>
+<div id="topStack">
+  <header>
+    <div class="brand">
+      <div class="brand-top">
+        <h1>Possible <em>Futures</em></h1>
+        <a class="log-link" href="index.html">&larr; return to log</a>
+      </div>
+      <div class="brand-credit">
+        Based on <a href="https://borretti.me/article/possible-futures" target="_blank" rel="noopener noreferrer">Fernando Borretti&rsquo;s &ldquo;Possible Futures&rdquo; &nearr;</a>
+      </div>
     </div>
-    <div class="brand-credit">
-      Based on <a href="https://borretti.me/article/possible-futures" target="_blank" rel="noopener noreferrer">Fernando Borretti&rsquo;s &ldquo;Possible Futures&rdquo; &nearr;</a>
+    <div class="top-actions">
+      <button class="pill-btn hidden" id="backBtn" type="button" title="Undo last fork (Backspace)">&larr; Step back</button>
+      <button class="pill-btn hidden" id="resetBtn" type="button" title="Return to 2026 superposition (R)">Re-open 2026</button>
+      <button class="pill-btn" id="randomBtn" type="button" title="Collapse to a random future">&#8635; Surprise me</button>
     </div>
-  </div>
-  <div class="top-actions">
-    <button class="pill-btn hidden" id="backBtn" type="button" title="Undo last fork (Backspace)">&larr; Step back</button>
-    <button class="pill-btn hidden" id="resetBtn" type="button" title="Return to 2026 superposition (R)">Re-open 2026</button>
-    <button class="pill-btn" id="randomBtn" type="button" title="Collapse to a random future">&#8635; Surprise me</button>
-  </div>
-</header>
+  </header>
 
-<section id="forkStage" class="show" aria-live="polite">
-  <div class="fork-kicker" id="forkKicker"></div>
-  <div class="fork-question" id="forkQuestion"></div>
-  <div class="fork-choices" id="forkChoices"></div>
-</section>
+  <div id="promptSlot">
+    <section id="forkStage" class="show" aria-live="polite">
+      <div class="fork-kicker" id="forkKicker"></div>
+      <div class="fork-question" id="forkQuestion"></div>
+      <div class="fork-choices" id="forkChoices"></div>
+    </section>
 
-<section id="storyCard" aria-live="polite">
-  <div class="story-trail" id="storyTrail"></div>
-  <h2 class="story-headline" id="storyHeadline"></h2>
-  <p class="story-copy" id="storyCopy"></p>
-  <div class="story-meta" id="storyMeta"></div>
-  <div class="story-actions">
-    <button class="pill-btn" id="storyBackBtn" type="button">&larr; Try sibling branch</button>
-    <button class="pill-btn" id="storyResetBtn" type="button">Re-open 2026</button>
+    <section id="storyCard" aria-live="polite">
+      <div class="story-trail" id="storyTrail"></div>
+      <h2 class="story-headline" id="storyHeadline"></h2>
+      <p class="story-copy" id="storyCopy"></p>
+      <div class="story-meta" id="storyMeta"></div>
+      <div class="story-actions">
+        <button class="pill-btn" id="storyBackBtn" type="button">&larr; Try sibling branch</button>
+        <button class="pill-btn" id="storyResetBtn" type="button">Re-open 2026</button>
+      </div>
+    </section>
   </div>
-</section>
+</div>
 
 <footer>
   <div class="climate-bar" id="climateBar" role="radiogroup" aria-label="Choose climate trajectory">
@@ -575,7 +650,7 @@
   // reach ASI, stay below ASI, halt by treaty, or early catastrophic misuse.
   const FORKS = {
     pre: {
-      kicker: '2026 · BORRETTI’S 10 AI FUTURES STILL OPEN — CHOOSE A TURN',
+      kicker: '2026 · BORRETTI’S 10 AI FUTURES — CHOOSE A TURN',
       question: 'Do we reach superintelligent AI?',
       choices: [
         { label: 'Yes — reach ASI',          crumb: 'Reach ASI',    target: 'align',  via: ['asi', 'align'] },
@@ -924,7 +999,9 @@
     crystalAmt: 0,
     treeVis: 1,
     lightning: 0,
-    nextLightningAt: 3.5
+    nextLightningAt: 3.5,
+    promptBottom: 240,
+    footerTop: window.innerHeight - 60
   };
 
   function isCollapsed() {
@@ -1030,15 +1107,29 @@
     return `rgba(${rgb[0] | 0},${rgb[1] | 0},${rgb[2] | 0},${clamp(a, 0, 1).toFixed(3)})`;
   }
 
+  function measureSafeBounds() {
+    const forkRect = elForkStage.getBoundingClientRect();
+    const footRect = document.querySelector('footer').getBoundingClientRect();
+    app.promptBottom = Math.max(150, forkRect.bottom);
+    app.footerTop = footRect.top || (app.vh - 60);
+  }
+
   function getTreeBox() {
-    const labelRoom = app.vw < 720 ? 112 : 165;
-    const w = Math.min(app.vw - labelRoom - 80, 680);
-    const h = Math.min(app.vh * 0.30, 245);
+    const isMobile = app.vw < 720;
+    const labelRoom = isMobile ? 128 : 165;
+    const leftPad = isMobile ? 42 : 46;
+    const rightPad = isMobile ? 12 : 34;
+    const w = Math.min(app.vw - leftPad - labelRoom - rightPad, 680);
+    const minY = app.promptBottom + (isMobile ? 22 : 28);
+    const maxBottom = Math.min(app.vh * 0.72, app.footerTop - (isMobile ? 118 : 138));
+    const availH = Math.max(125, maxBottom - minY);
+    const h = Math.min(availH, isMobile ? 215 : 245);
+    const y = minY + Math.max(0, (availH - h) * 0.35);
     return {
-      x: Math.max(46, (app.vw - (w + labelRoom)) * 0.5 + 16),
-      y: clamp(app.vh * 0.32, 212, 295),
-      w: Math.max(180, w),
-      h: Math.max(150, h)
+      x: isMobile ? leftPad : Math.max(46, (app.vw - (w + labelRoom)) * 0.5 + 16),
+      y,
+      w: Math.max(135, w),
+      h: Math.max(125, h)
     };
   }
 
@@ -1255,6 +1346,8 @@
       elStoryCopy.textContent = outcome.copy[climate.id];
       elStoryMeta.textContent = outcome.meta;
     }
+
+    requestAnimationFrame(measureSafeBounds);
   }
 
   /* =========================================================================
@@ -1324,6 +1417,7 @@
     app.dpr = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.floor(app.vw * app.dpr);
     canvas.height = Math.floor(app.vh * app.dpr);
+    measureSafeBounds();
   }
   window.addEventListener('resize', resize);
 
@@ -1694,13 +1788,13 @@
 
       if (treeVis > 0.25) {
         const lblAlpha = isPreview ? 0.96 : (alive ? (hover ? 0.20 : 0.56) : 0.12);
-        ctx.font = `${isPreview ? '500' : '400'} ${app.vw < 720 ? 10 : 11.5}px ${serifFont}`;
+        ctx.font = `${isPreview ? '500' : '400'} ${app.vw < 720 ? 9.5 : 11.5}px ${serifFont}`;
         ctx.textAlign = 'left';
         ctx.textBaseline = 'middle';
         ctx.fillStyle = isPreview
           ? rgba(OUTCOMES[key].rgb, 0.98 * treeVis)
           : `rgba(240, 234, 220, ${(lblAlpha * treeVis).toFixed(2)})`;
-        ctx.fillText(n.name, p.x + 11, p.y + 0.5);
+        ctx.fillText(n.name, p.x + 9, p.y + 0.5);
       }
     }
 
