@@ -580,7 +580,7 @@
       <span class="oracle-entry__desc">Frontier LLMs predicting Switzerland &amp; the world at 1, 3, 10, and 20 years — sealed and graded over time.</span>
     </span>
     <span class="oracle-entry__right">
-      <span class="oracle-entry__meta" id="oracle-entry-meta">8 models · R01</span>
+      <span class="oracle-entry__meta" id="oracle-entry-meta">10 models · 80 bets</span>
       <span class="oracle-entry__open">Open<span class="arrow">↗</span></span>
     </span>
   </a>
@@ -1947,11 +1947,13 @@
     const D = window.ORACLE_DATA;
     if (!D || !D.models) return;
     const llmCount = D.models.filter(m => m.lineage !== 'human').length;
-    const totalBets = (D.rounds || []).reduce((sum, r) => sum + (r.predictions || []).length, 0);
+    const allPreds = (D.rounds || []).flatMap(r => r.predictions || []);
+    const totalBets = allPreds.length;
+    const activeModels = new Set(allPreds.map(p => p.modelId)).size;
     const meta = document.getElementById('oracle-entry-meta');
     if (meta) {
       meta.textContent = totalBets > 0
-        ? `${llmCount} models · ${totalBets} ${totalBets === 1 ? 'bet' : 'bets'}`
+        ? `${activeModels} ${activeModels === 1 ? 'model' : 'models'} · ${totalBets} ${totalBets === 1 ? 'bet' : 'bets'}`
         : `${llmCount} models · 1Y / 3Y / 10Y / 20Y`;
     }
   })();

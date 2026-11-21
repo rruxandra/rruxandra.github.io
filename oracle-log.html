@@ -574,6 +574,7 @@
   };
 
   const modelsById = Object.fromEntries(DATA.models.map(m => [m.id, m]));
+  const modelRankById = Object.fromEntries(DATA.models.map((m, i) => [m.id, i]));
 
   function esc(str) {
     return String(str == null ? "" : str)
@@ -594,10 +595,11 @@
 
   function collectAllPredictions() {
     const out = [];
-    (DATA.rounds || []).forEach(round => {
+    (DATA.rounds || []).forEach((round, roundIndex) => {
       (round.predictions || []).forEach(p => {
         const askedDate = p.date || round.sealedDate;
         out.push(Object.assign({}, p, {
+          roundIndex,
           roundId: round.id,
           roundLabel: round.label,
           sealedDate: askedDate,
@@ -662,7 +664,14 @@
   }
 
   function renderPredictions(allPreds) {
-    const items = allPreds.filter(p => p.scope === state.tab && p.horizon === state.horizon);
+    const items = allPreds
+      .filter(p => p.scope === state.tab && p.horizon === state.horizon)
+      .sort((a, b) => {
+        if (a.roundIndex !== b.roundIndex) return a.roundIndex - b.roundIndex;
+        const ra = a.modelId in modelRankById ? modelRankById[a.modelId] : 999;
+        const rb = b.modelId in modelRankById ? modelRankById[b.modelId] : 999;
+        return ra - rb;
+      });
     const latest = DATA.rounds && DATA.rounds[0];
     const scopeLabel = state.tab === "CH" ? "Switzerland" : "World";
     const hzWord = HORIZON_LABELS[state.horizon] || state.horizon;
