@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Oracle Log — CH.03 // SIG/NAL.LOG</title>
-<meta name="description" content="The same prompt, asked to frontier LLMs over time. Bold predictions about Switzerland and the world — sealed on commit, graded at 1, 3, and 10 years." />
+<meta name="description" content="The same prompt, asked to frontier LLMs over time. Bold predictions about Switzerland and the world — sealed on commit, graded at 1, 3, 10, and 20 years." />
 <link rel="alternate" type="application/rss+xml" title="Signal//log" href="feed.xml" />
 <link rel="stylesheet" href="assets/space-mono.css" />
 <link rel="stylesheet" href="assets/article-fonts.css" />
@@ -222,6 +222,7 @@
 
   .horizons {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.35rem;
     padding-bottom: 0.62rem;
   }
@@ -284,8 +285,8 @@
   /* ── clean editorial predictions table ──────────────────────── */
   .pred-table-head {
     display: grid;
-    grid-template-columns: 112px 175px minmax(0, 1.45fr) 54px minmax(215px, 0.95fr);
-    gap: 1.25rem;
+    grid-template-columns: 112px 180px minmax(0, 1.55fr) minmax(220px, 0.95fr);
+    gap: 1.35rem;
     padding: 0.65rem 0.4rem;
     border-top: 1px solid var(--line-bright);
     border-bottom: 1px solid var(--line-bright);
@@ -295,7 +296,6 @@
     text-transform: uppercase;
     color: var(--bone-faint);
   }
-  .pred-table-head .col-prob { text-align: right; }
 
   .pred-row {
     border-bottom: 1px solid var(--line);
@@ -306,13 +306,13 @@
   }
   .pred-summary {
     display: grid;
-    grid-template-columns: 112px 175px minmax(0, 1.45fr) 54px minmax(215px, 0.95fr);
-    gap: 1.25rem;
+    grid-template-columns: 112px 180px minmax(0, 1.55fr) minmax(220px, 0.95fr);
+    gap: 1.35rem;
     align-items: start;
     padding: 1.35rem 0.4rem;
-    cursor: pointer;
     list-style: none;
   }
+  details.pred-row > .pred-summary { cursor: pointer; }
   .pred-summary::-webkit-details-marker { display: none; }
 
   /* Col 1: Date */
@@ -384,16 +384,7 @@
   .pred-row:hover .p-hint { color: var(--bone-dim); }
   .pred-row[open] .p-hint { display: none; }
 
-  /* Col 4: Probability */
-  .p-prob {
-    text-align: right;
-    padding-top: 0.16rem;
-    font-family: var(--jmono);
-    font-size: 0.8rem;
-    color: var(--bone-dim);
-  }
-
-  /* Col 5: Right / Wrong & Notes */
+  /* Col 4: Right / Wrong & Notes */
   .p-eval {
     padding-top: 0.14rem;
     padding-left: 1rem;
@@ -482,23 +473,19 @@
   @media (max-width: 900px) {
     .pred-table-head { display: none; }
     .pred-summary {
-      grid-template-columns: 1fr auto;
-      gap: 0.5rem 1rem;
+      grid-template-columns: 1fr;
+      gap: 0.5rem;
       padding: 1.25rem 0;
     }
     .p-date {
-      grid-column: 1 / -1;
       display: flex;
       gap: 0.75rem;
       align-items: baseline;
       padding-top: 0;
     }
     .p-date__due { margin-top: 0; }
-    .p-model { grid-column: 1; }
-    .p-prob { grid-column: 2; padding-top: 0.14rem; }
-    .p-claim { grid-column: 1 / -1; font-size: 1.04rem; }
+    .p-claim { font-size: 1.04rem; }
     .p-eval {
-      grid-column: 1 / -1;
       margin-top: 0.25rem;
       padding: 0.45rem 0 0.1rem 0.8rem;
       min-height: 0;
@@ -526,7 +513,7 @@
 
   <header>
     <h1>Oracle<span class="slash">/</span><span class="ital">log</span></h1>
-    <p class="intro">The same prompt, asked to frontier models over time. Bold predictions about Switzerland and the world — sealed on commit, then graded at 1, 3, and 10 years.</p>
+    <p class="intro">The same prompt, asked to frontier models over time. Bold predictions about Switzerland and the world — sealed on commit, then graded at 1, 3, 10, and 20 years.</p>
     <div class="header-actions">
       <button type="button" class="text-btn text-btn--accent" id="toggle-prompt-btn" aria-expanded="false" aria-controls="prompt-sheet">Read the prompt</button>
       <button type="button" class="text-btn" id="copy-prompt-btn">Copy prompt for today</button>
@@ -539,7 +526,7 @@
       </div>
       <pre id="prompt-text"></pre>
       <p class="prompt-rules">
-        Rules: identical prompt across every model and round (only the date changes) · models may use any native tools · git commit seals the timestamp · graded on maturity as Right / Partial / Wrong with notes and Brier score (0.250 = blind coin flip).
+        Rules: identical prompt across every model and round (only the date changes) · models may use any native tools · git commit seals the timestamp · evaluated later as Right / Partial / Wrong with notes.
       </p>
     </div>
   </header>
@@ -554,6 +541,7 @@
       <button type="button" class="hz-btn is-active" data-horizon="1Y">1 Year</button>
       <button type="button" class="hz-btn" data-horizon="3Y">3 Years</button>
       <button type="button" class="hz-btn" data-horizon="10Y">10 Years</button>
+      <button type="button" class="hz-btn" data-horizon="20Y">20 Years</button>
     </div>
   </div>
 
@@ -577,11 +565,12 @@
   const DATA = window.ORACLE_DATA;
   if (!DATA) return;
 
-  const HORIZON_YEARS = { "1Y": 1, "3Y": 3, "10Y": 10 };
+  const HORIZON_YEARS = { "1Y": 1, "3Y": 3, "10Y": 10, "20Y": 20 };
+  const HORIZON_LABELS = { "1Y": "1 Year", "3Y": "3 Years", "10Y": "10 Years", "20Y": "20 Years" };
 
   const state = {
     tab: "CH",       // "CH" | "WORLD"
-    horizon: "1Y"    // "1Y" | "3Y" | "10Y"
+    horizon: "1Y"    // "1Y" | "3Y" | "10Y" | "20Y"
   };
 
   const modelsById = Object.fromEntries(DATA.models.map(m => [m.id, m]));
@@ -613,6 +602,7 @@
           roundLabel: round.label,
           sealedDate: askedDate,
           dueDate: addYearsISO(askedDate, HORIZON_YEARS[p.horizon] || 1),
+          headline: p.prediction || p.headline || "",
           resolutionCriteria: p.resolutionCriteria || p.resolution_criteria || "",
           status: p.status || "sealed",
           comment: p.comment || (p.audit && p.audit.note) || "",
@@ -668,14 +658,14 @@
     const sc = (params.get("scope") || "").toUpperCase();
     if (sc === "CH" || sc === "WORLD") state.tab = sc;
     const hz = (params.get("horizon") || "").toUpperCase();
-    if (["1Y", "3Y", "10Y"].includes(hz)) state.horizon = hz;
+    if (hz in HORIZON_YEARS) state.horizon = hz;
   }
 
   function renderPredictions(allPreds) {
     const items = allPreds.filter(p => p.scope === state.tab && p.horizon === state.horizon);
     const latest = DATA.rounds && DATA.rounds[0];
     const scopeLabel = state.tab === "CH" ? "Switzerland" : "World";
-    const hzWord = state.horizon === "1Y" ? "1 Year" : state.horizon === "3Y" ? "3 Years" : "10 Years";
+    const hzWord = HORIZON_LABELS[state.horizon] || state.horizon;
 
     if (items.length && latest) {
       const matISO = addYearsISO(latest.sealedDate, HORIZON_YEARS[state.horizon]);
@@ -693,7 +683,6 @@
         <span>Date</span>
         <span>Model</span>
         <span>Prediction</span>
-        <span class="col-prob">Prob.</span>
         <span>Right / Wrong &amp; Notes</span>
       </div>
     `;
@@ -717,44 +706,43 @@
         ? `<div class="p-comment">${esc(p.comment)}</div>`
         : `<div class="p-comment p-comment--empty">To fill after ${fmtDate(p.dueDate).slice(0, 7)}</div>`;
 
+      const hasExtra = Boolean(p.impact || p.resolutionCriteria || p.rationale);
+      const innerSummary = `
+        <div class="p-date">
+          <div class="p-date__asked">${fmtDate(p.sealedDate)}</div>
+          <div class="p-date__due">due ${fmtDate(p.dueDate).slice(0, 7)}</div>
+        </div>
+
+        <div class="p-model">
+          <div class="p-model__name">
+            <span class="p-dot" style="background:${esc(m.accent)}"></span>
+            ${esc(m.name)}
+          </div>
+          <div class="p-model__lab">${esc(m.lab)} · ${esc(m.region)}</div>
+        </div>
+
+        <div class="p-claim">
+          ${esc(p.headline)}
+          ${hasExtra ? `<span class="p-hint">Notes &amp; details ▾</span>` : ""}
+        </div>
+
+        <div class="p-eval">
+          <div class="p-verdict ${v.cls}">${esc(v.label)}</div>
+          ${commentHTML}
+        </div>
+      `;
+
+      if (!hasExtra) {
+        return `<div class="pred-row"><div class="pred-summary">${innerSummary}</div></div>`;
+      }
+
       return `
         <details class="pred-row">
-          <summary class="pred-summary">
-            <div class="p-date">
-              <div class="p-date__asked">${fmtDate(p.sealedDate)}</div>
-              <div class="p-date__due">due ${fmtDate(p.dueDate).slice(0, 7)}</div>
-            </div>
-
-            <div class="p-model">
-              <div class="p-model__name">
-                <span class="p-dot" style="background:${esc(m.accent)}"></span>
-                ${esc(m.name)}
-              </div>
-              <div class="p-model__lab">${esc(m.lab)} · ${esc(m.region)}</div>
-            </div>
-
-            <div class="p-claim">
-              ${esc(p.headline)}
-              <span class="p-hint">Grading criterion &amp; rationale ▾</span>
-            </div>
-
-            <div class="p-prob">${p.probability}%</div>
-
-            <div class="p-eval">
-              <div class="p-verdict ${v.cls}">${esc(v.label)}</div>
-              ${commentHTML}
-            </div>
-          </summary>
-
+          <summary class="pred-summary">${innerSummary}</summary>
           <div class="pred-detail">
-            <div class="detail-block">
-              <span>How it’s graded (${fmtDate(p.dueDate)})</span>
-              ${esc(p.resolutionCriteria)}
-            </div>
-            <div class="detail-block detail-block--prose">
-              <span>Why it’s bold</span>
-              ${esc(p.rationale)}
-            </div>
+            ${p.impact ? `<div class="detail-block detail-block--prose"><span>Impact on me</span>${esc(p.impact)}</div>` : ""}
+            ${p.resolutionCriteria ? `<div class="detail-block"><span>How it’s graded (${fmtDate(p.dueDate)})</span>${esc(p.resolutionCriteria)}</div>` : ""}
+            ${p.rationale ? `<div class="detail-block detail-block--prose"><span>Why it’s bold</span>${esc(p.rationale)}</div>` : ""}
           </div>
         </details>
       `;

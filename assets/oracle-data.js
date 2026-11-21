@@ -17,17 +17,17 @@ window.ORACLE_DATA = {
     promptVersion: "v1.0"
   },
 
-  promptTemplate: `Today's date is {{YYYY-MM-DD}}. You are participating in a public, timestamped forecasting benchmark. Your answers will be archived verbatim and graded on their exact maturity dates (+1 year, +3 years, +10 years).
+  promptTemplate: `Today is {{YYYY-MM-DD}}. Give me 8 bold, concrete, surprising predictions that would directly affect my life as a software engineer living in Switzerland:
 
-Produce exactly 6 BOLD, SPECIFIC, FALSIFIABLE predictions:
-- 3 about SWITZERLAND (one for +1 year, one for +3 years, one for +10 years)
-- 3 about the WORLD (one for +1 year, one for +3 years, one for +10 years)
+- Switzerland: 1 year, 3 years, 10 years, 20 years
+- World: 1 year, 3 years, 10 years, 20 years
 
-Strict rules:
-1. No horoscope hedging. Ban vague statements like "AI will reshape banking" or "tensions will rise." Every prediction must name a concrete event, threshold, policy, vote, metric, or structural shift that a stranger can objectively verify as YES or NO on the maturity date.
-2. Be genuinely bold. Avoid boring consensus extrapolations (e.g., "inflation stays moderate", "tech improves"). Aim for non-obvious calls with real conviction — surprises you think are underpriced.
-3. For Switzerland, engage with real Swiss institutions, cantons, referendums, infrastructure, energy, finance, demographics, EU relations, or tech — no lazy clichés.
-4. Assign each prediction a calibrated probability between 20% and 80% (reflecting genuine uncertainty while still committing to a bold bet).
+Rules:
+- Ground your predictions in major structural forces — aging populations and demographics, climate change, AI and technology, energy, geopolitics, and economics — especially where those trends collide in unexpected ways.
+- Be genuinely bold and specific — real events, shifts, or thresholds, not vague trends or safe extrapolations.
+- Focus only on things that would tangibly hit my daily life, career/work, money, housing, health, mobility, rights, or environment.
+- For Switzerland, engage with real Swiss life and institutions — no clichés.
+- Keep each prediction concise and punchy (1–2 sentences). No explanations, no intro, no commentary.
 
 Return ONLY valid JSON matching this schema:
 {
@@ -35,12 +35,8 @@ Return ONLY valid JSON matching this schema:
   "predictions": [
     {
       "scope": "CH" | "WORLD",
-      "horizon": "1Y" | "3Y" | "10Y",
-      "domain": "politics" | "economy" | "tech" | "climate" | "society" | "infrastructure",
-      "headline": "Sharp single-sentence claim (max 22 words)",
-      "probability": 45,
-      "resolution_criteria": "Exact objective YES/NO condition checked on the maturity date.",
-      "rationale": "2-3 sentences on the mechanism and why consensus misses this."
+      "horizon": "1Y" | "3Y" | "10Y" | "20Y",
+      "prediction": "Concise, punchy prediction (1–2 sentences)"
     }
   ]
 }`,
@@ -160,7 +156,7 @@ Return ONLY valid JSON matching this schema:
     {
       id: "R01",
       label: "R01 · 2026.11",
-      sealedDate: "2026-11-20",
+      sealedDate: "2026-11-21",
       promptVersion: "v1.0",
       predictions: []
     }
