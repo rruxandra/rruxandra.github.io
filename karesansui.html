@@ -1,0 +1,4495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#141311" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Karesansui — Dry Landscape Sand Garden</title>
+  <meta name="description" content="A physically simulated Japanese dry-landscape zen sand garden: mass-conserving Shirakawa gravel, angle-of-repose avalanches, raymarched mossy granite boulders, raking sunlight, and granular acoustic foley." />
+  <style>
+    :root {
+      --bg: #12110f;
+      --ink: rgba(244, 239, 230, 0.92);
+      --ink-muted: rgba(224, 215, 200, 0.62);
+      --ink-faint: rgba(212, 200, 182, 0.36);
+      --panel: rgba(20, 18, 15, 0.66);
+      --panel-strong: rgba(22, 19, 16, 0.84);
+      --border: rgba(235, 224, 204, 0.14);
+      --border-strong: rgba(235, 224, 204, 0.30);
+      --accent: #d8c39e;
+      --accent-soft: rgba(216, 195, 158, 0.18);
+      --moss: #8ea56c;
+      --serif: ui-serif, 'New York', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif;
+      --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, sans-serif;
+      --mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+      --ease: cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+      touch-action: none;
+      overscroll-behavior: none;
+    }
+
+    #glCanvas, #fxCanvas {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      display: block;
+      touch-action: none;
+    }
+
+    #glCanvas {
+      z-index: 1;
+      cursor: none;
+    }
+
+    #glCanvas.cursor-grab {
+      cursor: grab;
+    }
+
+    #glCanvas.cursor-grabbing {
+      cursor: grabbing;
+    }
+
+    #fxCanvas {
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    /* ── Top Floating Chrome ── */
+    .back {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      left: max(16px, env(safe-area-inset-left));
+      z-index: 30;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: rgba(238, 231, 218, 0.76);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      text-decoration: none;
+      touch-action: manipulation;
+      transition: opacity 0.55s var(--ease), color 0.25s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .back:hover,
+    .back:focus-visible {
+      color: rgba(250, 246, 238, 0.98);
+      background: var(--panel-strong);
+      border-color: var(--border-strong);
+      outline: none;
+    }
+
+    .back::before {
+      content: "\2190";
+      letter-spacing: 0;
+    }
+
+    .top-right {
+      position: fixed;
+      top: max(16px, env(safe-area-inset-top));
+      right: max(16px, env(safe-area-inset-right));
+      z-index: 30;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 0.55s var(--ease);
+    }
+
+    .title-pill {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      pointer-events: none;
+    }
+
+    .title-pill .en {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: rgba(242, 235, 223, 0.85);
+    }
+
+    .title-pill .jp {
+      font-family: var(--serif);
+      font-size: 12px;
+      letter-spacing: 0.16em;
+      color: var(--accent);
+      opacity: 0.85;
+    }
+
+    .icon-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 11px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      color: var(--ink-muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      touch-action: manipulation;
+      transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .icon-pill:hover,
+    .icon-pill:focus-visible {
+      color: var(--ink);
+      background: var(--panel-strong);
+      border-color: var(--border-strong);
+      outline: none;
+    }
+
+    .icon-pill.is-active {
+      color: var(--accent);
+      border-color: rgba(216, 195, 158, 0.42);
+      background: rgba(34, 29, 23, 0.78);
+    }
+
+    .icon-pill svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ── Bottom Instrument Dock ── */
+    .dock-wrap {
+      position: fixed;
+      bottom: max(16px, env(safe-area-inset-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      max-width: calc(100vw - 20px);
+      transition: opacity 0.55s var(--ease), transform 0.55s var(--ease);
+    }
+
+    .hint-line {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(240, 232, 218, 0.76);
+      background: rgba(18, 16, 13, 0.56);
+      border: 1px solid rgba(235, 224, 204, 0.12);
+      padding: 5px 12px;
+      border-radius: 999px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      pointer-events: none;
+      text-align: center;
+      white-space: nowrap;
+      opacity: 1;
+      transition: opacity 0.9s var(--ease);
+    }
+
+    .hint-line.is-hidden {
+      opacity: 0;
+    }
+
+    .dock {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 6px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.42), inset 0 1px 0 rgba(255, 248, 235, 0.06);
+      overflow-x: auto;
+      max-width: calc(100vw - 20px);
+      scrollbar-width: none;
+    }
+
+    .dock::-webkit-scrollbar {
+      display: none;
+    }
+
+    .dock-group {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex-shrink: 0;
+    }
+
+    .dock-sep {
+      width: 1px;
+      height: 20px;
+      background: var(--border);
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .tool-btn {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 34px;
+      padding: 0 11px;
+      border-radius: 999px;
+      border: 1px solid transparent;
+      background: transparent;
+      color: var(--ink-muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+      cursor: pointer;
+      white-space: nowrap;
+      touch-action: manipulation;
+      transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .tool-btn svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 1.45;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      flex-shrink: 0;
+    }
+
+    .tool-btn:hover,
+    .tool-btn:focus-visible {
+      color: var(--ink);
+      background: rgba(255, 248, 235, 0.06);
+      outline: none;
+    }
+
+    .tool-btn.is-active {
+      color: #faf4e8;
+      background: var(--accent-soft);
+      border-color: rgba(216, 195, 158, 0.42);
+    }
+
+    .tool-btn.icon-only {
+      padding: 0 9px;
+    }
+
+    /* ── Popover Drawer (Light / Garden Presets / Stone Controls) ── */
+    .popover {
+      position: fixed;
+      bottom: calc(max(16px, env(safe-area-inset-bottom)) + 54px);
+      left: 50%;
+      transform: translateX(-50%) translateY(8px);
+      z-index: 35;
+      min-width: 280px;
+      max-width: calc(100vw - 24px);
+      padding: 14px 16px;
+      border-radius: 18px;
+      background: var(--panel-strong);
+      border: 1px solid var(--border-strong);
+      backdrop-filter: blur(22px);
+      -webkit-backdrop-filter: blur(22px);
+      box-shadow: 0 20px 54px rgba(0, 0, 0, 0.56);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s var(--ease), transform 0.25s var(--ease);
+    }
+
+    .popover.is-open {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .pop-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 11px;
+    }
+
+    .pop-title {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .pop-sub {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 12px;
+      color: var(--ink-muted);
+    }
+
+    .pop-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .pop-grid.cols-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .pop-choice {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 2px;
+      padding: 9px 11px;
+      border-radius: 11px;
+      border: 1px solid var(--border);
+      background: rgba(255, 248, 235, 0.03);
+      color: var(--ink);
+      cursor: pointer;
+      text-align: left;
+      transition: background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .pop-choice:hover {
+      background: rgba(255, 248, 235, 0.08);
+      border-color: var(--border-strong);
+    }
+
+    .pop-choice.is-active {
+      background: var(--accent-soft);
+      border-color: rgba(216, 195, 158, 0.55);
+    }
+
+    .pop-choice .name {
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .pop-choice .meta {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 11.5px;
+      color: var(--ink-muted);
+    }
+
+    .slider-row {
+      margin-top: 12px;
+      padding-top: 11px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .slider-item {
+      display: grid;
+      grid-template-columns: 78px 1fr 40px;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .slider-item label {
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--ink-muted);
+    }
+
+    .slider-item .val {
+      font-family: var(--mono);
+      font-size: 10px;
+      color: var(--accent);
+      text-align: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      border-radius: 99px;
+      background: rgba(235, 224, 204, 0.2);
+      outline: none;
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #1b1814;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid #1b1814;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+    }
+
+    .toggle-row {
+      margin-top: 10px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .chip-btn {
+      flex: 1;
+      min-width: 90px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      border: 1px solid var(--border);
+      background: rgba(255, 248, 235, 0.03);
+      color: var(--ink-muted);
+      font-family: var(--mono);
+      font-size: 9.5px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .chip-btn:hover {
+      color: var(--ink);
+      border-color: var(--border-strong);
+    }
+
+    .chip-btn.is-active {
+      color: #faf4e8;
+      background: var(--accent-soft);
+      border-color: rgba(216, 195, 158, 0.5);
+    }
+
+    /* ── Receding HUD during active raking or Zen mode ── */
+    body.is-raking .dock-wrap,
+    body.is-raking .top-right,
+    body.is-raking .back {
+      opacity: 0.22;
+      pointer-events: none;
+    }
+
+    body.zen-mode .back,
+    body.zen-mode .dock-wrap,
+    body.zen-mode .popover,
+    body.zen-mode .title-pill,
+    body.zen-mode #audioBtn,
+    body.zen-mode #viewBtn {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    body.zen-mode #zenBtn {
+      opacity: 0.32;
+    }
+
+    body.zen-mode #zenBtn:hover {
+      opacity: 0.92;
+    }
+
+    /* ── Stone Mode Helper Pill ── */
+    .mode-banner {
+      position: fixed;
+      top: max(58px, calc(env(safe-area-inset-top) + 42px));
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 25;
+      padding: 6px 14px;
+      border-radius: 999px;
+      background: rgba(20, 18, 15, 0.72);
+      border: 1px solid rgba(216, 195, 158, 0.30);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+      color: var(--accent);
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      white-space: nowrap;
+      max-width: calc(100vw - 24px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mode-banner.show {
+      opacity: 1;
+    }
+
+    @media (max-width: 820px) {
+      .title-pill { display: none; }
+      .tool-btn .lbl { display: none; }
+      .tool-btn { padding: 0 9px; height: 34px; }
+      .tool-btn.keep-lbl .lbl { display: inline; }
+      .hint-line { font-size: 9px; letter-spacing: 0.1em; }
+      .pop-grid.cols-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    .fallback-msg {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #141311;
+      color: var(--ink);
+      font-family: var(--serif);
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="glCanvas"></canvas>
+  <canvas id="fxCanvas"></canvas>
+
+  <a class="back" href="index.html">return to log</a>
+
+  <div class="top-right">
+    <div class="title-pill" aria-hidden="true">
+      <span class="en">Karesansui</span>
+      <span class="jp">枯山水</span>
+    </div>
+    <button type="button" class="icon-pill" id="viewBtn" title="Toggle Perspective (V)" aria-label="Toggle camera angle">
+      <svg viewBox="0 0 24 24"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      <span id="viewLabel">Plan</span>
+    </button>
+    <button type="button" class="icon-pill is-active" id="audioBtn" title="Toggle Sound (M)" aria-label="Toggle granular sound">
+      <svg id="audioIconOn" viewBox="0 0 24 24"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/><path d="M18.8 5.5a9 9 0 0 1 0 13"/></svg>
+      <svg id="audioIconOff" viewBox="0 0 24 24" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="22" y1="9" x2="16" y2="15"/><line x1="16" y1="9" x2="22" y2="15"/></svg>
+    </button>
+    <button type="button" class="icon-pill" id="zenBtn" title="Zen View (H)" aria-label="Hide interface">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>
+      <span>Zen</span>
+    </button>
+  </div>
+
+  <div class="mode-banner" id="modeBanner"></div>
+
+  <!-- Popover: Light & Atmosphere -->
+  <div class="popover" id="lightPopover" role="dialog" aria-label="Lighting and Atmosphere">
+    <div class="pop-head">
+      <span class="pop-title">Light &amp; Weather</span>
+      <span class="pop-sub">raking illumination</span>
+    </div>
+    <div class="pop-grid cols-4" id="lightChoices">
+      <button type="button" class="pop-choice is-active" data-light="morning">
+        <span class="name">Morning</span>
+        <span class="meta">crisp dawn</span>
+      </button>
+      <button type="button" class="pop-choice" data-light="golden">
+        <span class="name">Golden</span>
+        <span class="meta">low amber</span>
+      </button>
+      <button type="button" class="pop-choice" data-light="mist">
+        <span class="name">Mist</span>
+        <span class="meta">soft rain</span>
+      </button>
+      <button type="button" class="pop-choice" data-light="moon">
+        <span class="name">Moon</span>
+        <span class="meta">quiet silver</span>
+      </button>
+    </div>
+    <div class="slider-row">
+      <div class="slider-item">
+        <label for="sunAzimuth">Azimuth</label>
+        <input type="range" id="sunAzimuth" min="0" max="360" step="1" value="34" />
+        <span class="val" id="sunAzimuthVal">34°</span>
+      </div>
+      <div class="slider-item">
+        <label for="sunElevation">Elevation</label>
+        <input type="range" id="sunElevation" min="11" max="54" step="1" value="23" />
+        <span class="val" id="sunElevationVal">23°</span>
+      </div>
+    </div>
+    <div class="toggle-row">
+      <button type="button" class="chip-btn is-active" id="komorebiToggle">Komorebi Canopy</button>
+      <button type="button" class="chip-btn is-active" id="leavesToggle">Maple Leaves</button>
+    </div>
+  </div>
+
+  <!-- Popover: Classic Temple Gardens -->
+  <div class="popover" id="gardenPopover" role="dialog" aria-label="Garden Compositions">
+    <div class="pop-head">
+      <span class="pop-title">Compositions</span>
+      <span class="pop-sub">traditional karesansui</span>
+    </div>
+    <div class="pop-grid" id="gardenChoices">
+      <button type="button" class="pop-choice is-active" data-preset="ryoanji">
+        <span class="name">Ryōan-ji</span>
+        <span class="meta">five stones &amp; sea rings</span>
+      </button>
+      <button type="button" class="pop-choice" data-preset="sazanami">
+        <span class="name">Sazanami</span>
+        <span class="meta">gentle undulating tide</span>
+      </button>
+      <button type="button" class="pop-choice" data-preset="uzumaki">
+        <span class="name">Uzumaki</span>
+        <span class="meta">twin spirals in gravel</span>
+      </button>
+      <button type="button" class="pop-choice" data-preset="blank">
+        <span class="name">Fresh Bed</span>
+        <span class="meta">combed clean slate</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Floating Dock -->
+  <div class="dock-wrap">
+    <div class="hint-line" id="hintLine">Drag to rake &middot; Shift for straight rows &middot; Alt to orbit stones</div>
+    <div class="dock" role="toolbar" aria-label="Zen garden tools">
+      <div class="dock-group" id="toolGroup">
+        <button type="button" class="tool-btn is-active" data-tool="rake" title="Wide Cedar Rake — 5 tines (1)">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="5" y1="6" x2="5" y2="18"/><line x1="8.5" y1="6" x2="8.5" y2="18"/><line x1="12" y1="6" x2="12" y2="18"/><line x1="15.5" y1="6" x2="15.5" y2="18"/><line x1="19" y1="6" x2="19" y2="18"/></svg>
+          <span class="lbl">Rake</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="fine" title="Fine Bamboo Comb — 7 tines (2)">
+          <svg viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="4.5" y1="6" x2="4.5" y2="17"/><line x1="7" y1="6" x2="7" y2="17"/><line x1="9.5" y1="6" x2="9.5" y2="17"/><line x1="12" y1="6" x2="12" y2="17"/><line x1="14.5" y1="6" x2="14.5" y2="17"/><line x1="17" y1="6" x2="17" y2="17"/><line x1="19.5" y1="6" x2="19.5" y2="17"/></svg>
+          <span class="lbl">Fine</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="wave" title="Deep Wave Rake — 3 broad tines (3)">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="6" y1="6" x2="6" y2="19" stroke-width="2"/><line x1="12" y1="6" x2="12" y2="19" stroke-width="2"/><line x1="18" y1="6" x2="18" y2="19" stroke-width="2"/></svg>
+          <span class="lbl">Wave</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="stylus" title="Bamboo Stylus — single furrow (4)">
+          <svg viewBox="0 0 24 24"><path d="M17 3l4 4L8 20l-5 1 1-5L17 3z"/></svg>
+          <span class="lbl">Stylus</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="smooth" title="Narashi Smoothing Board (5)">
+          <svg viewBox="0 0 24 24"><rect x="4" y="8" width="16" height="8" rx="1.5"/><line x1="7" y1="12" x2="17" y2="12" opacity="0.6"/></svg>
+          <span class="lbl">Smooth</span>
+        </button>
+        <button type="button" class="tool-btn" data-tool="stone" title="Arrange Mossy Stones (6)">
+          <svg viewBox="0 0 24 24"><path d="M5 17L7.5 9.5L13 6.5L18.5 10L20 16.5L14 19L5 17Z"/><path d="M10 11.5L13 6.5L15.5 12" opacity="0.55"/></svg>
+          <span class="lbl">Stones</span>
+        </button>
+      </div>
+
+      <div class="dock-sep"></div>
+
+      <div class="dock-group">
+        <button type="button" class="tool-btn keep-lbl" id="guideBtn" title="Cycle Rake Guide: Free / Straight Line / Stone Orbit (G)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7.5" stroke-dasharray="2.5 2.5"/><circle cx="12" cy="12" r="2"/></svg>
+          <span class="lbl" id="guideLabel">Free</span>
+        </button>
+        <button type="button" class="tool-btn" id="lightBtn" title="Light, Sun Angle & Weather (L)">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2.5" x2="12" y2="5"/><line x1="12" y1="19" x2="12" y2="21.5"/><line x1="4.8" y1="4.8" x2="6.6" y2="6.6"/><line x1="17.4" y1="17.4" x2="19.2" y2="19.2"/><line x1="2.5" y1="12" x2="5" y2="12"/><line x1="19" y1="12" x2="21.5" y2="12"/><line x1="4.8" y1="19.2" x2="6.6" y2="17.4"/><line x1="17.4" y1="6.6" x2="19.2" y2="4.8"/></svg>
+          <span class="lbl">Light</span>
+        </button>
+        <button type="button" class="tool-btn" id="gardenBtn" title="Traditional Garden Presets (P)">
+          <svg viewBox="0 0 24 24"><path d="M3 8c3-2 6 2 9 0s6 2 9 0"/><path d="M3 13c3-2 6 2 9 0s6 2 9 0"/><path d="M3 18c3-2 6 2 9 0s6 2 9 0"/></svg>
+          <span class="lbl">Garden</span>
+        </button>
+      </div>
+
+      <div class="dock-sep"></div>
+
+      <div class="dock-group">
+        <button type="button" class="tool-btn icon-only" id="undoBtn" title="Undo Stroke (Ctrl/Cmd+Z)" aria-label="Undo">
+          <svg viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+        </button>
+        <button type="button" class="tool-btn icon-only" id="sweepBtn" title="Sweep Entire Sand Bed Smooth (R)" aria-label="Sweep smooth">
+          <svg viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/><path d="M16 9l3 3-3 3"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="fallback-msg" id="fallbackMsg">
+    <div>
+      <h2 style="font-weight:400;margin-bottom:8px;">WebGL2 Required</h2>
+      <p style="opacity:0.7;font-size:14px;">This sand simulation uses WebGL2 heightfield physics and raymarched lighting.</p>
+    </div>
+  </div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ==========================================================================
+   * 1. CANVAS & WEBGL2 INITIALIZATION
+   * ========================================================================== */
+  const glCanvas = document.getElementById('glCanvas');
+  const fxCanvas = document.getElementById('fxCanvas');
+  const fxCtx = fxCanvas.getContext('2d');
+
+  const gl = glCanvas.getContext('webgl2', {
+    alpha: false,
+    antialias: false,
+    depth: false,
+    stencil: false,
+    powerPreference: 'high-performance',
+    preserveDrawingBuffer: false
+  });
+
+  if (!gl) {
+    document.getElementById('fallbackMsg').style.display = 'flex';
+    return;
+  }
+
+  // Enable float / half-float render target extensions if available
+  const extFloat = gl.getExtension('EXT_color_buffer_float');
+  const extHalfFloat = gl.getExtension('EXT_color_buffer_half_float');
+  gl.getExtension('OES_texture_float_linear');
+  gl.getExtension('OES_texture_half_float_linear');
+
+  function testHalfFloatFBO() {
+    if (!extFloat && !extHalfFloat) return false;
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, 4, 4, 0, gl.RGBA, gl.HALF_FLOAT, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    const ok = gl.checkFramebufferStatus(gl.FRAMEBUFFER) === gl.FRAMEBUFFER_COMPLETE;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.deleteFramebuffer(fbo);
+    gl.deleteTexture(tex);
+    return ok;
+  }
+
+  const USE_FLOAT_FBO = testHalfFloatFBO();
+  const MAX_STONES = 7;
+
+  /* ==========================================================================
+   * 2. PHYSICAL GARDEN WORLD, CAMERA & PRESETS
+   * ========================================================================== */
+  const TOOLS = {
+    rake:   { id: 'rake',   mode: 0, tines: 5, spacing: 3.7, halfW: 0.96, depth: 1.66, width: 16.6, audioTone: 1.0,  label: 'Wide Cedar Rake' },
+    fine:   { id: 'fine',   mode: 0, tines: 7, spacing: 2.35, halfW: 0.65, depth: 1.18, width: 15.2, audioTone: 1.45, label: 'Fine Bamboo Comb' },
+    wave:   { id: 'wave',   mode: 0, tines: 3, spacing: 6.4, halfW: 1.72, depth: 2.28, width: 16.0, audioTone: 0.72, label: 'Deep Wave Rake' },
+    stylus: { id: 'stylus', mode: 1, tines: 1, spacing: 0.0, halfW: 1.22, depth: 1.92, width: 2.4,  audioTone: 1.75, label: 'Bamboo Stylus' },
+    smooth: { id: 'smooth', mode: 2, tines: 1, spacing: 0.0, halfW: 10.5, depth: 0.0,  width: 21.0, audioTone: 0.60, label: 'Narashi Board' },
+    stone:  { id: 'stone',  mode: 4, tines: 0, spacing: 0.0, halfW: 0.0,  depth: 0.0,  width: 0.0,  audioTone: 0.45, label: 'Arrange Stones' }
+  };
+
+  const LIGHT_PRESETS = {
+    morning: {
+      azimuth: 34, elevation: 22,
+      sunColor:  [1.54, 1.38, 1.14],
+      skyColor:  [0.37, 0.46, 0.61],
+      bounceCol: [0.96, 0.87, 0.74],
+      fogCol:    [0.10, 0.10, 0.095],
+      wetness:   0.0,
+      rainRate:  0.0,
+      exposure:  1.05,
+      komorebiStr: 0.52
+    },
+    golden: {
+      azimuth: 226, elevation: 13,
+      sunColor:  [1.98, 1.08, 0.46],
+      skyColor:  [0.27, 0.35, 0.54],
+      bounceCol: [1.14, 0.72, 0.38],
+      fogCol:    [0.11, 0.085, 0.068],
+      wetness:   0.0,
+      rainRate:  0.0,
+      exposure:  1.06,
+      komorebiStr: 0.56
+    },
+    mist: {
+      azimuth: 58, elevation: 33,
+      sunColor:  [0.94, 0.98, 1.04],
+      skyColor:  [0.54, 0.60, 0.65],
+      bounceCol: [0.74, 0.78, 0.80],
+      fogCol:    [0.13, 0.14, 0.145],
+      wetness:   0.56,
+      rainRate:  8.5,
+      exposure:  1.02,
+      komorebiStr: 0.24
+    },
+    moon: {
+      azimuth: 142, elevation: 20,
+      sunColor:  [0.74, 0.90, 1.20],
+      skyColor:  [0.13, 0.19, 0.34],
+      bounceCol: [0.32, 0.43, 0.62],
+      fogCol:    [0.04, 0.05, 0.08],
+      wetness:   0.08,
+      rainRate:  0.0,
+      exposure:  1.12,
+      komorebiStr: 0.38
+    }
+  };
+
+  // World units in centimeters
+  const world = {
+    bedW: 260.0,
+    bedH: 170.0,
+    frameW: 8.5,
+    frameH: 5.8,
+    simW: 1152,
+    simH: 768,
+    viewW: window.innerWidth,
+    viewH: window.innerHeight,
+    dpr: 1.0
+  };
+
+  const cam = {
+    pitchDeg: 78.5,
+    targetPitchDeg: 78.5,
+    fovDeg: 27.0,
+    pos: [0, -60, 420],
+    target: [0, 0, 0],
+    forward: [0, 0.2, -0.98],
+    right: [1, 0, 0],
+    up: [0, 0.98, 0.2],
+    tanHalfFov: Math.tan((27.0 * Math.PI / 180) * 0.5),
+    aspect: 1.5
+  };
+
+  const state = {
+    tool: 'rake',
+    guide: 'free',          // 'free' | 'line' | 'orbit'
+    preset: 'ryoanji',
+    lightName: 'morning',
+    sunAzimuth: 34,
+    sunElevation: 22,
+    targetAzimuth: 34,
+    targetElevation: 22,
+    curSunCol: [...LIGHT_PRESETS.morning.sunColor],
+    curSkyCol: [...LIGHT_PRESETS.morning.skyColor],
+    curBounceCol: [...LIGHT_PRESETS.morning.bounceCol],
+    curWetness: 0.0,
+    curExposure: 1.05,
+    curKomorebiStr: 0.52,
+    komorebiOn: true,
+    leavesOn: true,
+    audioEnabled: true,
+    zenMode: false,
+    verandaView: false,
+    hasInteracted: false,
+
+    // Stones array (up to MAX_STONES)
+    // Each: { x, y, rot, r, ax, ay, hz, seed, moss, flat, sink }
+    stones: [],
+    hoveredStone: -1,
+    grabbedStone: -1,
+    grabOffset: [0, 0],
+
+    // Simulation settle countdown (runs angle-of-repose relaxation)
+    settleFrames: 0,
+
+    // Animated full-garden sweeper
+    sweepActive: false,
+    sweepX: 0,
+    sweepPrevX: 0,
+
+    // Pointer & wooden rake trailing kinematics
+    pointerDown: false,
+    pointerId: null,
+    pointerScreen: [0, 0],
+    pointerWorld: [0, 0],
+    pointerInside: false,
+    lastMoveTime: 0,
+    strokeStarted: false,
+    strokeStartWorld: [0, 0],
+    strokePrevWorld: [0, 0],
+    rakePos: [0, 0],
+    rakeDir: [1, 0],
+    rakeHeadingReady: false,
+    lineAxis: null,
+    orbitStoneIdx: -1,
+    orbitRadius: 20,
+    orbitAngle: 0,
+    strokeSpeed: 0,
+    shiftHeld: false,
+    altHeld: false
+  };
+
+  /* ==========================================================================
+   * 3. GLSL SHADERS
+   * ========================================================================== */
+  const QUAD_VS = `#version 300 es
+precision highp float;
+out vec2 vUv;
+void main() {
+  vec2 p = vec2(float((gl_VertexID & 1) << 2) - 1.0, float((gl_VertexID & 2) << 1) - 1.0);
+  vUv = p * 0.5 + 0.5;
+  gl_Position = vec4(p, 0.0, 1.0);
+}
+`;
+
+  const COMMON_PACK_GLSL = USE_FLOAT_FBO ? `
+vec4 unpackSand(vec4 raw) {
+  return raw;
+}
+vec4 packSand(float h, float fresh, vec2 flow) {
+  return vec4(h, clamp(fresh, 0.0, 1.0), clamp(flow, -1.0, 1.0));
+}
+vec4 sampleSand(sampler2D tex, vec2 uv) {
+  return texture(tex, clamp(uv, vec2(0.0005), vec2(0.9995)));
+}
+` : `
+const float H_MIN = -4.5;
+const float H_RANGE = 11.0;
+vec4 unpackSand(vec4 raw) {
+  float h01 = raw.r + raw.g / 255.0;
+  float h = H_MIN + h01 * H_RANGE;
+  vec2 flow = raw.ba * 2.0 - 1.0;
+  float fresh = clamp(length(flow), 0.0, 1.0);
+  return vec4(h, fresh, flow);
+}
+vec4 packSand(float h, float fresh, vec2 flow) {
+  float h01 = clamp((h - H_MIN) / H_RANGE, 0.0, 0.9999);
+  float hi = floor(h01 * 255.0) / 255.0;
+  float lo = fract(h01 * 255.0);
+  vec2 fl = clamp(flow, -1.0, 1.0) * 0.5 + 0.5;
+  return vec4(hi, lo, fl.x, fl.y);
+}
+vec4 sampleSand(sampler2D tex, vec2 uv) {
+  vec2 sz = vec2(textureSize(tex, 0));
+  vec2 fc = clamp(uv, vec2(0.0005), vec2(0.9995)) * sz - 0.5;
+  vec2 f = fract(fc);
+  vec2 b = (floor(fc) + 0.5) / sz;
+  vec2 t = 1.0 / sz;
+  vec4 s00 = unpackSand(texture(tex, b));
+  vec4 s10 = unpackSand(texture(tex, b + vec2(t.x, 0.0)));
+  vec4 s01 = unpackSand(texture(tex, b + vec2(0.0, t.y)));
+  vec4 s11 = unpackSand(texture(tex, b + t));
+  return mix(mix(s00, s10, f.x), mix(s01, s11, f.x), f.y);
+}
+`;
+
+  const NOISE_GLSL = `
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+vec2 hash22(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.xx + p3.yz) * p3.zy);
+}
+
+vec3 hash32(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * vec3(0.1031, 0.1030, 0.0973));
+  p3 += dot(p3, p3.yxz + 33.33);
+  return fract((p3.xxy + p3.yzz) * p3.zyx);
+}
+
+float hash13(vec3 p3) {
+  p3 = fract(p3 * 0.1031);
+  p3 += dot(p3, p3.zyx + 31.32);
+  return fract((p3.x + p3.y) * p3.z);
+}
+
+float vnoise2(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  vec2 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash12(i), hash12(i + vec2(1.0, 0.0)), u.x),
+    mix(hash12(i + vec2(0.0, 1.0)), hash12(i + vec2(1.0, 1.0)), u.x),
+    u.y
+  );
+}
+
+float vnoise3(vec3 p) {
+  vec3 i = floor(p);
+  vec3 f = fract(p);
+  vec3 u = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(
+      mix(hash13(i + vec3(0,0,0)), hash13(i + vec3(1,0,0)), u.x),
+      mix(hash13(i + vec3(0,1,0)), hash13(i + vec3(1,1,0)), u.x),
+      u.y
+    ),
+    mix(
+      mix(hash13(i + vec3(0,0,1)), hash13(i + vec3(1,0,1)), u.x),
+      mix(hash13(i + vec3(0,1,1)), hash13(i + vec3(1,1,1)), u.x),
+      u.y
+    ),
+    u.z
+  );
+}
+
+float fbm2(vec2 p) {
+  float v = 0.0;
+  float a = 0.5;
+  mat2 m = mat2(0.80, 0.60, -0.60, 0.80);
+  for (int i = 0; i < 4; i++) {
+    v += a * vnoise2(p);
+    p = m * p * 2.03 + vec2(17.1, 31.7);
+    a *= 0.5;
+  }
+  return v;
+}
+
+float fbm3(vec3 p) {
+  float v = 0.0;
+  float a = 0.5;
+  for (int i = 0; i < 4; i++) {
+    v += a * vnoise3(p);
+    p = p * 2.04 + vec3(13.7, 29.3, 47.1);
+    a *= 0.5;
+  }
+  return v;
+}
+`;
+
+  // ── SHADER 1: Preset Courtyard Initializer ──
+  const PRESET_FS = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform vec2 uBedSize;
+uniform int uPreset;
+uniform int uStoneCount;
+uniform vec4 uStoneA[${MAX_STONES}];
+uniform vec4 uStoneB[${MAX_STONES}];
+
+${COMMON_PACK_GLSL}
+${NOISE_GLSL}
+
+// Crisp triangular-peaked Shirakawa ridge wave in [-1, 1]
+float ridgeWave(float phase) {
+  float tri = 1.0 - 2.0 * abs(fract(phase) - 0.5);
+  // Sharpen crests gently while rounding troughs like wooden rake teeth
+  return mix(-1.0, 1.0, pow(tri, 0.78));
+}
+
+float stoneContourDist(vec2 p, int idx) {
+  vec2 d = p - uStoneA[idx].xy;
+  float c = cos(-uStoneA[idx].z);
+  float s = sin(-uStoneA[idx].z);
+  vec2 q = vec2(c * d.x - s * d.y, s * d.x + c * d.y);
+  vec2 rad = max(vec2(1.0), uStoneA[idx].w * uStoneB[idx].xy);
+  // Approximate Euclidean distance outside rotated ellipse
+  vec2 n = q / rad;
+  float k0 = length(n);
+  float k1 = length(n / rad);
+  return k0 * (k0 - 1.0) / max(k1, 1e-4);
+}
+
+float sminDist(float a, float b, float k) {
+  float h = max(k - abs(a - b), 0.0) / k;
+  return min(a, b) - h * h * k * 0.25;
+}
+
+float stoneClusterField(vec2 p) {
+  float d = 1e5;
+  for (int i = 0; i < ${MAX_STONES}; i++) {
+    if (i >= uStoneCount) break;
+    float sd = stoneContourDist(p, i);
+    d = (i == 0) ? sd : sminDist(d, sd, 11.5);
+  }
+  return d;
+}
+
+void main() {
+  vec2 P = (vUv - 0.5) * uBedSize;
+  vec2 halfBed = uBedSize * 0.5;
+
+  // Hard min distance for exact stone collar + smooth unified island contour for raked rings!
+  float minSD = 1e5;
+  for (int i = 0; i < ${MAX_STONES}; i++) {
+    if (i >= uStoneCount) break;
+    minSD = min(minSD, stoneContourDist(P, i));
+  }
+  float clusterSD = stoneClusterField(P);
+  vec2 eps = vec2(0.6, 0.0);
+  vec2 stoneGrad = normalize(vec2(
+    stoneClusterField(P + eps.xy) - stoneClusterField(P - eps.xy),
+    stoneClusterField(P + eps.yx) - stoneClusterField(P - eps.yx)
+  ) + vec2(1e-4, 0.0));
+
+  // Distance from wooden garden frame
+  vec2 edgeD = halfBed - abs(P);
+  float minEdge = min(edgeD.x, edgeD.y);
+
+  // Subtle hand-raked human organic tremor
+  float handWobble = (fbm2(P * 0.022 + 3.1) - 0.5) * 0.65;
+  float microGrain = (vnoise2(P * 0.65) - 0.5) * 0.08;
+
+  float h = 0.0;
+  vec2 flow = vec2(1.0, 0.0);
+  float fresh = 0.62;
+
+  if (uPreset == 0) {
+    // ── RYŌAN-JI: Classic Kyoto temple sea lines + flowing stone-island halos + framed perimeter ──
+    float spacing = 3.7;
+    float seaPhase = (P.y + handWobble * 1.15) / spacing;
+    float seaH = ridgeWave(seaPhase) * 0.94;
+    vec2 seaFlow = vec2(1.0, 0.0);
+
+    // Unified smooth concentric rings embracing each stone cluster (4 crisp rings)
+    float ringSpan = spacing * 4.05;
+    float ringPhase = (clusterSD + handWobble * 0.40) / spacing;
+    float ringH = ridgeWave(ringPhase) * 1.02;
+    vec2 ringFlow = vec2(-stoneGrad.y, stoneGrad.x);
+
+    // Crisp hand-raked outer rim cutting cleanly across the straight sea lines
+    float ringMask = 1.0 - smoothstep(ringSpan - 0.95, ringSpan + 0.75, clusterSD);
+    float outerCrest = exp(-pow((clusterSD - ringSpan + 0.45) / 1.15, 2.0)) * 0.24;
+    h = mix(seaH, ringH, ringMask) + outerCrest;
+    flow = normalize(mix(seaFlow, ringFlow, ringMask) + vec2(1e-4, 0.0));
+
+    // Classic fuchidori perimeter border (2 crisp parallel grooves hugging the timber wall)
+    float borderSpan = spacing * 2.1;
+    if (minEdge < borderSpan + 1.5) {
+      float bMask = 1.0 - smoothstep(borderSpan - 0.9, borderSpan + 0.85, minEdge);
+      float bH = ridgeWave((minEdge + handWobble * 0.25) / spacing) * 0.86;
+      vec2 bFlow = (edgeD.x < edgeD.y) ? vec2(0.0, 1.0) : vec2(1.0, 0.0);
+      h = mix(h, bH, bMask * (1.0 - ringMask * 0.85));
+      flow = normalize(mix(flow, bFlow, bMask * (1.0 - ringMask * 0.85)) + vec2(1e-4, 0.0));
+    }
+  } else if (uPreset == 1) {
+    // ── SAZANAMI: Gentle sinusoidal ocean tide flowing around reclining stones ──
+    float spacing = 4.2;
+    float waveY = P.y + sin(P.x * 0.055) * 6.5 + sin(P.x * 0.024 + 1.2) * 3.8 + handWobble;
+    float dWaveDx = cos(P.x * 0.055) * 6.5 * 0.055 + cos(P.x * 0.024 + 1.2) * 3.8 * 0.024;
+    vec2 seaFlow = normalize(vec2(1.0, -dWaveDx));
+    float seaH = ridgeWave(waveY / spacing) * 1.00;
+
+    float ringSpan = spacing * 3.1;
+    float ringMask = 1.0 - smoothstep(ringSpan - 1.0, ringSpan + 0.8, clusterSD);
+    float ringH = ridgeWave((clusterSD + handWobble * 0.35) / 3.6) * 0.98;
+    vec2 ringFlow = vec2(-stoneGrad.y, stoneGrad.x);
+
+    h = mix(seaH, ringH, ringMask);
+    flow = normalize(mix(seaFlow, ringFlow, ringMask) + vec2(1e-4, 0.0));
+  } else if (uPreset == 2) {
+    // ── UZUMAKI: Twin interlocking spirals & sweeping river arcs ──
+    vec2 c1 = (uStoneCount > 0) ? uStoneA[0].xy : vec2(-42.0, 6.0);
+    vec2 c2 = (uStoneCount > 1) ? uStoneA[1].xy : vec2(46.0, -8.0);
+    vec2 v1 = P - c1;
+    vec2 v2 = P - c2;
+    float r1 = length(v1);
+    float r2 = length(v2);
+    float a1 = atan(v1.y, v1.x);
+    float a2 = atan(v2.y, v2.x);
+    float sp = 3.85;
+    float w1 = ridgeWave((r1 + a1 * (sp / 6.2831853) + handWobble * 0.35) / sp) * 0.94;
+    float w2 = ridgeWave((r2 - a2 * (sp / 6.2831853) + handWobble * 0.35) / sp) * 0.94;
+    float blend = smoothstep(-10.0, 10.0, r1 - r2);
+    vec2 f1 = normalize(vec2(-v1.y, v1.x) + vec2(1e-4, 0.0));
+    vec2 f2 = normalize(vec2(v2.y, -v2.x) + vec2(1e-4, 0.0));
+    h = mix(w1, w2, blend);
+    flow = normalize(mix(f1, f2, blend) + vec2(1e-4, 0.0));
+  } else {
+    // ── FRESH BED: Immaculate hand-leveled white Shirakawa gravel ──
+    h = (fbm2(P * 0.035) - 0.5) * 0.22 + sin(P.y * 1.45 + handWobble) * 0.035;
+    flow = vec2(1.0, 0.0);
+    fresh = 0.25;
+  }
+
+  // Raised subtle gravel collar hugging stone bases + snug basin under stones
+  if (minSD < 4.5) {
+    float collar = exp(-pow((minSD - 0.7) / 1.8, 2.0)) * 0.52;
+    float under = smoothstep(0.6, -2.5, minSD);
+    h = mix(h + collar, -0.65, under);
+  }
+
+  // Natural slightly banked gravel edge against the timber frame
+  float wallBank = exp(-minEdge * 0.32) * 0.36;
+  h += wallBank + microGrain;
+
+  fragColor = packSand(h, fresh, flow);
+}
+`;
+
+  // ── SHADER 2: Mass-Conserving Rake, Smooth, Sweeper, Stone & Raindrop Physics ──
+  const RAKE_FS = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform sampler2D uSandTex;
+uniform vec2 uBedSize;
+uniform vec2 uP0;
+uniform vec2 uP1;
+uniform vec2 uN0;
+uniform vec2 uN1;
+uniform int uMode;       // 0=multi-tine rake, 1=stylus, 2=smooth board, 3=sweeper, 4=stoneDrag, 5=raindrop
+uniform int uTineCount;
+uniform float uSpacing;
+uniform float uHalfW;
+uniform float uDepth;
+uniform float uStrength;
+uniform float uTime;
+
+uniform int uStoneCount;
+uniform vec4 uStoneA[${MAX_STONES}];
+uniform vec4 uStoneB[${MAX_STONES}];
+uniform int uActiveStone;
+
+${COMMON_PACK_GLSL}
+${NOISE_GLSL}
+
+vec2 worldToUv(vec2 p) {
+  return p / uBedSize + 0.5;
+}
+
+float stoneMaskAt(vec2 p, int skipIdx) {
+  float minD = 1e5;
+  for (int i = 0; i < ${MAX_STONES}; i++) {
+    if (i >= uStoneCount || i == skipIdx) break;
+    vec2 d = p - uStoneA[i].xy;
+    float c = cos(-uStoneA[i].z);
+    float s = sin(-uStoneA[i].z);
+    vec2 q = vec2(c * d.x - s * d.y, s * d.x + c * d.y);
+    vec2 rad = max(vec2(1.0), uStoneA[i].w * uStoneB[i].xy);
+    vec2 n = q / rad;
+    float k0 = length(n);
+    float k1 = length(n / rad);
+    float sd = k0 * (k0 - 1.0) / max(k1, 1e-4);
+    minD = min(minD, sd);
+  }
+  return smoothstep(-0.3, 1.4, minD);
+}
+
+void main() {
+  vec2 P = (vUv - 0.5) * uBedSize;
+  vec4 cur = sampleSand(uSandTex, vUv);
+  float h = cur.r;
+  float fresh = cur.g;
+  vec2 flow = cur.ba;
+
+  if (uMode == 0 || uMode == 1) {
+    // ── MULTI-TINE RAKE OR BAMBOO STYLUS (MASS-CONSERVING DISPLACEMENT) ──
+    float sMask = stoneMaskAt(P, -1);
+    if (sMask > 0.001) {
+      float halfSpan = 0.5 * float(uTineCount - 1);
+      float bestCut = 0.0;
+      float bestCutTarget = h;
+      float bermAdd = 0.0;
+      float bowAdd = 0.0;
+      vec2 bestDir = flow;
+      float flowW = 0.0;
+      float disturb = 0.0;
+
+      // Local baseline height (keeps cross-raking grounded without drifting)
+      vec2 tx = vec2(max(uSpacing, 2.8)) / uBedSize;
+      float hAvg = 0.25 * (
+        sampleSand(uSandTex, vUv + vec2(tx.x, 0.0)).r +
+        sampleSand(uSandTex, vUv - vec2(tx.x, 0.0)).r +
+        sampleSand(uSandTex, vUv + vec2(0.0, tx.y)).r +
+        sampleSand(uSandTex, vUv - vec2(0.0, tx.y)).r
+      );
+      float refH = mix(0.0, hAvg, 0.42);
+
+      // Subtle stone-to-stone micro jitter for natural wood-grain imperfection
+      float grainJit = (vnoise2(P * 0.55) - 0.5) * 0.06;
+
+      for (int k = 0; k < 7; k++) {
+        if (k >= uTineCount) break;
+        float off = (float(k) - halfSpan) * uSpacing;
+        vec2 a = uP0 + uN0 * off;
+        vec2 b = uP1 + uN1 * off;
+        vec2 ab = b - a;
+        float len2 = dot(ab, ab);
+        float len = sqrt(max(len2, 1e-6));
+        float t = clamp(dot(P - a, ab) / max(len2, 1e-6), 0.0, 1.0);
+        vec2 Q = a + ab * t;
+        float d = length(P - Q);
+        vec2 dir = (len > 1e-4) ? (ab / len) : vec2(-uN1.y, uN1.x);
+
+        float u = d / uHalfW;
+        if (u < 2.55) {
+          float hCenter = sampleSand(uSandTex, worldToUv(Q)).r;
+          float floorCenter = refH - uDepth;
+          float centerCarved = max(0.0, hCenter - floorCenter);
+
+          // 1) Inside wooden tine tooth: carve rounded V-trough
+          if (u < 1.05) {
+            float cutProf = clamp(1.0 - u * u, 0.0, 1.0);
+            cutProf = pow(cutProf, 0.85);
+            float targetFloor = refH - uDepth * cutProf + grainJit;
+            if (cutProf > bestCut) {
+              bestCut = cutProf;
+              bestCutTarget = targetFloor;
+              bestDir = dir;
+            }
+            flowW = max(flowW, cutProf * 0.92);
+            disturb = max(disturb, cutProf);
+          }
+
+          // 2) Lateral displaced berms pushed symmetrically onto both flanks
+          if (u >= 0.78 && u < 2.28) {
+            float bu = clamp((u - 0.78) / 1.50, 0.0, 1.0);
+            float bermProf = pow(sin(bu * 3.14159265), 1.22);
+            bermAdd += centerCarved * bermProf * 0.66;
+            flowW = max(flowW, bermProf * 0.68);
+            bestDir = (flowW > 0.0) ? mix(bestDir, dir, bermProf * 0.5) : dir;
+            disturb = max(disturb, bermProf * 0.9);
+          }
+
+          // 3) Forward bow-wave pushed just ahead of moving tine tip
+          float ahead = dot(P - b, dir);
+          float side = abs(dot(P - b, vec2(-dir.y, dir.x)));
+          if (ahead > 0.0 && ahead < uHalfW * 2.1 && side < uHalfW * 1.45) {
+            float fw = sin((ahead / (uHalfW * 2.1)) * 3.14159265) * (1.0 - side / (uHalfW * 1.45));
+            bowAdd += centerCarved * fw * 0.28 * clamp(len * 0.45, 0.0, 1.0);
+            disturb = max(disturb, fw * 0.75);
+          }
+        }
+      }
+
+      if (bestCut > 0.001) {
+        // Carve down toward target floor cleanly without over-digging
+        float carved = max(0.0, h - bestCutTarget);
+        h -= carved * clamp(uStrength * (0.76 + 0.24 * bestCut), 0.0, 0.98) * sMask;
+      }
+
+      if (bermAdd > 0.0001 || bowAdd > 0.0001) {
+        // Soft ceiling prevents piling infinite sand on repeated passes
+        float headroom = clamp((2.65 - h) / 2.2, 0.0, 1.0);
+        h += (bermAdd + bowAdd) * headroom * uStrength * sMask;
+      }
+
+      if (flowW > 0.001) {
+        vec2 nf = mix(flow, bestDir, clamp(flowW * sMask, 0.0, 0.92));
+        float fl = length(nf);
+        flow = (fl > 1e-4) ? nf / fl : bestDir;
+      }
+      fresh = max(fresh, disturb * sMask);
+    }
+  } else if (uMode == 2) {
+    // ── NARASHI SMOOTHING BOARD (PLANAR SCREEDING) ──
+    float sMask = stoneMaskAt(P, -1);
+    vec2 ab = uP1 - uP0;
+    float len2 = dot(ab, ab);
+    float len = sqrt(max(len2, 1e-6));
+    float t = clamp(dot(P - uP0, ab) / max(len2, 1e-6), 0.0, 1.0);
+    vec2 Q = uP0 + ab * t;
+    vec2 dir = (len > 1e-4) ? (ab / len) : vec2(-uN1.y, uN1.x);
+    vec2 perp = vec2(-dir.y, dir.x);
+
+    float across = abs(dot(P - Q, perp));
+    float along = length(P - Q - perp * dot(P - Q, perp));
+    float wAcross = smoothstep(uHalfW, uHalfW * 0.68, across);
+    float wAlong = smoothstep(2.6, 0.6, along);
+    float mask = wAcross * wAlong * sMask;
+
+    if (mask > 0.001) {
+      vec2 off = vec2(2.6) / uBedSize;
+      float avg = 0.25 * (
+        sampleSand(uSandTex, vUv + vec2(off.x, 0.0)).r +
+        sampleSand(uSandTex, vUv - vec2(off.x, 0.0)).r +
+        sampleSand(uSandTex, vUv + vec2(0.0, off.y)).r +
+        sampleSand(uSandTex, vUv - vec2(0.0, off.y)).r
+      );
+      float striation = sin(dot(P, perp) * 2.2 + vnoise2(P * 0.2) * 2.0) * 0.035;
+      float targetH = mix(avg, 0.0, 0.42) + striation;
+      h = mix(h, targetH, mask * 0.56);
+      flow = normalize(mix(flow, dir, mask * 0.72) + vec2(1e-4, 0.0));
+      fresh = mix(fresh, 0.38, mask * 0.5);
+    }
+  } else if (uMode == 3) {
+    // ── ANIMATED FULL-GARDEN WOODEN SWEEPER BAR ──
+    float sMask = stoneMaskAt(P, -1);
+    float x0 = uP0.x;
+    float x1 = uP1.x;
+    // Behind advancing bar: freshly leveled sand with delicate cedar comb lines
+    if (P.x >= x0 - 4.0 && P.x <= x1 + 0.5) {
+      float stria = sin(P.y * 1.65 + fbm2(P * 0.04) * 2.2) * 0.045;
+      float gentle = (fbm2(P * 0.032 + uTime * 0.01) - 0.5) * 0.14;
+      float targetH = stria + gentle;
+      h = mix(h, targetH, 0.96 * sMask);
+      flow = normalize(mix(flow, vec2(1.0, 0.0), 0.92 * sMask) + vec2(1e-4, 0.0));
+      fresh = mix(fresh, 0.48, 0.78 * sMask);
+    } else if (P.x > x1 + 0.5 && P.x < x1 + 8.5) {
+      // Visible rolling sand bow-wave pushed just ahead of the cedar beam
+      float bw = sin(((P.x - x1 - 0.5) / 8.0) * 3.14159265);
+      h += bw * 0.24 * sMask * clamp((2.6 - h) / 2.2, 0.0, 1.0);
+      fresh = max(fresh, bw * 0.92 * sMask);
+    }
+  } else if (uMode == 4 && uActiveStone >= 0) {
+    // ── DRAGGING / PLACING A BOULDER: BOW WAVE & NESTED COLLAR ──
+    vec4 sA = uStoneA[uActiveStone];
+    vec4 sB = uStoneB[uActiveStone];
+    vec2 move = uP1 - uP0;
+    float mLen = length(move);
+    vec2 mDir = (mLen > 1e-3) ? (move / mLen) : vec2(1.0, 0.0);
+
+    vec2 d = P - sA.xy;
+    float c = cos(-sA.z);
+    float s = sin(-sA.z);
+    vec2 q = vec2(c * d.x - s * d.y, s * d.x + c * d.y);
+    vec2 rad = max(vec2(1.0), sA.w * sB.xy);
+    vec2 n = q / rad;
+    float k0 = length(n);
+    float k1 = length(n / rad);
+    float sd = k0 * (k0 - 1.0) / max(k1, 1e-4);
+
+    // Depress sand smoothly under stone
+    if (sd < 0.8) {
+      float dep = smoothstep(0.8, -2.5, sd);
+      h = mix(h, -0.85, dep * 0.45);
+      fresh = max(fresh, dep * 0.8);
+    }
+    // Push raised gravel collar around stone perimeter, stronger on leading side
+    if (sd >= -0.4 && sd < 6.2) {
+      float ring = exp(-pow((sd - 1.5) / 2.1, 2.0));
+      float lead = 0.55 + 0.65 * max(0.0, dot(normalize(d + vec2(1e-4, 0.0)), mDir));
+      float push = (0.14 + 0.24 * clamp(mLen * 0.35, 0.0, 1.0)) * ring * lead;
+      float headroom = clamp((2.8 - h) / 2.4, 0.0, 1.0);
+      h += push * headroom;
+      fresh = max(fresh, ring * 0.85);
+    }
+  } else if (uMode == 5) {
+    // ── MIST / RAIN MICRO-CRATER IMPULSE ──
+    float d = length(P - uP1);
+    float r = uHalfW;
+    if (d < r * 2.2) {
+      float u = d / r;
+      float pit = exp(-u * u * 2.4) * uDepth;
+      float rim = exp(-pow((u - 1.15) / 0.45, 2.0)) * uDepth * 0.46;
+      h += rim - pit;
+      fresh = max(fresh, exp(-u * u) * 0.65);
+    }
+  }
+
+  h = clamp(h, -3.8, 5.0);
+  fragColor = packSand(h, fresh, flow);
+}
+`;
+
+  // ── SHADER 3: Mass-Conserving Angle-of-Repose Granular Avalanche Relaxation ──
+  const RELAX_FS = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform sampler2D uSandTex;
+uniform vec2 uBedSize;
+uniform vec2 uTexel;
+uniform float uRate;
+
+${COMMON_PACK_GLSL}
+${NOISE_GLSL}
+
+void main() {
+  vec4 center = sampleSand(uSandTex, vUv);
+  float h = center.r;
+  float fresh = center.g;
+  vec2 flow = center.ba;
+
+  vec2 P = (vUv - 0.5) * uBedSize;
+  vec2 dCm = uTexel * uBedSize;
+  float dx = dCm.x;
+  float dy = dCm.y;
+  float dd = length(dCm);
+
+  // Crushed angular Shirakawa granite angle of repose (~38 deg -> tan ~ 0.79)
+  // Modulated subtly by grain roughness for crisp organic ridges
+  float talus = 0.79 + (hash12(floor(P * 2.4)) - 0.5) * 0.10;
+
+  float hL = sampleSand(uSandTex, vUv + vec2(-uTexel.x, 0.0)).r;
+  float hR = sampleSand(uSandTex, vUv + vec2( uTexel.x, 0.0)).r;
+  float hD = sampleSand(uSandTex, vUv + vec2(0.0, -uTexel.y)).r;
+  float hU = sampleSand(uSandTex, vUv + vec2(0.0,  uTexel.y)).r;
+
+  float hLD = sampleSand(uSandTex, vUv + vec2(-uTexel.x, -uTexel.y)).r;
+  float hRD = sampleSand(uSandTex, vUv + vec2( uTexel.x, -uTexel.y)).r;
+  float hLU = sampleSand(uSandTex, vUv + vec2(-uTexel.x,  uTexel.y)).r;
+  float hRU = sampleSand(uSandTex, vUv + vec2( uTexel.x,  uTexel.y)).r;
+
+  float netFlux = 0.0;
+  float limX = talus * dx;
+  float limY = talus * dy;
+  float limD = talus * dd;
+
+  // Symmetric pairwise avalanche flux guarantees mass conservation
+  float dL = hL - h; netFlux += (abs(dL) > limX) ? sign(dL) * (abs(dL) - limX) : 0.0;
+  float dR = hR - h; netFlux += (abs(dR) > limX) ? sign(dR) * (abs(dR) - limX) : 0.0;
+  float dD = hD - h; netFlux += (abs(dD) > limY) ? sign(dD) * (abs(dD) - limY) : 0.0;
+  float dU = hU - h; netFlux += (abs(dU) > limY) ? sign(dU) * (abs(dU) - limY) : 0.0;
+
+  float dLD = hLD - h; netFlux += (abs(dLD) > limD) ? 0.707 * sign(dLD) * (abs(dLD) - limD) : 0.0;
+  float dRD = hRD - h; netFlux += (abs(dRD) > limD) ? 0.707 * sign(dRD) * (abs(dRD) - limD) : 0.0;
+  float dLU = hLU - h; netFlux += (abs(dLU) > limD) ? 0.707 * sign(dLU) * (abs(dLU) - limD) : 0.0;
+  float dRU = hRU - h; netFlux += (abs(dRU) > limD) ? 0.707 * sign(dRU) * (abs(dRU) - limD) : 0.0;
+
+  // Strictly static below angle of repose: only apply tiny anti-aliasing where grains actually avalanche!
+  if (abs(netFlux) > 0.0002) {
+    float lap = (hL + hR + hD + hU - 4.0 * h);
+    h += uRate * netFlux + 0.006 * lap;
+  }
+  h = clamp(h, -3.8, 5.0);
+
+  fragColor = packSand(h, fresh, flow);
+}
+`;
+
+  // ── SHADER 4: Photorealistic Raymarched Karesansui Display Shader ──
+  const RENDER_FS = `#version 300 es
+precision highp float;
+in vec2 vUv;
+out vec4 fragColor;
+
+uniform sampler2D uSandTex;
+uniform vec2 uBedSize;
+uniform vec2 uTexel;
+uniform vec2 uFrameDim; // (frameWidthCm, frameHeightCm)
+uniform vec2 uResolution;
+uniform float uTime;
+
+// Camera
+uniform vec3 uCamPos;
+uniform vec3 uCamForward;
+uniform vec3 uCamRight;
+uniform vec3 uCamUp;
+uniform float uTanHalfFov;
+uniform float uAspect;
+
+// Lighting & Atmosphere
+uniform vec3 uSunDir;
+uniform vec3 uSunColor;
+uniform vec3 uSkyColor;
+uniform vec3 uBounceColor;
+uniform float uWetness;
+uniform float uExposure;
+uniform float uKomorebi;
+
+// 3D Zen Stones
+uniform int uStoneCount;
+uniform vec4 uStoneA[${MAX_STONES}]; // (x, y, rot, scaleR)
+uniform vec4 uStoneB[${MAX_STONES}]; // (ax, ay, hz, seed)
+uniform vec4 uStoneC[${MAX_STONES}]; // (moss, flatness, sink, highlight)
+
+${COMMON_PACK_GLSL}
+${NOISE_GLSL}
+
+// ── Smooth Min/Max for Sculptural Rock Facets ──
+float smin(float a, float b, float k) {
+  float h = max(k - abs(a - b), 0.0) / k;
+  return min(a, b) - h * h * k * 0.25;
+}
+
+float smax(float a, float b, float k) {
+  return -smin(-a, -b, k);
+}
+
+// ── Fast 2x2 Cellular Voronoi for Real Millimeter Shirakawa Granite Pebbles ──
+// Returns: x = distance to nearest grain center, y = distance to grain edge (cavity), z = grain ID hash, w = secondary hash
+vec4 pebbleCell(vec2 p) {
+  vec2 n = floor(p);
+  vec2 f = fract(p);
+  float d1 = 8.0;
+  float d2 = 8.0;
+  vec2 bestCell = vec2(0.0);
+  vec2 bestDiff = vec2(0.0);
+
+  // 3x3 only in tight 2x2 neighborhood around nearest corner -> 4 taps!
+  vec2 oBase = step(vec2(0.5), f) - 1.0;
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      vec2 g = oBase + vec2(float(i), float(j));
+      vec2 cell = n + g;
+      vec2 rnd = hash22(cell);
+      vec2 diff = g + (0.14 + 0.72 * rnd) - f;
+      float d = dot(diff, diff);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        bestCell = cell;
+        bestDiff = diff;
+      } else if (d < d2) {
+        d2 = d;
+      }
+    }
+  }
+  float edge = sqrt(d2) - sqrt(d1);
+  vec2 id = hash22(bestCell + 19.31);
+  return vec4(sqrt(d1), edge, id.x, id.y);
+}
+
+// Also return micro-normal offset of individual pebble facet
+vec3 pebbleInfo(vec2 p, out vec2 facetSlope) {
+  vec2 n = floor(p);
+  vec2 f = fract(p);
+  float d1 = 8.0;
+  float d2 = 8.0;
+  vec2 bestCell = vec2(0.0);
+  vec2 bestDiff = vec2(0.0);
+  vec2 oBase = step(vec2(0.5), f) - 1.0;
+  for (int j = 0; j < 2; j++) {
+    for (int i = 0; i < 2; i++) {
+      vec2 g = oBase + vec2(float(i), float(j));
+      vec2 cell = n + g;
+      vec2 rnd = hash22(cell);
+      vec2 diff = g + (0.15 + 0.70 * rnd) - f;
+      float d = dot(diff, diff);
+      if (d < d1) {
+        d2 = d1;
+        d1 = d;
+        bestCell = cell;
+        bestDiff = diff;
+      } else if (d < d2) {
+        d2 = d;
+      }
+    }
+  }
+  float edge = clamp((sqrt(d2) - sqrt(d1)) * 2.6, 0.0, 1.0);
+  vec3 id = hash32(bestCell + 7.13);
+  // Dome + tilted flat mineral crystal facet per pebble
+  vec2 tilt = (id.yz - 0.5) * 0.72;
+  facetSlope = -bestDiff * 0.95 + tilt;
+  return vec3(edge, id.x, id.y);
+}
+
+// ── Sand Heightfield Helpers ──
+vec2 worldToUv(vec2 p) {
+  return p / uBedSize + 0.5;
+}
+
+float getSandH(vec2 p) {
+  return sampleSand(uSandTex, worldToUv(p)).r;
+}
+
+// ── 3D Weathered Kyoto Granite Boulder SDF ──
+float stoneSDF(vec3 p, int i) {
+  vec4 sA = uStoneA[i];
+  vec4 sB = uStoneB[i];
+  vec4 sC = uStoneC[i];
+
+  vec3 rel = p - vec3(sA.xy, -sC.z);
+  float ca = cos(-sA.z);
+  float sa = sin(-sA.z);
+  vec3 lp = vec3(ca * rel.x - sa * rel.y, sa * rel.x + ca * rel.y, rel.z);
+
+  vec3 rad = vec3(sA.w * sB.x, sA.w * sB.y, sB.z);
+  vec3 q = lp / rad;
+
+  // Natural geological lean/asymmetry seeded per boulder
+  float sd = sB.w;
+  float leanX = (fract(sd * 1.37) - 0.5) * 0.34;
+  float leanY = (fract(sd * 2.91) - 0.5) * 0.34;
+  q.x -= leanX * max(0.0, q.z);
+  q.y -= leanY * max(0.0, q.z);
+
+  // Broad anchored base, slightly tapered weathered crown
+  float taper = 1.0 + 0.22 * clamp(q.z, -0.4, 1.1);
+  vec3 qs = vec3(q.xy * taper, (q.z - 0.28) * 1.18);
+  float d = length(qs) - 0.96;
+
+  // Sculpt 5 crystalline granite cleavage planes (gives real angular temple rock silhouette!)
+  float a0 = sd * 6.2831;
+  for (int k = 0; k < 5; k++) {
+    float fk = float(k);
+    float ang = a0 + fk * 1.28 + sin(sd * 3.7 + fk) * 0.45;
+    float pitch = 0.25 + 0.55 * fract(sd * (2.13 + fk * 0.77));
+    vec3 pn = normalize(vec3(cos(ang) * cos(pitch), sin(ang) * cos(pitch), sin(pitch)));
+    float offset = 0.66 + 0.22 * fract(sd * (4.17 + fk * 1.31));
+    d = smax(d, dot(q - vec3(0.0, 0.0, 0.16), pn) - offset, 0.17);
+  }
+
+  // Optional slightly flat-topped stepping/reclining crown
+  float topPlane = q.z - (0.94 - sC.y * 0.24);
+  d = smax(d, topPlane, 0.16);
+
+  // Stratified Kurama granite geological ridges & fissures
+  float strata = sin((q.x * 3.4 + q.y * 2.1 + q.z * 7.2) + sd * 5.0 + vnoise3(q * 2.6 + sd) * 2.2);
+  float macroRough = (vnoise3(q * 2.8 + vec3(sd * 3.1, sd * 1.7, sd * 2.3)) - 0.5) * 0.14;
+  float medRough = (vnoise3(q * 6.4 + vec3(sd * 5.3)) - 0.5) * 0.055;
+  d += macroRough + medRough - abs(strata) * 0.022;
+
+  // Flat bottom anchor beneath gravel
+  d = max(d, -q.z - 0.28);
+
+  float minR = min(rad.x, min(rad.y, rad.z));
+  return d * minR;
+}
+
+vec3 stoneNormal(vec3 p, int i) {
+  float e = 0.12;
+  vec2 k = vec2(1.0, -1.0);
+  return normalize(
+    k.xyy * stoneSDF(p + k.xyy * e, i) +
+    k.yyx * stoneSDF(p + k.yyx * e, i) +
+    k.yxy * stoneSDF(p + k.yxy * e, i) +
+    k.xxx * stoneSDF(p + k.xxx * e, i)
+  );
+}
+
+// Fast ray-sphere test (returns vec2(tNear, tFar), miss if x > y)
+vec2 intersectSphere(vec3 ro, vec3 rd, vec3 center, float radius) {
+  vec3 oc = ro - center;
+  float b = dot(oc, rd);
+  float c = dot(oc, oc) - radius * radius;
+  float h = b * b - c;
+  if (h < 0.0) return vec2(1.0, -1.0);
+  h = sqrt(h);
+  return vec2(-b - h, -b + h);
+}
+
+// Ray-box intersection for Hinoki wooden frame
+vec2 intersectBox(vec3 ro, vec3 rd, vec3 bMin, vec3 bMax) {
+  vec3 invR = 1.0 / rd;
+  vec3 t0 = (bMin - ro) * invR;
+  vec3 t1 = (bMax - ro) * invR;
+  vec3 tmin = min(t0, t1);
+  vec3 tmax = max(t0, t1);
+  float tN = max(max(tmin.x, tmin.y), tmin.z);
+  float tF = min(min(tmax.x, tmax.y), tmax.z);
+  return vec2(tN, tF);
+}
+
+// ── Komorebi (Swaying Overhanging Japanese Maple & Bamboo Canopy Shadow) ──
+float komorebiFactor(vec3 P) {
+  if (uKomorebi <= 0.001) return 1.0;
+  vec2 halfBed = uBedSize * 0.5;
+  // Project along sun ray up to canopy plane z = 195 cm
+  vec2 cPos = P.xy + uSunDir.xy * ((195.0 - P.z) / max(uSunDir.z, 0.22));
+  vec2 normP = cPos / halfBed;
+
+  // Frame two graceful opposite garden corners so center stays clear and dramatic
+  float cornerNW = smoothstep(0.18, 1.15, -normP.x * 0.72 + normP.y * 0.85 + 0.12);
+  float cornerSE = smoothstep(0.26, 1.18,  normP.x * 0.68 - normP.y * 0.82 + 0.02);
+  float canopyZone = clamp(max(cornerNW, cornerSE * 0.88), 0.0, 1.0);
+  if (canopyZone < 0.01) return 1.0;
+
+  // Gentle breeze sway
+  float breeze = sin(uTime * 0.55 + cPos.x * 0.014) * 3.8 + sin(uTime * 1.18 + cPos.y * 0.022) * 1.5;
+  vec2 wp = cPos * 0.036 + vec2(breeze * 0.065, cos(uTime * 0.42 + cPos.y * 0.018) * 0.14);
+
+  // Layered dappled foliage gaps (sunbeams dancing through maple leaves)
+  float f1 = fbm2(wp * 1.35);
+  float f2 = vnoise2(wp * 3.4 + vec2(sin(uTime * 0.85) * 0.25, 4.1));
+  float leaves = smoothstep(0.42, 0.68, f1 * 0.72 + f2 * 0.34);
+  return 1.0 - leaves * canopyZone * uKomorebi;
+}
+
+// ── Unified Physically-Based Shadow (Sand Ridges + 3D Stones + Wooden Frame) ──
+float computeShadow(vec3 P, int selfStone) {
+  float sh = 1.0;
+
+  // 1) Sand ridge self-shadowing (march heightfield toward sun)
+  vec2 halfBed = uBedSize * 0.5;
+  if (abs(P.x) < halfBed.x && abs(P.y) < halfBed.y && P.z < 4.5) {
+    float t = 0.42;
+    float maxT = (4.6 - P.z) / max(uSunDir.z, 0.14);
+    maxT = min(maxT, 24.0);
+    for (int s = 0; s < 18; s++) {
+      if (t > maxT) break;
+      vec3 sp = P + uSunDir * t;
+      if (abs(sp.x) >= halfBed.x || abs(sp.y) >= halfBed.y) break;
+      float hS = getSandH(sp.xy);
+      float diff = sp.z - hS;
+      if (diff < 0.0) {
+        sh = 0.0;
+        break;
+      }
+      sh = min(sh, clamp(4.8 * diff / t, 0.0, 1.0));
+      t += mix(0.46, 1.65, float(s) / 17.0);
+    }
+  }
+  if (sh < 0.02) return 0.0;
+
+  // 2) 3D Stone cast soft penumbra shadows (fast bounding-sphere rejection)
+  for (int i = 0; i < ${MAX_STONES}; i++) {
+    if (i >= uStoneCount) break;
+    vec4 sA = uStoneA[i];
+    vec4 sB = uStoneB[i];
+    vec4 sC = uStoneC[i];
+    float bR = max(sA.w * max(sB.x, sB.y), sB.z) * 1.18;
+    vec3 bC = vec3(sA.xy, sB.z * 0.34 - sC.z);
+    vec2 hit = intersectSphere(P, uSunDir, bC, bR);
+    if (hit.x < hit.y && hit.y > 0.25) {
+      float t = max(hit.x, (i == selfStone) ? 0.55 : 0.22);
+      float tEnd = hit.y;
+      for (int s = 0; s < 16; s++) {
+        if (t > tEnd) break;
+        float d = stoneSDF(P + uSunDir * t, i);
+        if (d < 0.04) {
+          sh = 0.0;
+          break;
+        }
+        sh = min(sh, clamp(7.2 * d / t, 0.0, 1.0));
+        t += clamp(d * 0.85, 0.35, 3.2);
+      }
+      if (sh < 0.02) return 0.0;
+    }
+  }
+
+  // 3) Elevated wooden timber border cast shadow onto sand bed
+  if (P.z < uFrameDim.y && abs(P.x) < halfBed.x && abs(P.y) < halfBed.y) {
+    float tTop = (uFrameDim.y - P.z) / max(uSunDir.z, 0.08);
+    vec2 hitXY = P.xy + uSunDir.xy * tTop;
+    vec2 over = abs(hitXY) - halfBed;
+    float edgeOut = max(over.x, over.y);
+    if (edgeOut > -1.4) {
+      float fw = smoothstep(-1.4, 1.4, edgeOut);
+      // Softness widens with distance from timber rim
+      sh = min(sh, 1.0 - fw * 0.92);
+    }
+  }
+
+  return sh;
+}
+
+// ── Oren-Nayar Rough Matte Granular Diffuse ──
+float orenNayar(vec3 N, vec3 L, vec3 V, float sigma) {
+  float NdotL = max(dot(N, L), 0.0);
+  if (NdotL <= 0.0) return 0.0;
+  float NdotV = max(dot(N, V), 0.001);
+  float s2 = sigma * sigma;
+  float A = 1.0 - 0.5 * (s2 / (s2 + 0.33));
+  float B = 0.45 * (s2 / (s2 + 0.09));
+  vec3 Lp = normalize(L - N * NdotL + vec3(1e-5));
+  vec3 Vp = normalize(V - N * NdotV + vec3(1e-5));
+  float cosPhi = max(0.0, dot(Lp, Vp));
+  float sinAlpha = sqrt(max(0.0, 1.0 - min(NdotL, NdotV) * min(NdotL, NdotV)));
+  float tanBeta  = sqrt(max(0.0, 1.0 - max(NdotL, NdotV) * max(NdotL, NdotV))) / max(max(NdotL, NdotV), 0.001);
+  return NdotL * (A + B * cosPhi * sinAlpha * tanBeta);
+}
+
+// ── Stone Contact AO & Moss Color Bleed onto Sand ──
+vec2 sandStoneContact(vec3 P) {
+  float ao = 1.0;
+  float mossBleed = 0.0;
+  for (int i = 0; i < ${MAX_STONES}; i++) {
+    if (i >= uStoneCount) break;
+    vec4 sA = uStoneA[i];
+    vec4 sB = uStoneB[i];
+    vec4 sC = uStoneC[i];
+    vec2 d = P.xy - sA.xy;
+    float ca = cos(-sA.z);
+    float sa = sin(-sA.z);
+    vec2 q = vec2(ca * d.x - sa * d.y, sa * d.x + ca * d.y);
+    vec2 rad = max(vec2(1.0), sA.w * sB.xy);
+    vec2 n = q / rad;
+    float k0 = length(n);
+    float k1 = length(n / rad);
+    float sd = k0 * (k0 - 1.0) / max(k1, 1e-4);
+    float cAO = smoothstep(-0.5, 4.6, sd);
+    ao *= mix(0.44, 1.0, cAO);
+    mossBleed = max(mossBleed, (1.0 - smoothstep(0.0, 3.8, sd)) * sC.x * 0.22);
+  }
+  return vec2(ao, mossBleed);
+}
+
+// ── Photorealistic Shirakawa Granite Gravel Shading ──
+vec3 shadeSand(vec3 P, vec3 V) {
+  vec2 uv = worldToUv(P.xy);
+  vec4 sand = sampleSand(uSandTex, uv);
+  float h = sand.r;
+  float fresh = sand.g;
+  vec2 flow = sand.ba;
+  float fl = length(flow);
+  vec2 fDir = (fl > 0.05) ? (flow / fl) : vec2(1.0, 0.0);
+  vec2 fPerp = vec2(-fDir.y, fDir.x);
+
+  // Macro surface normal from heightfield central differences
+  vec2 dCm = uTexel * uBedSize;
+  float hL = sampleSand(uSandTex, uv - vec2(uTexel.x, 0.0)).r;
+  float hR = sampleSand(uSandTex, uv + vec2(uTexel.x, 0.0)).r;
+  float hD = sampleSand(uSandTex, uv - vec2(0.0, uTexel.y)).r;
+  float hU = sampleSand(uSandTex, uv + vec2(0.0, uTexel.y)).r;
+  vec3 Nmacro = normalize(vec3((hL - hR) / (2.0 * dCm.x), (hD - hU) / (2.0 * dCm.y), 1.0));
+
+  // Fine combing striations aligned with wooden rake stroke direction
+  float striaCoord = dot(P.xy, fPerp) * 5.8 + fbm2(P.xy * 0.25) * 1.4;
+  float striaDeriv = cos(striaCoord) * 0.065 * clamp(fresh * 1.25, 0.15, 1.0);
+  vec3 Ncombed = normalize(Nmacro + vec3(fPerp * striaDeriv, 0.0));
+
+  // Multi-scale crushed Shirakawa granite pebbles (coarse 2.8mm + fine 1.1mm quartz matrix)
+  // Slightly align coarse grain orientation along rake stroke
+  vec2 pCoarse = P.xy * 3.45 + fDir * (sin(dot(P.xy, fPerp) * 2.2) * 0.06);
+  vec2 slope1, slope2;
+  vec3 g1 = pebbleInfo(pCoarse, slope1);
+  vec3 g2 = pebbleInfo(P.xy * 8.6 + vec2(31.4, 17.8), slope2);
+
+  // Authentic Kyoto Shirakawa-suna mineral composition per individual grain
+  vec3 cQuartz   = vec3(0.84, 0.815, 0.775); // luminous warm white quartz
+  vec3 cFeldspar = vec3(0.75, 0.705, 0.645); // soft pale warm feldspar
+  vec3 cGranite  = vec3(0.61, 0.595, 0.570); // silver-grey granite grain
+  vec3 cBiotite  = vec3(0.23, 0.225, 0.220); // crisp dark biotite mica fleck
+
+  float m1 = g1.y;
+  vec3 col1 = cQuartz;
+  if (m1 > 0.90)      col1 = cBiotite;
+  else if (m1 > 0.75) col1 = cGranite;
+  else if (m1 > 0.48) col1 = cFeldspar;
+  col1 *= (0.94 + 0.12 * g1.z);
+
+  float m2 = g2.y;
+  vec3 col2 = (m2 > 0.89) ? cBiotite * 1.15 : ((m2 > 0.52) ? cFeldspar : cQuartz);
+  col2 *= (0.94 + 0.11 * g2.z);
+
+  // Blend coarse pebbles & fine matrix + inter-pebble micro-cavity occlusion
+  vec3 albedo = mix(col1, col2, 0.36);
+  float grainCavity = mix(0.84, 1.04, smoothstep(0.0, 0.65, g1.x)) * mix(0.92, 1.03, g2.x);
+  albedo *= grainCavity;
+
+  // Subtle macro variation across courtyard (natural gravel bed density & subtle freshness)
+  float macroVar = fbm2(P.xy * 0.025 + 5.2);
+  albedo *= (0.94 + 0.11 * macroVar);
+  // Freshly turned grooves show slightly brighter upturned dry mineral grains on ridges
+  albedo *= (0.98 + 0.035 * fresh * clamp(h * 0.5 + 0.5, 0.0, 1.0));
+
+  // Combine macro heightfield normal with individual pebble micro-facets
+  vec3 N = normalize(Ncombed + vec3(slope1 * 0.26 + slope2 * 0.16, 0.0));
+
+  // Heightfield trough Ambient Occlusion
+  vec2 aoStep = uTexel * 4.5;
+  float hAround = 0.25 * (
+    sampleSand(uSandTex, uv + vec2(aoStep.x, 0.0)).r +
+    sampleSand(uSandTex, uv - vec2(aoStep.x, 0.0)).r +
+    sampleSand(uSandTex, uv + vec2(0.0, aoStep.y)).r +
+    sampleSand(uSandTex, uv - vec2(0.0, aoStep.y)).r
+  );
+  float ridgeAO = clamp(1.0 - max(0.0, hAround - h) * 0.28, 0.56, 1.0);
+
+  // Stone contact AO & wooden frame contact AO (recessed shadow reveal along dark timber lip)
+  vec2 sc = sandStoneContact(P);
+  vec2 halfBed = uBedSize * 0.5;
+  float edgeDist = min(halfBed.x - abs(P.x), halfBed.y - abs(P.y));
+  float frameAO = mix(0.32, 1.0, smoothstep(0.0, 4.6, edgeDist));
+  float ao = ridgeAO * sc.x * frameAO;
+
+  // Faint natural moss tint clinging right next to mossy stones
+  albedo = mix(albedo, vec3(0.36, 0.42, 0.27), sc.y * 0.45);
+
+  // Wetness response (Mist/Rain darkens granite & adds gentle specular sheen)
+  float wetLocal = uWetness * (0.85 + 0.30 * (1.0 - clamp(h * 0.35 + 0.5, 0.0, 1.0)));
+  albedo *= mix(1.0, 0.60, wetLocal);
+
+  // Direct sunlight with unified sand/stone/frame shadows & Komorebi dappled canopy
+  float shadow = computeShadow(P, -1);
+  float komo = komorebiFactor(P);
+  float directVis = shadow * komo;
+
+  float diff = orenNayar(N, uSunDir, V, mix(0.84, 0.45, wetLocal));
+  vec3 directLight = uSunColor * diff * directVis;
+
+  // Sparse crystalline quartz & mica micro-glints on sunlit facets
+  vec3 H = normalize(uSunDir + V);
+  vec3 crystalN = normalize(Nmacro + vec3(slope1 * 0.62 + (vec2(g1.z, g2.z) - 0.5) * 0.55, 0.0));
+  float glint = pow(max(dot(crystalN, H), 0.0), mix(140.0, 42.0, wetLocal));
+  float micaBoost = (m1 > 0.90 || m1 < 0.14) ? 1.55 : 0.45;
+  vec3 specLight = uSunColor * glint * mix(0.28, 0.56, wetLocal) * micaBoost * directVis;
+
+  // Cool atmospheric skylight + warm sunlit sand-to-sand bounce inside troughs!
+  vec3 skyAmb = uSkyColor * (0.48 + 0.52 * N.z) * ao * 0.54;
+  float bounceMask = (1.0 - directVis * 0.78) * ao * (1.0 - 0.38 * N.z);
+  vec3 sandBounce = uBounceColor * bounceMask * 0.17 * (0.65 + 0.35 * komo);
+
+  // Subtle wet sky Fresnel reflection in Mist mode
+  float fresnel = pow(1.0 - max(dot(N, V), 0.0), 4.0);
+  vec3 wetSheen = uSkyColor * fresnel * wetLocal * 0.24 * ao;
+
+  vec3 color = albedo * (directLight + skyAmb + sandBounce) + specLight + wetSheen;
+  return color;
+}
+
+// ── Photorealistic 3D Weathered Kyoto Granite & Velvet Moss Shading ──
+vec3 shadeStone(vec3 P, vec3 V, int idx) {
+  vec4 sA = uStoneA[idx];
+  vec4 sB = uStoneB[idx];
+  vec4 sC = uStoneC[idx];
+  float sd = sB.w;
+
+  vec3 N = stoneNormal(P, idx);
+
+  // Transform to stone-local coords for consistent texture when rotating/moving boulder!
+  vec3 rel = P - vec3(sA.xy, -sC.z);
+  float ca = cos(-sA.z);
+  float sa = sin(-sA.z);
+  vec3 lp = vec3(ca * rel.x - sa * rel.y, sa * rel.x + ca * rel.y, rel.z);
+  vec3 q = lp / max(vec3(1.0), vec3(sA.w * sB.x, sA.w * sB.y, sB.z));
+
+  // Fine mineral grain & fracture bump on granite
+  float fMicro = fbm3(q * 11.5 + sd * 4.0);
+  float fFine  = vnoise3(q * 28.0 + sd * 7.0);
+  float fStrata = sin((q.x * 4.5 + q.y * 2.8 + q.z * 9.5) + fMicro * 3.2);
+  float fCrack = smoothstep(0.08, 0.0, abs(fbm3(q * 5.2 + vec3(sd * 2.1, 1.3, 4.7)) - 0.5));
+
+  // Perturb normal with fine fractured granite texture
+  vec3 gBump = vec3(
+    vnoise3(q * 24.0 + vec3(0.4, 0.0, 0.0)) - fFine,
+    vnoise3(q * 24.0 + vec3(0.0, 0.4, 0.0)) - fFine,
+    vnoise3(q * 24.0 + vec3(0.0, 0.0, 0.4)) - fFine
+  );
+  N = normalize(N + gBump * 0.32);
+
+  // Kyoto Kurama / Kibune granite base color (deep slate charcoal + warm mineral iron veins)
+  vec3 darkBasalt = vec3(0.145, 0.148, 0.152);
+  vec3 midGranite = vec3(0.245, 0.242, 0.232);
+  vec3 warmIron   = vec3(0.31,  0.265, 0.215);
+  vec3 quartzVein = vec3(0.56,  0.545, 0.515);
+
+  vec3 rockCol = mix(darkBasalt, midGranite, smoothstep(0.28, 0.72, fMicro));
+  rockCol = mix(rockCol, warmIron, smoothstep(0.58, 0.85, fbm3(q * 3.8 + sd * 9.0)) * 0.42);
+  // Hairline quartz mineral veins
+  float vein = smoothstep(0.955, 0.992, abs(sin(q.x * 6.0 - q.z * 8.0 + fMicro * 4.2)));
+  rockCol = mix(rockCol, quartzVein, vein * 0.45);
+  // Subtle speckled crystalline sparkle
+  rockCol *= (0.86 + 0.26 * fFine);
+  // Darken fractures & stratified crevices
+  rockCol *= (1.0 - fCrack * 0.36);
+  rockCol *= (0.92 + 0.08 * fStrata);
+
+  // Crustose pale grey-sage mountain lichen rosettes on sunlit upper shoulders
+  float lichenNoise = fbm3(q * 7.8 + vec3(19.2, sd * 3.3, 8.1));
+  float lichenMask = smoothstep(0.64, 0.76, lichenNoise) * smoothstep(0.25, 0.65, N.z) * (1.0 - fCrack);
+  vec3 lichenCol = mix(vec3(0.48, 0.50, 0.44), vec3(0.62, 0.61, 0.53), fFine);
+  rockCol = mix(rockCol, lichenCol, lichenMask * 0.62);
+
+  // ── Velvety Kyoto Sugi-goke Moss ──
+  // Clings organically to upward crevices, cool shaded flanks, and moist lower pockets
+  float mossPatch = fbm3(q * 4.6 + vec3(sd * 5.7, 3.1, sd * 1.9));
+  float mossFine  = vnoise3(q * 36.0 + sd * 2.0);
+  float northBias = clamp(0.55 - dot(N.xy, normalize(uSunDir.xy + vec2(1e-4))) * 0.30, 0.2, 0.85);
+  float heightProfile = smoothstep(-0.08, 0.14, q.z) * (1.0 - smoothstep(0.62, 1.05, q.z) * 0.45);
+  float mossField = (N.z * 0.68 + northBias * 0.36 + (mossPatch - 0.5) * 0.72) * heightProfile;
+  float mossThreshold = 1.02 - sC.x * 0.58;
+  float mossMask = smoothstep(mossThreshold, mossThreshold + 0.16, mossField);
+
+  // Plush multi-tone botanical moss palette
+  vec3 mossDeep   = vec3(0.105, 0.165, 0.070);
+  vec3 mossMid    = vec3(0.215, 0.300, 0.115);
+  vec3 mossTip    = vec3(0.385, 0.465, 0.175);
+  vec3 mossCol = mix(mossDeep, mossMid, smoothstep(0.25, 0.75, mossFine));
+  mossCol = mix(mossCol, mossTip, smoothstep(0.55, 0.95, mossPatch * 0.65 + mossFine * 0.45));
+
+  // Fuzzy normal jitter on moss cushions
+  vec3 Nsurf = normalize(mix(N, normalize(N + (vec3(mossFine, fFine, mossPatch) - 0.5) * 0.55), mossMask));
+
+  // Dusting of pale dry gravel clinging right at the sand-stone interface
+  float localSandH = getSandH(P.xy);
+  float hAboveSand = P.z - localSandH;
+  float sandDust = (1.0 - smoothstep(0.0, 2.1, hAboveSand)) * (1.0 - mossMask * 0.7);
+  vec3 albedo = mix(rockCol, mossCol, mossMask);
+  albedo = mix(albedo, vec3(0.62, 0.59, 0.54), sandDust * 0.42);
+
+  // Darken rock when wet in Mist mode (wet basalt gets rich, deep, glossy!)
+  float wetRock = uWetness * (1.0 - mossMask * 0.65);
+  albedo *= mix(1.0, 0.54, wetRock);
+
+  // Lighting & unified shadows
+  float shadow = computeShadow(P + N * 0.16, idx);
+  float komo = komorebiFactor(P);
+  float directVis = shadow * komo;
+
+  float diff = orenNayar(Nsurf, uSunDir, V, mix(0.75, 0.92, mossMask));
+  vec3 directLight = uSunColor * diff * directVis;
+
+  // Subtle granite specular (stronger when wet) + velvet moss grazing-angle sheen!
+  vec3 H = normalize(uSunDir + V);
+  float rockSpecPow = mix(36.0, 96.0, wetRock);
+  float rockSpec = pow(max(dot(Nsurf, H), 0.0), rockSpecPow) * mix(0.11, 0.38, wetRock) * (1.0 - mossMask);
+  float fresnel = pow(1.0 - max(dot(Nsurf, V), 0.0), 3.0);
+  // Plush translucent velvet sheen on sunlit moss tips
+  vec3 mossSheen = mossTip * fresnel * mossMask * (uSunColor * directVis * 0.42 + uSkyColor * 0.25);
+
+  // Ground contact AO + bright sand bounce light illuminating the stone's underside!
+  float groundAO = smoothstep(-0.6, 4.5, hAboveSand);
+  float cavityAO = mix(0.62, 1.0, groundAO) * (1.0 - fCrack * 0.32);
+  vec3 skyAmb = uSkyColor * (0.35 + 0.65 * max(0.0, Nsurf.z)) * cavityAO * 0.68;
+  // Bright gravel reflects warm bounce light onto the lower flanks of dark granite boulders
+  float upwardBounce = clamp(0.42 - Nsurf.z * 0.55, 0.0, 1.0) * smoothstep(14.0, 0.0, hAboveSand);
+  vec3 sandBounce = uBounceColor * upwardBounce * 0.34 * (0.45 + 0.55 * komo);
+
+  vec3 col = albedo * (directLight + skyAmb + sandBounce) + uSunColor * rockSpec * directVis + mossSheen;
+
+  // Subtle tactile rim feedback only when stone is actively hovered/grabbed in Stones mode
+  if (sC.w > 0.01) {
+    float rim = pow(1.0 - max(dot(N, V), 0.0), 2.4);
+    col += vec3(0.88, 0.78, 0.58) * rim * sC.w * 0.55;
+  }
+
+  return col;
+}
+
+// ── Aged Hinoki / Dark Oiled Cedar Wooden Courtyard Frame ──
+vec3 shadeWoodFrame(vec3 P, vec3 N, vec3 V) {
+  vec2 halfBed = uBedSize * 0.5;
+  // Determine mitered beam orientation (horizontal on top/bottom beams, vertical on left/right)
+  vec2 over = abs(P.xy) - halfBed;
+  bool isVerticalBeam = over.x > over.y;
+  float miterDist = abs(over.x - over.y);
+  float miterSeam = smoothstep(0.0, 0.38, miterDist);
+
+  // Longitudinal wood-grain coordinates
+  vec2 wp = isVerticalBeam ? vec2(P.x * 0.85, P.y * 0.095) : vec2(P.y * 0.85, P.x * 0.095);
+  float warp = fbm2(wp * vec2(1.4, 2.2) + 4.1) * 3.2;
+  float rings = sin(wp.x * 4.2 + warp);
+  float grain = smoothstep(-0.85, 0.85, rings);
+  float fineFiber = vnoise2(wp * vec2(22.0, 3.5));
+
+  vec3 darkCedar  = vec3(0.105, 0.076, 0.056);
+  vec3 warmHinoki = vec3(0.185, 0.135, 0.096);
+  vec3 woodCol = mix(darkCedar, warmHinoki, grain * 0.72 + fineFiber * 0.28);
+
+  // Darken miter joinery seam & weathered inner lip
+  woodCol *= mix(0.42, 1.0, miterSeam);
+  float innerDist = max(over.x, over.y);
+  float bevelGlow = smoothstep(0.85, 0.0, abs(innerDist - 0.35));
+
+  // Subtle wood fiber normal perturbation + soft beveled lip
+  vec3 Nw = N;
+  if (N.z > 0.5) {
+    vec2 gSlope = isVerticalBeam ? vec2(cos(wp.x * 4.2 + warp) * 0.07, 0.0) : vec2(0.0, cos(wp.x * 4.2 + warp) * 0.07);
+    Nw = normalize(N + vec3(gSlope, 0.0));
+  }
+
+  float komo = komorebiFactor(P);
+  float sh = computeShadow(P + N * 0.15, -1);
+  float vis = sh * komo;
+
+  float diff = orenNayar(Nw, uSunDir, V, 0.58);
+  vec3 H = normalize(uSunDir + V);
+  float spec = pow(max(dot(Nw, H), 0.0), mix(34.0, 72.0, uWetness)) * mix(0.12, 0.30, uWetness);
+
+  // Subtle recessed edge AO near the sand floor on vertical inner walls
+  float wallAO = (N.z < 0.5) ? smoothstep(-0.8, 3.8, P.z) * 0.65 + 0.35 : 1.0;
+
+  vec3 col = woodCol * (uSunColor * diff * vis + uSkyColor * (0.35 + 0.55 * max(0.0, Nw.z)) * 0.58 * wallAO)
+           + uSunColor * (spec + bevelGlow * 0.05 * max(0.0, dot(N, uSunDir))) * vis;
+  return col;
+}
+
+// ── Outer Dark Temple Slate Courtyard Apron ──
+vec3 shadeCourtyard(vec3 P, vec3 V) {
+  vec2 halfOut = uBedSize * 0.5 + uFrameDim.x;
+  vec2 dOut = max(abs(P.xy) - halfOut, vec2(0.0));
+  float distFrame = length(dOut);
+
+  // Large dark weathered Kyoto basalt stone slabs
+  vec2 tile = P.xy / 38.0;
+  vec2 tileF = fract(tile);
+  float grout = smoothstep(0.0, 0.032, min(min(tileF.x, 1.0 - tileF.x), min(tileF.y, 1.0 - tileF.y)));
+  float tileTone = 0.88 + 0.22 * hash12(floor(tile));
+  float n1 = fbm2(P.xy * 0.12);
+  float n2 = vnoise2(P.xy * 1.4);
+
+  vec3 slate = vec3(0.072, 0.070, 0.066) * tileTone * (0.82 + 0.32 * n1) * (0.92 + 0.14 * n2);
+  slate *= mix(0.45, 1.0, grout);
+  slate *= mix(1.0, 0.68, uWetness);
+
+  // Soft shadow cast by outer timber frame onto the stone courtyard
+  vec2 hitTop = P.xy + uSunDir.xy * ((uFrameDim.y - P.z) / max(uSunDir.z, 0.1));
+  vec2 insideOut = halfOut - abs(hitTop);
+  float frameCast = smoothstep(-1.2, 1.5, min(insideOut.x, insideOut.y));
+  float sh = 1.0 - frameCast * 0.85;
+  float komo = komorebiFactor(P);
+  float ao = mix(0.42, 1.0, smoothstep(0.0, 7.5, distFrame));
+
+  vec3 N = normalize(vec3((n2 - 0.5) * 0.08, (n1 - 0.5) * 0.08, 1.0));
+  float diff = orenNayar(N, uSunDir, V, 0.70);
+  vec3 H = normalize(uSunDir + V);
+  float spec = pow(max(dot(N, H), 0.0), 40.0) * mix(0.06, 0.22, uWetness) * sh * komo;
+
+  return slate * (uSunColor * diff * sh * komo + uSkyColor * 0.55 * ao) + uSunColor * spec;
+}
+
+// ── Filmic ACES Tone Mapping ──
+vec3 acesToneMap(vec3 x) {
+  const float a = 2.51;
+  const float b = 0.03;
+  const float c = 2.43;
+  const float d = 0.59;
+  const float e = 0.14;
+  return clamp((x * (a * x + b)) / (x * (c * x + d) + e), 0.0, 1.0);
+}
+
+void main() {
+  vec2 ndc = vUv * 2.0 - 1.0;
+  vec3 ro = uCamPos;
+  vec3 rd = normalize(uCamForward + uCamRight * (ndc.x * uAspect * uTanHalfFov) + uCamUp * (ndc.y * uTanHalfFov));
+  vec3 V = -rd;
+
+  vec2 halfBed = uBedSize * 0.5;
+  vec2 halfOut = halfBed + uFrameDim.x;
+
+  // 1) Intersect wooden courtyard frame (hollow rectangular rim from z=-1.2 to z=uFrameDim.y)
+  float tHit = 1e6;
+  int hitType = 0; // 0=courtyard, 1=sand, 2=wood, 3=stone
+  vec3 hitPos = vec3(0.0);
+  vec3 hitNorm = vec3(0.0, 0.0, 1.0);
+  int hitStoneIdx = -1;
+
+  // Intersect outer courtyard plane (z = -1.2 cm)
+  float tApron = (-1.2 - ro.z) / rd.z;
+  if (tApron > 0.0) {
+    tHit = tApron;
+    hitPos = ro + rd * tApron;
+    hitType = 0;
+  }
+
+  // Intersect 4 wooden frame bars cleanly (outer box minus inner gravel cavity)
+  vec2 boxOut = intersectBox(ro, rd, vec3(-halfOut, -1.5), vec3(halfOut, uFrameDim.y));
+  if (boxOut.x < boxOut.y && boxOut.y > 0.0) {
+    // Check top face of wood frame (z = uFrameDim.y)
+    float tWoodTop = (uFrameDim.y - ro.z) / rd.z;
+    if (tWoodTop > 0.0 && tWoodTop < tHit) {
+      vec3 pTop = ro + rd * tWoodTop;
+      if (abs(pTop.x) <= halfOut.x && abs(pTop.y) <= halfOut.y &&
+         (abs(pTop.x) >= halfBed.x || abs(pTop.y) >= halfBed.y)) {
+        tHit = tWoodTop;
+        hitPos = pTop;
+        hitNorm = vec3(0.0, 0.0, 1.0);
+        hitType = 2;
+      }
+    }
+    // Check inner vertical walls of wood frame facing into the sand bed
+    float tWallYPos = (halfBed.y - ro.y) / rd.y;
+    if (tWallYPos > 0.0 && tWallYPos < tHit) {
+      vec3 pW = ro + rd * tWallYPos;
+      if (abs(pW.x) <= halfBed.x && pW.z >= -1.5 && pW.z <= uFrameDim.y) {
+        tHit = tWallYPos;
+        hitPos = pW;
+        hitNorm = vec3(0.0, -1.0, 0.0);
+        hitType = 2;
+      }
+    }
+    float tWallYNeg = (-halfBed.y - ro.y) / rd.y;
+    if (tWallYNeg > 0.0 && tWallYNeg < tHit) {
+      vec3 pW = ro + rd * tWallYNeg;
+      if (abs(pW.x) <= halfBed.x && pW.z >= -1.5 && pW.z <= uFrameDim.y) {
+        tHit = tWallYNeg;
+        hitPos = pW;
+        hitNorm = vec3(0.0, 1.0, 0.0);
+        hitType = 2;
+      }
+    }
+    float tWallXPos = (halfBed.x - ro.x) / rd.x;
+    if (tWallXPos > 0.0 && tWallXPos < tHit) {
+      vec3 pW = ro + rd * tWallXPos;
+      if (abs(pW.y) <= halfBed.y && pW.z >= -1.5 && pW.z <= uFrameDim.y) {
+        tHit = tWallXPos;
+        hitPos = pW;
+        hitNorm = vec3(-1.0, 0.0, 0.0);
+        hitType = 2;
+      }
+    }
+    float tWallXNeg = (-halfBed.x - ro.x) / rd.x;
+    if (tWallXNeg > 0.0 && tWallXNeg < tHit) {
+      vec3 pW = ro + rd * tWallXNeg;
+      if (abs(pW.y) <= halfBed.y && pW.z >= -1.5 && pW.z <= uFrameDim.y) {
+        tHit = tWallXNeg;
+        hitPos = pW;
+        hitNorm = vec3(1.0, 0.0, 0.0);
+        hitType = 2;
+      }
+    }
+    // Check outer front wall of frame facing camera (-Y)
+    float tOutYNeg = (-halfOut.y - ro.y) / rd.y;
+    if (tOutYNeg > 0.0 && tOutYNeg < tHit) {
+      vec3 pW = ro + rd * tOutYNeg;
+      if (abs(pW.x) <= halfOut.x && pW.z >= -1.5 && pW.z <= uFrameDim.y) {
+        tHit = tOutYNeg;
+        hitPos = pW;
+        hitNorm = vec3(0.0, -1.0, 0.0);
+        hitType = 2;
+      }
+    }
+  }
+
+  // 2) Raymarch Sand Heightfield (True 3D Relief Parallax)
+  float tTop = (4.8 - ro.z) / rd.z;
+  float tBot = (-3.8 - ro.z) / rd.z;
+  if (tBot > 0.0 && tTop < tHit) {
+    float tStart = max(0.0, tTop);
+    float tEnd = min(tBot, tHit);
+    vec3 pMid = ro + rd * ((tStart + tEnd) * 0.5);
+    if (abs(pMid.x) <= halfBed.x + 4.0 && abs(pMid.y) <= halfBed.y + 4.0) {
+      const int STEPS = 12;
+      float dt = (tEnd - tStart) / float(STEPS);
+      float prevT = tStart;
+      float currT = tStart;
+      bool found = false;
+      for (int s = 0; s <= STEPS; s++) {
+        currT = tStart + float(s) * dt;
+        vec3 p = ro + rd * currT;
+        if (abs(p.x) <= halfBed.x && abs(p.y) <= halfBed.y) {
+          float hs = getSandH(p.xy);
+          if (p.z <= hs) {
+            found = true;
+            break;
+          }
+        }
+        prevT = currT;
+      }
+      if (found) {
+        // 4 binary refinement steps for sub-millimeter ridge crispness
+        float lo = prevT;
+        float hi = currT;
+        for (int b = 0; b < 4; b++) {
+          float mid = 0.5 * (lo + hi);
+          vec3 pm = ro + rd * mid;
+          if (pm.z <= getSandH(pm.xy)) hi = mid;
+          else lo = mid;
+        }
+        vec3 pSand = ro + rd * hi;
+        if (abs(pSand.x) <= halfBed.x && abs(pSand.y) <= halfBed.y && hi < tHit) {
+          tHit = hi;
+          hitPos = pSand;
+          hitType = 1;
+        }
+      }
+    }
+  }
+
+  // 3) Raymarch 3D Sculptural Zen Boulders (tight bounding-sphere acceleration!)
+  for (int i = 0; i < ${MAX_STONES}; i++) {
+    if (i >= uStoneCount) break;
+    vec4 sA = uStoneA[i];
+    vec4 sB = uStoneB[i];
+    vec4 sC = uStoneC[i];
+    float bR = max(sA.w * max(sB.x, sB.y), sB.z) * 1.18;
+    vec3 bC = vec3(sA.xy, sB.z * 0.34 - sC.z);
+    vec2 sp = intersectSphere(ro, rd, bC, bR);
+    if (sp.x < sp.y && sp.y > 0.0 && sp.x < tHit) {
+      float t = max(0.0, sp.x);
+      float tMax = min(sp.y, tHit);
+      float prevD = 1e5;
+      float prevT = t;
+      for (int m = 0; m < 36; m++) {
+        vec3 p = ro + rd * t;
+        float d = stoneSDF(p, i);
+        if (d < 0.05) {
+          // Refine silhouette edge cleanly
+          float lo = prevT;
+          float hi = t;
+          for (int b = 0; b < 3; b++) {
+            float mid = 0.5 * (lo + hi);
+            if (stoneSDF(ro + rd * mid, i) < 0.0) hi = mid;
+            else lo = mid;
+          }
+          vec3 pStone = ro + rd * hi;
+          if (hi < tHit) {
+            tHit = hi;
+            hitPos = pStone;
+            hitType = 3;
+            hitStoneIdx = i;
+          }
+          break;
+        }
+        prevD = d;
+        prevT = t;
+        t += max(d * 0.72, 0.22);
+        if (t > tMax) break;
+      }
+    }
+  }
+
+  // 4) Shade Winning Surface
+  vec3 color;
+  if (hitType == 1) {
+    color = shadeSand(hitPos, V);
+  } else if (hitType == 3) {
+    color = shadeStone(hitPos, V, hitStoneIdx);
+  } else if (hitType == 2) {
+    color = shadeWoodFrame(hitPos, hitNorm, V);
+  } else {
+    color = shadeCourtyard(hitPos, V);
+  }
+
+  // Subtle Kyoto atmospheric depth & soft optical vignette
+  float vig = 1.0 - dot(ndc * vec2(0.75, 0.92), ndc * vec2(0.75, 0.92)) * 0.16;
+  color *= vig;
+
+  // Exposure + ACES Filmic Tone Mapping + sRGB Gamma
+  color = acesToneMap(color * uExposure);
+  color = pow(max(color, vec3(0.0)), vec3(1.0 / 2.2));
+
+  // Micro film dithering eliminates any 8-bit sky/shadow gradient banding
+  float dither = (hash12(gl_FragCoord.xy + fract(uTime) * 17.0) - 0.5) / 255.0;
+  fragColor = vec4(color + dither, 1.0);
+}
+`;
+
+  /* ==========================================================================
+   * 4. WEBGL2 PROGRAM, FBO & UNDO RING BUFFER SETUP
+   * ========================================================================== */
+  function compileShader(type, src) {
+    const sh = gl.createShader(type);
+    gl.shaderSource(sh, src);
+    gl.compileShader(sh);
+    if (!gl.getShaderParameter(sh, gl.COMPILE_STATUS)) {
+      console.error('Shader compile error:', gl.getShaderInfoLog(sh));
+      throw new Error(gl.getShaderInfoLog(sh));
+    }
+    return sh;
+  }
+
+  function createProgram(vsSrc, fsSrc) {
+    const vs = compileShader(gl.VERTEX_SHADER, vsSrc);
+    const fs = compileShader(gl.FRAGMENT_SHADER, fsSrc);
+    const prog = gl.createProgram();
+    gl.attachShader(prog, vs);
+    gl.attachShader(prog, fs);
+    gl.linkProgram(prog);
+    if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) {
+      console.error('Program link error:', gl.getProgramInfoLog(prog));
+      throw new Error(gl.getProgramInfoLog(prog));
+    }
+    gl.deleteShader(vs);
+    gl.deleteShader(fs);
+    return prog;
+  }
+
+  const progPreset = createProgram(QUAD_VS, PRESET_FS);
+  const progRake   = createProgram(QUAD_VS, RAKE_FS);
+  const progRelax  = createProgram(QUAD_VS, RELAX_FS);
+  const progRender = createProgram(QUAD_VS, RENDER_FS);
+
+  function getUniforms(prog, names) {
+    const map = {};
+    for (const n of names) map[n] = gl.getUniformLocation(prog, n);
+    return map;
+  }
+
+  const uPreset = getUniforms(progPreset, [
+    'uBedSize', 'uPreset', 'uStoneCount', 'uStoneA', 'uStoneB'
+  ]);
+  const uRake = getUniforms(progRake, [
+    'uSandTex', 'uBedSize', 'uP0', 'uP1', 'uN0', 'uN1',
+    'uMode', 'uTineCount', 'uSpacing', 'uHalfW', 'uDepth', 'uStrength', 'uTime',
+    'uStoneCount', 'uStoneA', 'uStoneB', 'uActiveStone'
+  ]);
+  const uRelax = getUniforms(progRelax, [
+    'uSandTex', 'uBedSize', 'uTexel', 'uRate'
+  ]);
+  const uRender = getUniforms(progRender, [
+    'uSandTex', 'uBedSize', 'uTexel', 'uFrameDim', 'uResolution', 'uTime',
+    'uCamPos', 'uCamForward', 'uCamRight', 'uCamUp', 'uTanHalfFov', 'uAspect',
+    'uSunDir', 'uSunColor', 'uSkyColor', 'uBounceColor', 'uWetness', 'uExposure', 'uKomorebi',
+    'uStoneCount', 'uStoneA', 'uStoneB', 'uStoneC'
+  ]);
+
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
+
+  function createSimTarget(w, h) {
+    const tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    const intFmt = USE_FLOAT_FBO ? gl.RGBA16F : gl.RGBA8;
+    const type   = USE_FLOAT_FBO ? gl.HALF_FLOAT : gl.UNSIGNED_BYTE;
+    const filt   = USE_FLOAT_FBO ? gl.LINEAR : gl.NEAREST;
+    gl.texImage2D(gl.TEXTURE_2D, 0, intFmt, w, h, 0, gl.RGBA, type, null);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, filt);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, filt);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    const fbo = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    return { tex, fbo, w, h };
+  }
+
+  let sandA = null;
+  let sandB = null;
+  const MAX_UNDO = 10;
+  let undoStack = []; // { target, stones }
+
+  function destroySimTarget(t) {
+    if (!t) return;
+    gl.deleteFramebuffer(t.fbo);
+    gl.deleteTexture(t.tex);
+  }
+
+  function clearUndoStack() {
+    for (const item of undoStack) destroySimTarget(item.target);
+    undoStack = [];
+  }
+
+  function copySandTarget(src, dst) {
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, src.fbo);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, dst.fbo);
+    gl.blitFramebuffer(0, 0, src.w, src.h, 0, 0, dst.w, dst.h, gl.COLOR_BUFFER_BIT, gl.NEAREST);
+    gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
+    gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+  }
+
+  function pushUndoSnapshot() {
+    if (!sandA) return;
+    let target;
+    if (undoStack.length >= MAX_UNDO) {
+      const oldest = undoStack.shift();
+      target = oldest.target;
+    } else {
+      target = createSimTarget(world.simW, world.simH);
+    }
+    copySandTarget(sandA, target);
+    const stonesCopy = state.stones.map(s => ({ ...s }));
+    undoStack.push({ target, stones: stonesCopy });
+  }
+
+  function performUndo() {
+    if (!undoStack.length || !sandA) return;
+    const snap = undoStack.pop();
+    copySandTarget(snap.target, sandA);
+    destroySimTarget(snap.target);
+    state.stones = snap.stones;
+    state.settleFrames = 4;
+    showBanner('Undid last change');
+  }
+
+  /* ==========================================================================
+   * 5. STONE COMPOSITIONS & UNIFORM PACKING
+   * ========================================================================== */
+  const stoneBufA = new Float32Array(MAX_STONES * 4);
+  const stoneBufB = new Float32Array(MAX_STONES * 4);
+  const stoneBufC = new Float32Array(MAX_STONES * 4);
+
+  function packStoneUniforms() {
+    const count = Math.min(state.stones.length, MAX_STONES);
+    for (let i = 0; i < count; i++) {
+      const s = state.stones[i];
+      const o = i * 4;
+      stoneBufA[o]     = s.x;
+      stoneBufA[o + 1] = s.y;
+      stoneBufA[o + 2] = s.rot;
+      stoneBufA[o + 3] = s.r;
+
+      stoneBufB[o]     = s.ax;
+      stoneBufB[o + 1] = s.ay;
+      stoneBufB[o + 2] = s.hz;
+      stoneBufB[o + 3] = s.seed;
+
+      const isHi = (state.tool === 'stone' && (i === state.hoveredStone || i === state.grabbedStone))
+        ? (i === state.grabbedStone ? 1.0 : 0.65) : 0.0;
+      stoneBufC[o]     = s.moss;
+      stoneBufC[o + 1] = s.flat;
+      stoneBufC[o + 2] = s.sink;
+      stoneBufC[o + 3] = isHi;
+    }
+  }
+
+  function buildPresetStones(name) {
+    const sx = world.bedW * 0.5;
+    const sy = world.bedH * 0.5;
+    const sc = Math.min(world.bedW / 260, world.bedH / 170);
+    const k = Math.max(0.76, Math.min(1.12, sc));
+
+    if (name === 'ryoanji') {
+      // Classic asymmetric Kyoto 3+2 triad composition (Shin-Gyō-Sō)
+      return [
+        // Main guardian stone (left-upper triad anchor)
+        { x: -sx * 0.42, y:  sy * 0.14, rot: 0.38, r: 16.5 * k, ax: 1.18, ay: 0.86, hz: 22.0 * k, seed: 1.42, moss: 0.82, flat: 0.18, sink: 2.2 },
+        // Companion low reclining stone beside guardian
+        { x: -sx * 0.27, y:  sy * 0.02, rot: -0.52, r: 10.5 * k, ax: 1.25, ay: 0.78, hz: 10.2 * k, seed: 3.17, moss: 0.68, flat: 0.62, sink: 1.8 },
+        // Third smaller triad anchor stone
+        { x: -sx * 0.49, y: -sy * 0.09, rot: 1.15, r: 8.2 * k,  ax: 1.05, ay: 0.88, hz: 9.0 * k,  seed: 5.84, moss: 0.74, flat: 0.35, sink: 1.5 },
+        // Right-lower serene pair
+        { x:  sx * 0.35, y: -sy * 0.14, rot: -0.28, r: 14.2 * k, ax: 1.28, ay: 0.80, hz: 15.8 * k, seed: 7.29, moss: 0.76, flat: 0.48, sink: 2.0 },
+        { x:  sx * 0.48, y: -sy * 0.01, rot: 0.82, r: 9.2 * k,  ax: 1.10, ay: 0.85, hz: 11.4 * k, seed: 9.61, moss: 0.58, flat: 0.25, sink: 1.6 }
+      ];
+    } else if (name === 'sazanami') {
+      return [
+        { x: -sx * 0.34, y: -sy * 0.08, rot: 0.22, r: 15.5 * k, ax: 1.35, ay: 0.76, hz: 16.5 * k, seed: 2.63, moss: 0.78, flat: 0.55, sink: 2.0 },
+        { x:  sx * 0.08, y:  sy * 0.22, rot: -0.65, r: 11.2 * k, ax: 1.15, ay: 0.88, hz: 13.8 * k, seed: 6.44, moss: 0.70, flat: 0.32, sink: 1.8 },
+        { x:  sx * 0.38, y: -sy * 0.16, rot: 0.94, r: 12.6 * k, ax: 1.22, ay: 0.82, hz: 12.0 * k, seed: 8.15, moss: 0.84, flat: 0.58, sink: 1.8 }
+      ];
+    } else if (name === 'uzumaki') {
+      return [
+        { x: -sx * 0.36, y:  sy * 0.06, rot: 0.55, r: 14.5 * k, ax: 1.06, ay: 0.92, hz: 21.0 * k, seed: 4.18, moss: 0.80, flat: 0.15, sink: 2.2 },
+        { x:  sx * 0.38, y: -sy * 0.08, rot: -0.40, r: 13.0 * k, ax: 1.12, ay: 0.88, hz: 17.5 * k, seed: 7.92, moss: 0.72, flat: 0.28, sink: 2.0 }
+      ];
+    } else {
+      // Blank / Fresh Bed: 2 understated corner stones leaving broad open canvas
+      return [
+        { x: -sx * 0.48, y:  sy * 0.26, rot: 0.42, r: 12.5 * k, ax: 1.20, ay: 0.84, hz: 14.8 * k, seed: 1.94, moss: 0.74, flat: 0.42, sink: 1.9 },
+        { x:  sx * 0.46, y: -sy * 0.28, rot: -0.75, r: 10.0 * k, ax: 1.14, ay: 0.88, hz: 11.5 * k, seed: 5.27, moss: 0.65, flat: 0.48, sink: 1.6 }
+      ];
+    }
+  }
+
+  /* ==========================================================================
+   * 6. CAMERA MATH & PROJECTION (SHARED BY WEBGL2 AND 2D FX OVERLAY)
+   * ========================================================================== */
+  function vecNorm(v) {
+    const l = Math.hypot(v[0], v[1], v[2]) || 1;
+    return [v[0] / l, v[1] / l, v[2] / l];
+  }
+
+  function vecCross(a, b) {
+    return [
+      a[1] * b[2] - a[2] * b[1],
+      a[2] * b[0] - a[0] * b[2],
+      a[0] * b[1] - a[1] * b[0]
+    ];
+  }
+
+  function vecDot(a, b) {
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  }
+
+  function updateCamera() {
+    const pitch = cam.pitchDeg * Math.PI / 180;
+    const tanH = cam.tanHalfFov;
+    const aspect = cam.aspect;
+
+    // Fit entire wooden timber box cleanly inside viewport
+    const totalW = world.bedW + world.frameW * 2.0;
+    const totalH = world.bedH + world.frameW * 2.0;
+    const sinP = Math.sin(pitch);
+    const cosP = Math.cos(pitch);
+
+    // Compute exact distance so the garden fills ~94% of viewport beautifully
+    const fill = state.verandaView ? 0.90 : 0.955;
+    const distV = (totalH * 0.5 * sinP) / (tanH * fill) + (totalH * 0.5 * cosP);
+    const distH = (totalW * 0.5) / (tanH * aspect * fill);
+    const dist = Math.max(distV, distH);
+
+    // Slight vertical framing offset so bottom dock leaves garden nicely centered
+    const yBias = state.verandaView ? -4.5 : -2.2;
+    cam.target = [0, yBias, 0];
+    cam.pos = [0, yBias - dist * cosP, dist * sinP];
+    cam.forward = vecNorm([
+      cam.target[0] - cam.pos[0],
+      cam.target[1] - cam.pos[1],
+      cam.target[2] - cam.pos[2]
+    ]);
+    cam.right = vecNorm(vecCross(cam.forward, [0, 0, 1]));
+    cam.up = vecCross(cam.right, cam.forward);
+  }
+
+  function screenToWorld(clientX, clientY, planeZ = 0) {
+    const ndcX = (clientX / world.viewW) * 2 - 1;
+    const ndcY = 1 - (clientY / world.viewH) * 2;
+    const sx = ndcX * cam.aspect * cam.tanHalfFov;
+    const sy = ndcY * cam.tanHalfFov;
+    const rd = vecNorm([
+      cam.forward[0] + cam.right[0] * sx + cam.up[0] * sy,
+      cam.forward[1] + cam.right[1] * sx + cam.up[1] * sy,
+      cam.forward[2] + cam.right[2] * sx + cam.up[2] * sy
+    ]);
+    const t = (planeZ - cam.pos[2]) / (rd[2] || -1e-4);
+    return [cam.pos[0] + rd[0] * t, cam.pos[1] + rd[1] * t];
+  }
+
+  function worldToScreen(wx, wy, wz = 0) {
+    const vx = wx - cam.pos[0];
+    const vy = wy - cam.pos[1];
+    const vz = wz - cam.pos[2];
+    const cz = vx * cam.forward[0] + vy * cam.forward[1] + vz * cam.forward[2];
+    if (cz <= 1) return [-9999, -9999, 1];
+    const cx = vx * cam.right[0] + vy * cam.right[1] + vz * cam.right[2];
+    const cy = vx * cam.up[0] + vy * cam.up[1] + vz * cam.up[2];
+    const ndcX = cx / (cz * cam.aspect * cam.tanHalfFov);
+    const ndcY = cy / (cz * cam.tanHalfFov);
+    const px = (ndcX * 0.5 + 0.5) * world.viewW;
+    const py = (0.5 - ndcY * 0.5) * world.viewH;
+    // Pixels per cm at this depth
+    const pxPerCm = (world.viewH * 0.5) / (cz * cam.tanHalfFov);
+    return [px, py, pxPerCm];
+  }
+
+  function getSunDir() {
+    const az = state.sunAzimuth * Math.PI / 180;
+    const el = state.sunElevation * Math.PI / 180;
+    const ce = Math.cos(el);
+    return [Math.cos(az) * ce, Math.sin(az) * ce, Math.sin(el)];
+  }
+
+  /* ==========================================================================
+   * 7. GPU SIMULATION PASSES
+   * ========================================================================== */
+  function swapSand() {
+    const tmp = sandA;
+    sandA = sandB;
+    sandB = tmp;
+  }
+
+  function runRelaxPasses(count, rate = 0.16) {
+    gl.useProgram(progRelax);
+    gl.viewport(0, 0, world.simW, world.simH);
+    gl.uniform2f(uRelax.uBedSize, world.bedW, world.bedH);
+    gl.uniform2f(uRelax.uTexel, 1 / world.simW, 1 / world.simH);
+    gl.uniform1f(uRelax.uRate, rate);
+    gl.uniform1i(uRelax.uSandTex, 0);
+
+    for (let i = 0; i < count; i++) {
+      gl.bindFramebuffer(gl.FRAMEBUFFER, sandB.fbo);
+      gl.activeTexture(gl.TEXTURE0);
+      gl.bindTexture(gl.TEXTURE_2D, sandA.tex);
+      gl.drawArrays(gl.TRIANGLES, 0, 3);
+      swapSand();
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+  }
+
+  function applyPreset(name, saveUndo = false) {
+    if (saveUndo) pushUndoSnapshot();
+    state.preset = name;
+    state.stones = buildPresetStones(name);
+    packStoneUniforms();
+
+    const presetIdx = name === 'ryoanji' ? 0 : name === 'sazanami' ? 1 : name === 'uzumaki' ? 2 : 3;
+    gl.useProgram(progPreset);
+    gl.viewport(0, 0, world.simW, world.simH);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, sandA.fbo);
+    gl.uniform2f(uPreset.uBedSize, world.bedW, world.bedH);
+    gl.uniform1i(uPreset.uPreset, presetIdx);
+    gl.uniform1i(uPreset.uStoneCount, state.stones.length);
+    gl.uniform4fv(uPreset.uStoneA, stoneBufA);
+    gl.uniform4fv(uPreset.uStoneB, stoneBufB);
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    // Relax initial ridges into crisp physical angle-of-repose geometry
+    runRelaxPasses(14, 0.17);
+    state.settleFrames = 6;
+    initMapleLeaves();
+  }
+
+  function runRakeStep(opts) {
+    packStoneUniforms();
+    gl.useProgram(progRake);
+    gl.viewport(0, 0, world.simW, world.simH);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, sandB.fbo);
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, sandA.tex);
+
+    gl.uniform1i(uRake.uSandTex, 0);
+    gl.uniform2f(uRake.uBedSize, world.bedW, world.bedH);
+    gl.uniform2f(uRake.uP0, opts.p0[0], opts.p0[1]);
+    gl.uniform2f(uRake.uP1, opts.p1[0], opts.p1[1]);
+    gl.uniform2f(uRake.uN0, opts.n0[0], opts.n0[1]);
+    gl.uniform2f(uRake.uN1, opts.n1[0], opts.n1[1]);
+    gl.uniform1i(uRake.uMode, opts.mode);
+    gl.uniform1i(uRake.uTineCount, opts.tines || 1);
+    gl.uniform1f(uRake.uSpacing, opts.spacing || 0);
+    gl.uniform1f(uRake.uHalfW, opts.halfW || 1);
+    gl.uniform1f(uRake.uDepth, opts.depth || 1);
+    gl.uniform1f(uRake.uStrength, opts.strength ?? 0.85);
+    gl.uniform1f(uRake.uTime, performance.now() * 0.001);
+    gl.uniform1i(uRake.uStoneCount, state.stones.length);
+    gl.uniform4fv(uRake.uStoneA, stoneBufA);
+    gl.uniform4fv(uRake.uStoneB, stoneBufB);
+    gl.uniform1i(uRake.uActiveStone, opts.activeStone ?? -1);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    swapSand();
+  }
+
+  /* ==========================================================================
+   * 8. PROCEDURAL GRANULAR WEB AUDIO ENGINE (GRAVEL FOLEY + KYOTO AMBIENCE)
+   * ========================================================================== */
+  const audio = {
+    ctx: null,
+    master: null,
+    initialized: false,
+    rakeGain: null,
+    rakeFilter: null,
+    gritGain: null,
+    gritFilter: null,
+    woodGain: null,
+    woodFilter: null,
+    breezeGain: null,
+    breezeFilter: null,
+    rainGain: null,
+    rainFilter: null,
+    targetRakeAmp: 0,
+    curRakeAmp: 0,
+    lastClickMs: 0,
+    nextShishiMs: 0
+  };
+
+  function createNoiseBuffer(ctx, seconds = 3.0, type = 'white') {
+    const len = Math.floor(ctx.sampleRate * seconds);
+    const buf = ctx.createBuffer(2, len, ctx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = buf.getChannelData(ch);
+      let b0 = 0, b1 = 0, b2 = 0;
+      for (let i = 0; i < len; i++) {
+        const w = Math.random() * 2 - 1;
+        if (type === 'pink') {
+          b0 = 0.99765 * b0 + w * 0.0990460;
+          b1 = 0.96300 * b1 + w * 0.2965164;
+          b2 = 0.57000 * b2 + w * 1.0526913;
+          data[i] = (b0 + b1 + b2 + w * 0.1848) * 0.15;
+        } else if (type === 'gravel') {
+          // Sparse sharp granular micro-impulses (simulates individual Shirakawa pebbles clicking)
+          const r = Math.random();
+          data[i] = r < 0.055 ? (Math.random() * 2 - 1) * Math.pow(Math.random(), 0.45) : w * 0.07;
+        } else {
+          data[i] = w;
+        }
+      }
+    }
+    return buf;
+  }
+
+  function initAudio() {
+    if (audio.initialized) {
+      if (audio.ctx && audio.ctx.state === 'suspended') audio.ctx.resume();
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+
+    try {
+      const ctx = new AC();
+      audio.ctx = ctx;
+
+      const master = ctx.createGain();
+      master.gain.value = state.audioEnabled ? 0.72 : 0.0;
+      master.connect(ctx.destination);
+      audio.master = master;
+
+      const pinkBuf   = createNoiseBuffer(ctx, 4.0, 'pink');
+      const gravelBuf = createNoiseBuffer(ctx, 3.0, 'gravel');
+      const whiteBuf  = createNoiseBuffer(ctx, 2.5, 'white');
+
+      // Layer 1: Continuous broad sand displacement friction
+      const rakeSrc = ctx.createBufferSource();
+      rakeSrc.buffer = pinkBuf;
+      rakeSrc.loop = true;
+      const rakeFilter = ctx.createBiquadFilter();
+      rakeFilter.type = 'bandpass';
+      rakeFilter.frequency.value = 1350;
+      rakeFilter.Q.value = 1.1;
+      const rakeGain = ctx.createGain();
+      rakeGain.gain.value = 0;
+      rakeSrc.connect(rakeFilter).connect(rakeGain).connect(master);
+      rakeSrc.start();
+      audio.rakeFilter = rakeFilter;
+      audio.rakeGain = rakeGain;
+
+      // Layer 2: Crisp individual crushed-granite grain crackle
+      const gritSrc = ctx.createBufferSource();
+      gritSrc.buffer = gravelBuf;
+      gritSrc.loop = true;
+      const gritFilter = ctx.createBiquadFilter();
+      gritFilter.type = 'bandpass';
+      gritFilter.frequency.value = 3800;
+      gritFilter.Q.value = 1.6;
+      const gritGain = ctx.createGain();
+      gritGain.gain.value = 0;
+      gritSrc.connect(gritFilter).connect(gritGain).connect(master);
+      gritSrc.start();
+      audio.gritFilter = gritFilter;
+      audio.gritGain = gritGain;
+
+      // Layer 3: Subtle warm wooden rake body resonance
+      const woodSrc = ctx.createBufferSource();
+      woodSrc.buffer = pinkBuf;
+      woodSrc.loop = true;
+      const woodFilter = ctx.createBiquadFilter();
+      woodFilter.type = 'bandpass';
+      woodFilter.frequency.value = 340;
+      woodFilter.Q.value = 3.2;
+      const woodGain = ctx.createGain();
+      woodGain.gain.value = 0;
+      woodSrc.connect(woodFilter).connect(woodGain).connect(master);
+      woodSrc.start();
+      audio.woodFilter = woodFilter;
+      audio.woodGain = woodGain;
+
+      // Ambient Layer A: Distant gentle Kyoto bamboo breeze
+      const breezeSrc = ctx.createBufferSource();
+      breezeSrc.buffer = pinkBuf;
+      breezeSrc.loop = true;
+      const breezeFilter = ctx.createBiquadFilter();
+      breezeFilter.type = 'bandpass';
+      breezeFilter.frequency.value = 520;
+      breezeFilter.Q.value = 0.85;
+      const breezeGain = ctx.createGain();
+      breezeGain.gain.value = 0.022;
+      breezeSrc.connect(breezeFilter).connect(breezeGain).connect(master);
+      breezeSrc.start();
+      audio.breezeFilter = breezeFilter;
+      audio.breezeGain = breezeGain;
+
+      // Ambient Layer B: Soft Kyoto rain patter (audible in Mist mode)
+      const rainSrc = ctx.createBufferSource();
+      rainSrc.buffer = whiteBuf;
+      rainSrc.loop = true;
+      const rainFilter = ctx.createBiquadFilter();
+      rainFilter.type = 'bandpass';
+      rainFilter.frequency.value = 1800;
+      rainFilter.Q.value = 0.65;
+      const rainGain = ctx.createGain();
+      rainGain.gain.value = 0.0;
+      rainSrc.connect(rainFilter).connect(rainGain).connect(master);
+      rainSrc.start();
+      audio.rainFilter = rainFilter;
+      audio.rainGain = rainGain;
+
+      audio.initialized = true;
+      audio.nextShishiMs = performance.now() + 18000 + Math.random() * 18000;
+    } catch (_) {}
+  }
+
+  function triggerGrainTick(volume = 0.08, pitch = 4200) {
+    if (!audio.initialized || !state.audioEnabled) return;
+    const ctx = audio.ctx;
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(pitch * (0.85 + Math.random() * 0.35), now);
+    osc.frequency.exponentialRampToValueAtTime(pitch * 0.38, now + 0.018);
+    g.gain.setValueAtTime(volume, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.022);
+    osc.connect(g).connect(audio.master);
+    osc.start(now);
+    osc.stop(now + 0.026);
+  }
+
+  function triggerStoneThud(intensity = 0.4) {
+    if (!audio.initialized || !state.audioEnabled) return;
+    const ctx = audio.ctx;
+    const now = ctx.currentTime;
+    // Deep damped granite-into-gravel thud
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(92, now);
+    osc.frequency.exponentialRampToValueAtTime(36, now + 0.16);
+    g.gain.setValueAtTime(0.22 * intensity, now);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + 0.19);
+    osc.connect(g).connect(audio.master);
+    osc.start(now);
+    osc.stop(now + 0.21);
+
+    // Settling gravel trickle
+    for (let i = 0; i < 6; i++) {
+      setTimeout(() => {
+        triggerGrainTick(0.032 * intensity * (1 - i / 7), 2600 + Math.random() * 2600);
+      }, 28 + i * 28 + Math.random() * 20);
+    }
+  }
+
+  function triggerShishiOdoshi() {
+    // Distant hollow bamboo water clack — quiet Kyoto temple atmosphere
+    if (!audio.initialized || !state.audioEnabled) return;
+    const ctx = audio.ctx;
+    const now = ctx.currentTime;
+    const freqs = [395, 810, 1480];
+    const gains = [0.042, 0.022, 0.009];
+    freqs.forEach((f, idx) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(f, now);
+      osc.frequency.exponentialRampToValueAtTime(f * 0.96, now + 0.14);
+      g.gain.setValueAtTime(0.0001, now);
+      g.gain.linearRampToValueAtTime(gains[idx], now + 0.004);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 0.18 - idx * 0.03);
+      osc.connect(g).connect(audio.master);
+      osc.start(now);
+      osc.stop(now + 0.20);
+    });
+  }
+
+  function updateAudio(nowMs, dt) {
+    if (!audio.initialized) return;
+    const ctx = audio.ctx;
+    const t = ctx.currentTime;
+
+    const targetMaster = state.audioEnabled ? 0.72 : 0.0;
+    audio.master.gain.setTargetAtTime(targetMaster, t, 0.12);
+    if (!state.audioEnabled) return;
+
+    // Smooth breeze breathing
+    const breezeMod = 0.014 + 0.011 * Math.sin(nowMs * 0.00042) * Math.sin(nowMs * 0.00019 + 1.2);
+    audio.breezeGain.gain.setTargetAtTime(breezeMod, t, 0.25);
+    audio.breezeFilter.frequency.setTargetAtTime(460 + 220 * Math.sin(nowMs * 0.00031), t, 0.35);
+
+    // Rain ambience in Mist preset
+    const rainLevel = state.curWetness > 0.2 ? 0.048 * state.curWetness : 0.0;
+    audio.rainGain.gain.setTargetAtTime(rainLevel, t, 0.45);
+
+    // Active rake / sweeper / stone-drag gravel foley
+    let speedNorm = 0;
+    let tone = TOOLS[state.tool].audioTone;
+    if (state.sweepActive) {
+      speedNorm = 0.55;
+      tone = 0.62;
+    } else if (state.pointerDown && state.strokeSpeed > 0.4) {
+      speedNorm = Math.min(1.0, state.strokeSpeed / 120.0);
+    }
+
+    audio.curRakeAmp += (speedNorm - audio.curRakeAmp) * Math.min(1, dt * 16);
+    const amp = audio.curRakeAmp;
+
+    const isSmooth = state.tool === 'smooth' || state.sweepActive;
+    const isStone = state.tool === 'stone' && state.grabbedStone >= 0;
+
+    audio.rakeGain.gain.setTargetAtTime(amp * (isSmooth ? 0.16 : 0.24), t, 0.03);
+    audio.rakeFilter.frequency.setTargetAtTime((950 + amp * 1350) * tone, t, 0.04);
+
+    audio.gritGain.gain.setTargetAtTime(amp * (isSmooth ? 0.09 : (isStone ? 0.28 : 0.36)), t, 0.025);
+    audio.gritFilter.frequency.setTargetAtTime((2800 + amp * 2400) * Math.sqrt(tone), t, 0.04);
+
+    audio.woodGain.gain.setTargetAtTime(amp * (isStone ? 0.18 : 0.11), t, 0.035);
+    audio.woodFilter.frequency.setTargetAtTime(isStone ? 170 : 320 * tone, t, 0.05);
+
+    // Occasional stochastic crisp pebble clicks while slowly raking
+    if (amp > 0.04 && nowMs - audio.lastClickMs > (42 - amp * 24)) {
+      audio.lastClickMs = nowMs;
+      if (Math.random() < 0.55) {
+        triggerGrainTick(0.015 + amp * 0.025, (3200 + Math.random() * 2800) * Math.sqrt(tone));
+      }
+    }
+
+    // Rare distant bamboo shishi-odoshi water clack for Kyoto sanctuary feel
+    if (nowMs > audio.nextShishiMs) {
+      audio.nextShishiMs = nowMs + 32000 + Math.random() * 28000;
+      if (!state.pointerDown) triggerShishiOdoshi();
+    }
+  }
+
+  /* ==========================================================================
+   * 9. 2D MICRO-DYNAMICS OVERLAY: KICKED GRAVEL GRAINS, MAPLE LEAVES, RAKE GHOST
+   * ========================================================================== */
+  const MAX_GRAINS = 320;
+  const grains = [];
+
+  function spawnKickedGrains(wx, wy, dirX, dirY, speed, count) {
+    const perpX = -dirY;
+    const perpY = dirX;
+    const spd = Math.min(speed, 180);
+    const tones = [
+      '#e5dfd4', '#dcd5c7', '#cfc5b4', '#a7a197', '#4e4b46'
+    ];
+    for (let i = 0; i < count; i++) {
+      if (grains.length >= MAX_GRAINS) grains.shift();
+      const side = (Math.random() < 0.5 ? -1 : 1);
+      const lat = (0.35 + Math.random() * 0.9) * side;
+      const ejectSpd = (12 + spd * 0.24) * (0.55 + Math.random() * 0.85);
+      const rPick = Math.random();
+      const col = rPick > 0.86 ? tones[4] : rPick > 0.68 ? tones[3] : rPick > 0.42 ? tones[2] : rPick > 0.20 ? tones[1] : tones[0];
+      grains.push({
+        x: wx + (Math.random() - 0.5) * 1.4,
+        y: wy + (Math.random() - 0.5) * 1.4,
+        z: 0.4 + Math.random() * 0.8,
+        vx: (perpX * lat + dirX * (0.25 + Math.random() * 0.5)) * ejectSpd,
+        vy: (perpY * lat + dirY * (0.25 + Math.random() * 0.5)) * ejectSpd,
+        vz: 14 + Math.random() * 22 + spd * 0.09,
+        size: 0.14 + Math.random() * 0.16, // cm
+        col,
+        bounces: 0,
+        life: 0.55 + Math.random() * 0.45,
+        age: 0
+      });
+    }
+  }
+
+  // Delicate Japanese Maple Leaves (Acer palmatum / Momiji) resting & drifting across sand
+  const mapleLeaves = [];
+
+  function pushPointOutOfStones(x, y, pad = 4.2) {
+    let px = x;
+    let py = y;
+    for (let i = 0; i < state.stones.length; i++) {
+      const s = state.stones[i];
+      const rad = s.r * Math.max(s.ax, s.ay) + pad;
+      const dx = px - s.x;
+      const dy = py - s.y;
+      const d = Math.hypot(dx, dy);
+      if (d < rad) {
+        const ang = d > 0.01 ? Math.atan2(dy, dx) : (i * 1.9 + 0.5);
+        px = s.x + Math.cos(ang) * (rad + 1.5);
+        py = s.y + Math.sin(ang) * (rad + 1.5);
+      }
+    }
+    return [px, py];
+  }
+
+  function createMapleLeaf(airborne = false) {
+    const hw = world.bedW * 0.44;
+    const hh = world.bedH * 0.44;
+    const palettes = [
+      ['#9f2b1f', '#721b13', '#c84b31'], // deep crimson momiji
+      ['#b84222', '#822813', '#d96934'], // burnt vermilion
+      ['#a85c24', '#703a14', '#cf8638'], // autumn amber
+      ['#8b2620', '#5a1612', '#b03c2c']  // dark temple maple
+    ];
+    const pal = palettes[(Math.random() * palettes.length) | 0];
+    let lx = (Math.random() * 2 - 1) * hw;
+    let ly = (Math.random() * 2 - 1) * hh;
+    // Keep resting leaves near outer half & clearly off stone silhouettes
+    if (!airborne) {
+      if (Math.hypot(lx / hw, ly / hh) < 0.48) {
+        lx = (lx >= 0 ? 1 : -1) * hw * (0.55 + Math.random() * 0.36);
+      }
+      [lx, ly] = pushPointOutOfStones(lx, ly, 5.0);
+    }
+    return {
+      x: airborne ? -hw - 15 : lx,
+      y: airborne ? (Math.random() * 1.6 - 0.8) * hh : ly,
+      z: airborne ? 45 + Math.random() * 35 : 0.22,
+      vx: airborne ? 11 + Math.random() * 8 : 0,
+      vy: airborne ? (Math.random() - 0.5) * 6 : 0,
+      vz: airborne ? -5.5 - Math.random() * 3.5 : 0,
+      rot: Math.random() * Math.PI * 2,
+      vrot: (Math.random() - 0.5) * 2.2,
+      tilt: Math.random() * Math.PI * 2,
+      size: 2.9 + Math.random() * 1.15, // cm radius (~6-8cm real momiji leaf)
+      pal,
+      phase: Math.random() * 10
+    };
+  }
+
+  function initMapleLeaves() {
+    mapleLeaves.length = 0;
+    const count = 4;
+    for (let i = 0; i < count; i++) {
+      mapleLeaves.push(createMapleLeaf(false));
+    }
+  }
+
+  function nudgeLeavesFromRake(wx, wy, dirX, dirY, radius, speed) {
+    if (!state.leavesOn) return;
+    for (const lf of mapleLeaves) {
+      if (lf.z > 2.5) continue;
+      const dx = lf.x - wx;
+      const dy = lf.y - wy;
+      const d = Math.hypot(dx, dy);
+      if (d < radius + lf.size) {
+        const push = (1 - d / (radius + lf.size)) * Math.max(18, speed * 0.55);
+        const nx = d > 0.1 ? dx / d : dirX;
+        const ny = d > 0.1 ? dy / d : dirY;
+        lf.vx += (dirX * 0.65 + nx * 0.55) * push * 0.35;
+        lf.vy += (dirY * 0.65 + ny * 0.55) * push * 0.35;
+        lf.vz = Math.max(lf.vz, 5.5 + Math.random() * 5.0);
+        lf.vrot += (Math.random() - 0.5) * 8.0;
+      }
+    }
+  }
+
+  function drawPalmateMapleLeaf(ctx, radius, pal, shadowOnly) {
+    // 7-lobed Japanese Acer palmatum silhouette
+    ctx.beginPath();
+    const lobes = [
+      { ang: -Math.PI * 0.5, len: 1.02, w: 0.22 },
+      { ang: -Math.PI * 0.5 - 0.58, len: 0.90, w: 0.21 },
+      { ang: -Math.PI * 0.5 + 0.58, len: 0.90, w: 0.21 },
+      { ang: -Math.PI * 0.5 - 1.18, len: 0.72, w: 0.19 },
+      { ang: -Math.PI * 0.5 + 1.18, len: 0.72, w: 0.19 },
+      { ang: -Math.PI * 0.5 - 1.72, len: 0.44, w: 0.15 },
+      { ang: -Math.PI * 0.5 + 1.72, len: 0.44, w: 0.15 }
+    ];
+
+    // Trace star-like palmate outline clockwise
+    const ordered = [5, 3, 1, 0, 2, 4, 6];
+    ctx.moveTo(0, radius * 0.16);
+    for (let k = 0; k < ordered.length; k++) {
+      const lb = lobes[ordered[k]];
+      const tipX = Math.cos(lb.ang) * radius * lb.len;
+      const tipY = Math.sin(lb.ang) * radius * lb.len;
+      const c1x = Math.cos(lb.ang - lb.w) * radius * lb.len * 0.52;
+      const c1y = Math.sin(lb.ang - lb.w) * radius * lb.len * 0.52;
+      const c2x = Math.cos(lb.ang + lb.w) * radius * lb.len * 0.52;
+      const c2y = Math.sin(lb.ang + lb.w) * radius * lb.len * 0.52;
+      ctx.quadraticCurveTo(c1x, c1y, tipX, tipY);
+      const nextBaseAng = lb.ang + lb.w * 1.15;
+      ctx.quadraticCurveTo(c2x, c2y, Math.cos(nextBaseAng) * radius * 0.17, Math.sin(nextBaseAng) * radius * 0.17);
+    }
+    ctx.closePath();
+
+    if (shadowOnly) {
+      ctx.fill();
+      return;
+    }
+
+    const grad = ctx.createRadialGradient(0, -radius * 0.1, radius * 0.08, 0, 0, radius * 1.05);
+    grad.addColorStop(0, pal[2]);
+    grad.addColorStop(0.65, pal[0]);
+    grad.addColorStop(1, pal[1]);
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Delicate veins & petiole stem
+    ctx.strokeStyle = 'rgba(255, 224, 182, 0.22)';
+    ctx.lineWidth = Math.max(0.5, radius * 0.04);
+    ctx.beginPath();
+    for (const lb of lobes) {
+      ctx.moveTo(0, radius * 0.08);
+      ctx.lineTo(Math.cos(lb.ang) * radius * lb.len * 0.78, Math.sin(lb.ang) * radius * lb.len * 0.78);
+    }
+    ctx.stroke();
+
+    ctx.strokeStyle = pal[1];
+    ctx.lineWidth = Math.max(0.7, radius * 0.06);
+    ctx.beginPath();
+    ctx.moveTo(0, radius * 0.14);
+    ctx.quadraticCurveTo(radius * 0.08, radius * 0.45, radius * 0.16, radius * 0.68);
+    ctx.stroke();
+  }
+
+  function stepAndRenderFX(dt, nowMs) {
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    fxCtx.save();
+    fxCtx.scale(world.dpr, world.dpr);
+
+    const sun = getSunDir();
+    const shScaleX = -sun[0] / Math.max(sun[2], 0.22);
+    const shScaleY = -sun[1] / Math.max(sun[2], 0.22);
+    const lightBoost = state.lightName === 'moon' ? 0.58 : (state.lightName === 'mist' ? 0.78 : 1.0);
+    const shAlpha = state.lightName === 'mist' ? 0.16 : 0.34;
+
+    // 1) Update & render airborne kicked gravel grains
+    for (let i = grains.length - 1; i >= 0; i--) {
+      const g = grains[i];
+      g.age += dt;
+      if (g.age >= g.life) {
+        grains.splice(i, 1);
+        continue;
+      }
+      g.vz -= 210.0 * dt; // gravity (cm/s^2 scaled for crisp micro-hop feel)
+      g.x += g.vx * dt;
+      g.y += g.vy * dt;
+      g.z += g.vz * dt;
+      g.vx *= Math.pow(0.28, dt);
+      g.vy *= Math.pow(0.28, dt);
+
+      if (g.z <= 0.1) {
+        g.z = 0.1;
+        if (g.bounces < 1 && Math.abs(g.vz) > 10) {
+          g.vz = -g.vz * 0.34;
+          g.vx *= 0.55;
+          g.vy *= 0.55;
+          g.bounces++;
+        } else {
+          g.vz = 0;
+          g.vx *= 0.2;
+          g.vy *= 0.2;
+        }
+      }
+
+      const alpha = Math.min(1, (g.life - g.age) / 0.18);
+      const [sx, sy, ppm] = worldToScreen(g.x + g.z * shScaleX, g.y + g.z * shScaleY, 0.05);
+      const [px, py] = worldToScreen(g.x, g.y, g.z);
+      const rad = Math.max(0.8, g.size * ppm);
+
+      // Tiny cast shadow on gravel
+      fxCtx.fillStyle = `rgba(18, 16, 14, ${alpha * shAlpha * 0.85})`;
+      fxCtx.beginPath();
+      fxCtx.arc(sx, sy, rad * 0.95, 0, Math.PI * 2);
+      fxCtx.fill();
+
+      // Sunlit gravel pebble
+      fxCtx.globalAlpha = alpha * lightBoost;
+      fxCtx.fillStyle = g.col;
+      fxCtx.beginPath();
+      fxCtx.arc(px, py, rad, 0, Math.PI * 2);
+      fxCtx.fill();
+      fxCtx.globalAlpha = 1;
+    }
+
+    // 2) Update & render delicate Japanese maple leaves (Momiji)
+    if (state.leavesOn) {
+      const hw = world.bedW * 0.48;
+      const hh = world.bedH * 0.48;
+      // Rarely drift a fresh autumn leaf across the courtyard if fewer than 5
+      if (mapleLeaves.length < 5 && Math.random() < dt * 0.035) {
+        mapleLeaves.push(createMapleLeaf(true));
+      }
+
+      for (let i = mapleLeaves.length - 1; i >= 0; i--) {
+        const lf = mapleLeaves[i];
+        if (lf.z > 0.25 || Math.hypot(lf.vx, lf.vy) > 0.2) {
+          if (lf.z > 0.25) {
+            lf.vz = Math.max(lf.vz - 28 * dt, -9.5);
+            // Gentle fluttering aerodynamics
+            lf.vx += Math.sin(nowMs * 0.002 + lf.phase) * 7.0 * dt;
+            lf.vy += Math.cos(nowMs * 0.0017 + lf.phase) * 6.0 * dt;
+            lf.tilt += dt * 2.2;
+          } else {
+            lf.vx *= Math.pow(0.015, dt);
+            lf.vy *= Math.pow(0.015, dt);
+            lf.vrot *= Math.pow(0.02, dt);
+          }
+          lf.x += lf.vx * dt;
+          lf.y += lf.vy * dt;
+          lf.z += lf.vz * dt;
+          lf.rot += lf.vrot * dt;
+
+          if (lf.z <= 0.22) {
+            lf.z = 0.22;
+            lf.vz = 0;
+          }
+        }
+        // Remove if swept past garden border
+        if (Math.abs(lf.x) > hw + 18 || Math.abs(lf.y) > hh + 18) {
+          mapleLeaves.splice(i, 1);
+          continue;
+        }
+        // Keep landed leaves clamped subtly inside border & nestled beside stones (not overlapping rock faces)
+        if (lf.z <= 0.3) {
+          const [px, py] = pushPointOutOfStones(lf.x, lf.y, lf.size * 0.9 + 2.2);
+          lf.x = Math.max(-hw + 2, Math.min(hw - 2, px));
+          lf.y = Math.max(-hh + 2, Math.min(hh - 2, py));
+        }
+
+        const flutterScale = lf.z > 0.35 ? (0.65 + 0.35 * Math.cos(lf.tilt)) : 0.96;
+        const [shX, shY, ppm] = worldToScreen(lf.x + lf.z * shScaleX, lf.y + lf.z * shScaleY, 0.05);
+        const [lx, ly] = worldToScreen(lf.x, lf.y, lf.z);
+        const rPx = lf.size * ppm;
+
+        // Soft cast shadow on sand
+        fxCtx.save();
+        fxCtx.translate(shX, shY);
+        fxCtx.rotate(-lf.rot);
+        fxCtx.scale(1, flutterScale * 0.92);
+        fxCtx.fillStyle = `rgba(16, 14, 12, ${shAlpha * Math.max(0.25, 1.0 - lf.z * 0.012)})`;
+        drawPalmateMapleLeaf(fxCtx, rPx, lf.pal, true);
+        fxCtx.restore();
+
+        // Actual maple leaf
+        fxCtx.save();
+        fxCtx.translate(lx, ly);
+        fxCtx.rotate(-lf.rot);
+        fxCtx.scale(1, flutterScale);
+        fxCtx.globalAlpha = state.lightName === 'moon' ? 0.65 : 0.92;
+        drawPalmateMapleLeaf(fxCtx, rPx, lf.pal, false);
+        fxCtx.restore();
+      }
+    }
+
+    // 3) Animated wooden Narashi sweeper beam (when resetting sand bed)
+    if (state.sweepActive) {
+      const hh = world.bedH * 0.495;
+      const zBar = 2.6;
+      const [t0x, t0y, ppm] = worldToScreen(state.sweepX,  hh, zBar);
+      const [t1x, t1y]      = worldToScreen(state.sweepX, -hh, zBar);
+      const [s0x, s0y]      = worldToScreen(state.sweepX + zBar * shScaleX,  hh + zBar * shScaleY, 0.1);
+      const [s1x, s1y]      = worldToScreen(state.sweepX + zBar * shScaleX, -hh + zBar * shScaleY, 0.1);
+
+      // Soft shadow of cedar beam
+      fxCtx.save();
+      fxCtx.strokeStyle = `rgba(14, 12, 10, ${shAlpha * 1.15})`;
+      fxCtx.lineWidth = Math.max(4, 3.2 * ppm);
+      fxCtx.lineCap = 'round';
+      fxCtx.beginPath();
+      fxCtx.moveTo(s0x, s0y);
+      fxCtx.lineTo(s1x, s1y);
+      fxCtx.stroke();
+
+      // Hinoki wooden beam itself
+      const grad = fxCtx.createLinearGradient(t0x - 6, t0y, t0x + 6, t0y);
+      grad.addColorStop(0, '#5a432e');
+      grad.addColorStop(0.45, '#8c6d4d');
+      grad.addColorStop(1, '#473322');
+      fxCtx.strokeStyle = grad;
+      fxCtx.lineWidth = Math.max(5, 2.8 * ppm);
+      fxCtx.beginPath();
+      fxCtx.moveTo(t0x, t0y);
+      fxCtx.lineTo(t1x, t1y);
+      fxCtx.stroke();
+      fxCtx.restore();
+    }
+
+    // 4) Tactile Wooden Rake / Tool Preview Ghost (hover + active raking)
+    const idleSec = (nowMs - state.lastMoveTime) * 0.001;
+    const tool = TOOLS[state.tool];
+    const showGhost = state.pointerInside && state.tool !== 'stone' && !state.sweepActive && (state.pointerDown || idleSec < 1.35);
+    if (showGhost) {
+      const fade = state.pointerDown ? 0.88 : Math.max(0, 1.0 - Math.max(0, idleSec - 0.65) / 0.70) * 0.62;
+      const hoverZ = state.pointerDown ? 0.85 : 3.2;
+      const wx = state.pointerDown ? state.rakePos[0] : state.pointerWorld[0];
+      const wy = state.pointerDown ? state.rakePos[1] : state.pointerWorld[1];
+
+      // Determine current rake orientation (perp to rakeDir)
+      const dir = state.rakeDir;
+      const nx = -dir[1];
+      const ny = dir[0];
+
+      const halfBedW = world.bedW * 0.5;
+      const halfBedH = world.bedH * 0.5;
+      if (Math.abs(wx) <= halfBedW + 2 && Math.abs(wy) <= halfBedH + 2) {
+        const [, , ppm] = worldToScreen(wx, wy, hoverZ);
+        fxCtx.save();
+
+        if (tool.mode === 0) {
+          // Multi-tine wooden kumade rake head + tine contact points
+          const span = (tool.tines - 1) * tool.spacing * 0.5;
+          const pA = [wx - nx * (span + 1.1), wy - ny * (span + 1.1)];
+          const pB = [wx + nx * (span + 1.1), wy + ny * (span + 1.1)];
+
+          const [ax, ay] = worldToScreen(pA[0], pA[1], hoverZ + 1.2);
+          const [bx, by] = worldToScreen(pB[0], pB[1], hoverZ + 1.2);
+          const [sax, say] = worldToScreen(pA[0] + (hoverZ + 1.2) * shScaleX, pA[1] + (hoverZ + 1.2) * shScaleY, 0.1);
+          const [sbx, sby] = worldToScreen(pB[0] + (hoverZ + 1.2) * shScaleX, pB[1] + (hoverZ + 1.2) * shScaleY, 0.1);
+
+          // Cast shadow on sand
+          fxCtx.strokeStyle = `rgba(16, 14, 11, ${fade * 0.28})`;
+          fxCtx.lineWidth = Math.max(2.5, 1.6 * ppm);
+          fxCtx.lineCap = 'round';
+          fxCtx.beginPath();
+          fxCtx.moveTo(sax, say);
+          fxCtx.lineTo(sbx, sby);
+          fxCtx.stroke();
+
+          // Subtle wooden handle trailing slightly behind crossbar
+          const [hx0, hy0] = worldToScreen(wx, wy, hoverZ + 1.2);
+          const [hx1, hy1] = worldToScreen(wx - dir[0] * 12.0, wy - dir[1] * 12.0, hoverZ + 5.0);
+          fxCtx.strokeStyle = `rgba(176, 144, 106, ${fade * 0.34})`;
+          fxCtx.lineWidth = Math.max(2.0, 0.95 * ppm);
+          fxCtx.beginPath();
+          fxCtx.moveTo(hx0, hy0);
+          fxCtx.lineTo(hx1, hy1);
+          fxCtx.stroke();
+
+          // Wooden crossbar
+          fxCtx.strokeStyle = `rgba(196, 162, 120, ${fade * 0.62})`;
+          fxCtx.lineWidth = Math.max(3.0, 1.55 * ppm);
+          fxCtx.beginPath();
+          fxCtx.moveTo(ax, ay);
+          fxCtx.lineTo(bx, by);
+          fxCtx.stroke();
+
+          // Individual tine tips biting into gravel
+          for (let k = 0; k < tool.tines; k++) {
+            const off = (k - (tool.tines - 1) * 0.5) * tool.spacing;
+            const [tx, ty] = worldToScreen(wx + nx * off, wy + ny * off, hoverZ * 0.35);
+            fxCtx.fillStyle = `rgba(246, 232, 206, ${fade * 0.85})`;
+            fxCtx.beginPath();
+            fxCtx.arc(tx, ty, Math.max(1.8, tool.halfW * 0.48 * ppm), 0, Math.PI * 2);
+            fxCtx.fill();
+          }
+        } else if (tool.mode === 1) {
+          // Single Bamboo Stylus tip
+          const [tx, ty] = worldToScreen(wx, wy, hoverZ * 0.3);
+          const [sx, sy] = worldToScreen(wx + hoverZ * shScaleX, wy + hoverZ * shScaleY, 0.1);
+          const [hx, hy] = worldToScreen(wx - dir[0] * 9.5, wy - dir[1] * 9.5, hoverZ + 6.5);
+          fxCtx.strokeStyle = `rgba(16, 14, 11, ${fade * 0.24})`;
+          fxCtx.lineWidth = Math.max(2, 0.8 * ppm);
+          fxCtx.beginPath();
+          fxCtx.moveTo(sx, sy);
+          fxCtx.lineTo(hx + hoverZ * shScaleX * ppm * 0.4, hy);
+          fxCtx.stroke();
+
+          fxCtx.strokeStyle = `rgba(206, 180, 132, ${fade * 0.65})`;
+          fxCtx.lineWidth = Math.max(2.2, 0.95 * ppm);
+          fxCtx.lineCap = 'round';
+          fxCtx.beginPath();
+          fxCtx.moveTo(tx, ty);
+          fxCtx.lineTo(hx, hy);
+          fxCtx.stroke();
+
+          fxCtx.fillStyle = `rgba(248, 236, 212, ${fade * 0.9})`;
+          fxCtx.beginPath();
+          fxCtx.arc(tx, ty, Math.max(2.2, 0.72 * ppm), 0, Math.PI * 2);
+          fxCtx.fill();
+        } else if (tool.mode === 2) {
+          // Wide wooden Narashi smoothing board
+          const span = tool.halfW;
+          const [ax, ay] = worldToScreen(wx - nx * span, wy - ny * span, hoverZ + 0.8);
+          const [bx, by] = worldToScreen(wx + nx * span, wy + ny * span, hoverZ + 0.8);
+          const [sax, say] = worldToScreen(wx - nx * span + hoverZ * shScaleX, wy - ny * span + hoverZ * shScaleY, 0.1);
+          const [sbx, sby] = worldToScreen(wx + nx * span + hoverZ * shScaleX, wy + ny * span + hoverZ * shScaleY, 0.1);
+
+          fxCtx.strokeStyle = `rgba(16, 14, 11, ${fade * 0.25})`;
+          fxCtx.lineWidth = Math.max(4, 2.2 * ppm);
+          fxCtx.lineCap = 'round';
+          fxCtx.beginPath();
+          fxCtx.moveTo(sax, say);
+          fxCtx.lineTo(sbx, sby);
+          fxCtx.stroke();
+
+          fxCtx.strokeStyle = `rgba(204, 174, 134, ${fade * 0.58})`;
+          fxCtx.lineWidth = Math.max(4, 2.1 * ppm);
+          fxCtx.beginPath();
+          fxCtx.moveTo(ax, ay);
+          fxCtx.lineTo(bx, by);
+          fxCtx.stroke();
+        }
+
+        // Orbit assist faint guide ring around target boulder
+        const activeGuide = state.altHeld ? 'orbit' : (state.shiftHeld ? 'line' : state.guide);
+        if (activeGuide === 'orbit' && state.stones.length > 0) {
+          const idx = state.pointerDown && state.orbitStoneIdx >= 0 ? state.orbitStoneIdx : findNearestStone(wx, wy);
+          if (idx >= 0) {
+            const st = state.stones[idx];
+            const rad = state.pointerDown ? state.orbitRadius : Math.max(st.r * Math.max(st.ax, st.ay) + 3.5, Math.hypot(wx - st.x, wy - st.y));
+            fxCtx.strokeStyle = `rgba(225, 206, 172, ${fade * 0.26})`;
+            fxCtx.lineWidth = 1.0;
+            fxCtx.setLineDash([4, 5]);
+            fxCtx.beginPath();
+            const segs = 48;
+            for (let s = 0; s <= segs; s++) {
+              const a = (s / segs) * Math.PI * 2;
+              const [rx, ry] = worldToScreen(st.x + Math.cos(a) * rad, st.y + Math.sin(a) * rad, 0.3);
+              if (s === 0) fxCtx.moveTo(rx, ry);
+              else fxCtx.lineTo(rx, ry);
+            }
+            fxCtx.stroke();
+            fxCtx.setLineDash([]);
+          }
+        }
+
+        fxCtx.restore();
+      }
+    }
+
+    fxCtx.restore();
+  }
+
+  /* ==========================================================================
+   * 10. POINTER, RAKING KINEMATICS & STONE ARRANGEMENT INTERACTION
+   * ========================================================================== */
+  function findNearestStone(wx, wy) {
+    let best = -1;
+    let bestD = Infinity;
+    for (let i = 0; i < state.stones.length; i++) {
+      const s = state.stones[i];
+      const d = Math.hypot(wx - s.x, wy - s.y) - s.r * Math.max(s.ax, s.ay);
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  function hitTestStone(wx, wy) {
+    for (let i = state.stones.length - 1; i >= 0; i--) {
+      const s = state.stones[i];
+      const dx = wx - s.x;
+      const dy = wy - s.y;
+      const c = Math.cos(-s.rot);
+      const sn = Math.sin(-s.rot);
+      const lx = c * dx - sn * dy;
+      const ly = sn * dx + c * dy;
+      const rx = s.r * s.ax * 1.1;
+      const ry = s.r * s.ay * 1.1;
+      if ((lx * lx) / (rx * rx) + (ly * ly) / (ry * ry) <= 1.0) return i;
+    }
+    return -1;
+  }
+
+  function clampToBed(wx, wy, margin = 3.0) {
+    const hw = world.bedW * 0.5 - margin;
+    const hh = world.bedH * 0.5 - margin;
+    return [
+      Math.max(-hw, Math.min(hw, wx)),
+      Math.max(-hh, Math.min(hh, wy))
+    ];
+  }
+
+  function effectiveGuide() {
+    if (state.altHeld) return 'orbit';
+    if (state.shiftHeld) return 'line';
+    return state.guide;
+  }
+
+  function dismissHint() {
+    if (!state.hasInteracted) {
+      state.hasInteracted = true;
+      document.getElementById('hintLine').classList.add('is-hidden');
+    }
+  }
+
+  let bannerTimer = null;
+  function showBanner(text, ms = 2200) {
+    const el = document.getElementById('modeBanner');
+    el.textContent = text;
+    el.classList.add('show');
+    clearTimeout(bannerTimer);
+    if (ms > 0) {
+      bannerTimer = setTimeout(() => el.classList.remove('show'), ms);
+    }
+  }
+
+  function closePopovers() {
+    document.getElementById('lightPopover').classList.remove('is-open');
+    document.getElementById('gardenPopover').classList.remove('is-open');
+    document.getElementById('lightBtn').classList.remove('is-active');
+    document.getElementById('gardenBtn').classList.remove('is-active');
+  }
+
+  function updateCursorClass() {
+    glCanvas.classList.remove('cursor-grab', 'cursor-grabbing');
+    if (state.tool === 'stone') {
+      if (state.grabbedStone >= 0) glCanvas.classList.add('cursor-grabbing');
+      else glCanvas.classList.add('cursor-grab');
+    }
+  }
+
+  function applyRakeSegment(p0, p1, n0, n1, speed) {
+    const tool = TOOLS[state.tool];
+    const dist = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+    if (dist < 0.05) return;
+
+    const steps = Math.max(1, Math.min(20, Math.ceil(dist / 1.35)));
+    for (let s = 0; s < steps; s++) {
+      const t0 = s / steps;
+      const t1 = (s + 1) / steps;
+      const sp0 = [p0[0] + (p1[0] - p0[0]) * t0, p0[1] + (p1[1] - p0[1]) * t0];
+      const sp1 = [p0[0] + (p1[0] - p0[0]) * t1, p0[1] + (p1[1] - p0[1]) * t1];
+
+      const ix0 = n0[0] + (n1[0] - n0[0]) * t0;
+      const iy0 = n0[1] + (n1[1] - n0[1]) * t0;
+      const il0 = Math.hypot(ix0, iy0) || 1;
+      const sn0 = [ix0 / il0, iy0 / il0];
+
+      const ix1 = n0[0] + (n1[0] - n0[0]) * t1;
+      const iy1 = n0[1] + (n1[1] - n0[1]) * t1;
+      const il1 = Math.hypot(ix1, iy1) || 1;
+      const sn1 = [ix1 / il1, iy1 / il1];
+
+      runRakeStep({
+        p0: sp0, p1: sp1, n0: sn0, n1: sn1,
+        mode: tool.mode,
+        tines: tool.tines,
+        spacing: tool.spacing,
+        halfW: tool.halfW,
+        depth: tool.depth,
+        strength: tool.mode === 2 ? 0.65 : 0.88
+      });
+    }
+
+    // Kick up airborne sunlit gravel pebbles along tine tips!
+    const dirX = (p1[0] - p0[0]) / dist;
+    const dirY = (p1[1] - p0[1]) / dist;
+    if (tool.mode !== 2 && speed > 4.0) {
+      const grainBurst = Math.min(10, Math.ceil(dist * (tool.tines * 0.25 + 0.4)));
+      for (let g = 0; g < grainBurst; g++) {
+        const k = (Math.random() * tool.tines) | 0;
+        const off = (k - (tool.tines - 1) * 0.5) * tool.spacing;
+        spawnKickedGrains(p1[0] + n1[0] * off, p1[1] + n1[1] * off, dirX, dirY, speed, 1);
+      }
+    }
+
+    // Gently nudge maple leaves lying in the rake's path
+    nudgeLeavesFromRake(p1[0], p1[1], dirX, dirY, Math.max(4.0, tool.width * 0.58), speed);
+
+    // Run 1 immediate avalanche pass on large strokes for responsive sand flow
+    runRelaxPasses(1, 0.16);
+    state.settleFrames = 34;
+  }
+
+  function addNewStoneAt(wx, wy) {
+    if (state.stones.length >= MAX_STONES) {
+      showBanner('Maximum 7 stones — double-click a stone to lift it');
+      return;
+    }
+    const [cx, cy] = clampToBed(wx, wy, 16);
+    pushUndoSnapshot();
+    const sc = Math.max(0.8, Math.min(1.08, Math.min(world.bedW / 260, world.bedH / 170)));
+    const r = (9.5 + Math.random() * 5.2) * sc;
+    const newStone = {
+      x: cx,
+      y: cy,
+      rot: Math.random() * Math.PI * 2,
+      r,
+      ax: 1.05 + Math.random() * 0.28,
+      ay: 0.78 + Math.random() * 0.16,
+      hz: r * (0.85 + Math.random() * 0.52),
+      seed: 1.0 + Math.random() * 14.0,
+      moss: 0.52 + Math.random() * 0.36,
+      flat: 0.20 + Math.random() * 0.45,
+      sink: 1.8
+    };
+    state.stones.push(newStone);
+    const idx = state.stones.length - 1;
+    // Impress stone collar into gravel
+    runRakeStep({
+      p0: [cx, cy], p1: [cx, cy], n0: [0, 1], n1: [0, 1],
+      mode: 4, activeStone: idx, strength: 1.0
+    });
+    runRelaxPasses(6, 0.17);
+    state.settleFrames = 26;
+    spawnKickedGrains(cx, cy, 1, 0, 35, 16);
+    triggerStoneThud(0.85);
+    showBanner(`Placed stone (${state.stones.length}/${MAX_STONES}) · Scroll to rotate · Double-click to remove`);
+  }
+
+  function removeStoneAt(idx) {
+    if (idx < 0 || idx >= state.stones.length) return;
+    pushUndoSnapshot();
+    const st = state.stones[idx];
+    state.stones.splice(idx, 1);
+    state.hoveredStone = -1;
+    state.grabbedStone = -1;
+    state.settleFrames = 28;
+    spawnKickedGrains(st.x, st.y, 0, 1, 22, 12);
+    triggerStoneThud(0.45);
+    showBanner(`Lifted stone (${state.stones.length}/${MAX_STONES})`);
+  }
+
+  // Pointer event handlers
+  let lastPointerMoveMs = performance.now();
+  let lastStoneTapTime = 0;
+  let lastStoneTapIdx = -1;
+
+  glCanvas.addEventListener('pointerdown', (e) => {
+    if (e.button === 2) return;
+    initAudio();
+    closePopovers();
+    dismissHint();
+
+    glCanvas.setPointerCapture(e.pointerId);
+    state.pointerDown = true;
+    state.pointerId = e.pointerId;
+    state.pointerInside = true;
+    state.lastMoveTime = performance.now();
+    lastPointerMoveMs = state.lastMoveTime;
+
+    const w = screenToWorld(e.clientX, e.clientY, 0);
+    state.pointerWorld = w;
+
+    if (state.tool === 'stone') {
+      const hitIdx = hitTestStone(w[0], w[1]);
+      if (hitIdx >= 0) {
+        const now = performance.now();
+        if (hitIdx === lastStoneTapIdx && now - lastStoneTapTime < 340) {
+          // Double-tap / double-click removes stone cleanly
+          removeStoneAt(hitIdx);
+          state.pointerDown = false;
+          lastStoneTapIdx = -1;
+          return;
+        }
+        lastStoneTapIdx = hitIdx;
+        lastStoneTapTime = now;
+
+        pushUndoSnapshot();
+        state.grabbedStone = hitIdx;
+        state.grabOffset = [state.stones[hitIdx].x - w[0], state.stones[hitIdx].y - w[1]];
+        state.strokePrevWorld = [state.stones[hitIdx].x, state.stones[hitIdx].y];
+        triggerStoneThud(0.55);
+        updateCursorClass();
+      } else {
+        // Click open sand in Stones mode to place a new mossy boulder
+        const hw = world.bedW * 0.5 - 10;
+        const hh = world.bedH * 0.5 - 10;
+        if (Math.abs(w[0]) < hw && Math.abs(w[1]) < hh) {
+          addNewStoneAt(w[0], w[1]);
+        }
+        state.pointerDown = false;
+      }
+      return;
+    }
+
+    // Begin rake / stylus / smooth stroke
+    const [cw, ch] = clampToBed(w[0], w[1], 1.2);
+    pushUndoSnapshot();
+    state.strokeStarted = true;
+    state.strokeStartWorld = [cw, ch];
+    state.strokePrevWorld = [cw, ch];
+    state.rakePos = [cw, ch];
+    state.rakeHeadingReady = false;
+    state.lineAxis = null;
+    state.strokeSpeed = 0;
+
+    if (effectiveGuide() === 'orbit' && state.stones.length > 0) {
+      const sIdx = findNearestStone(cw, ch);
+      state.orbitStoneIdx = sIdx;
+      const st = state.stones[sIdx];
+      const minR = st.r * Math.max(st.ax, st.ay) + 3.2;
+      state.orbitRadius = Math.max(minR, Math.hypot(cw - st.x, ch - st.y));
+      state.orbitAngle = Math.atan2(ch - st.y, cw - st.x);
+      const sx = st.x + Math.cos(state.orbitAngle) * state.orbitRadius;
+      const sy = st.y + Math.sin(state.orbitAngle) * state.orbitRadius;
+      state.rakePos = [sx, sy];
+      state.strokePrevWorld = [sx, sy];
+    }
+
+    document.body.classList.add('is-raking');
+  });
+
+  glCanvas.addEventListener('pointermove', (e) => {
+    const now = performance.now();
+    const dt = Math.max(0.004, (now - lastPointerMoveMs) * 0.001);
+    lastPointerMoveMs = now;
+    state.lastMoveTime = now;
+    state.pointerInside = true;
+    state.pointerScreen = [e.clientX, e.clientY];
+
+    const w = screenToWorld(e.clientX, e.clientY, 0);
+    const prevW = state.pointerWorld;
+    state.pointerWorld = w;
+
+    if (!state.pointerDown) {
+      if (state.tool === 'stone') {
+        state.hoveredStone = hitTestStone(w[0], w[1]);
+      } else {
+        // Gently align hover preview rake with cursor travel direction
+        const dx = w[0] - prevW[0];
+        const dy = w[1] - prevW[1];
+        const dl = Math.hypot(dx, dy);
+        if (dl > 0.35) {
+          const td = [dx / dl, dy / dl];
+          const blend = Math.min(0.32, dl * 0.06);
+          const nx = state.rakeDir[0] * (1 - blend) + td[0] * blend;
+          const ny = state.rakeDir[1] * (1 - blend) + td[1] * blend;
+          const nl = Math.hypot(nx, ny) || 1;
+          state.rakeDir = [nx / nl, ny / nl];
+        }
+      }
+      return;
+    }
+
+    // Dragging a boulder through gravel
+    if (state.tool === 'stone' && state.grabbedStone >= 0) {
+      const st = state.stones[state.grabbedStone];
+      const pad = st.r * Math.max(st.ax, st.ay) + 3.5;
+      const [nx, ny] = clampToBed(w[0] + state.grabOffset[0], w[1] + state.grabOffset[1], pad);
+      const p0 = [st.x, st.y];
+      const p1 = [nx, ny];
+      const dist = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]);
+      st.x = nx;
+      st.y = ny;
+      state.strokeSpeed = dist / dt;
+
+      if (dist > 0.25) {
+        runRakeStep({
+          p0, p1, n0: [0, 1], n1: [0, 1],
+          mode: 4, activeStone: state.grabbedStone, strength: 1.0
+        });
+        runRelaxPasses(2, 0.17);
+        state.settleFrames = 32;
+        nudgeLeavesFromRake(nx, ny, (p1[0] - p0[0]) / dist, (p1[1] - p0[1]) / dist, st.r * 1.3, state.strokeSpeed);
+        if (Math.random() < 0.5) {
+          spawnKickedGrains(nx + ((p1[0] - p0[0]) / dist) * st.r, ny + ((p1[1] - p0[1]) / dist) * st.r, (p1[0] - p0[0]) / dist, (p1[1] - p0[1]) / dist, state.strokeSpeed, 2);
+        }
+      }
+      return;
+    }
+
+    if (!state.strokeStarted) return;
+
+    // Target world position with optional Line / Orbit assist
+    let [tx, ty] = clampToBed(w[0], w[1], 1.2);
+    const guide = effectiveGuide();
+
+    if (guide === 'line') {
+      const dx0 = tx - state.strokeStartWorld[0];
+      const dy0 = ty - state.strokeStartWorld[1];
+      if (!state.lineAxis && Math.hypot(dx0, dy0) > 2.2) {
+        // Snap to horizontal, vertical, or 45-degree temple axis
+        const ang = Math.atan2(dy0, dx0);
+        const snapped = Math.round(ang / (Math.PI / 4)) * (Math.PI / 4);
+        state.lineAxis = [Math.cos(snapped), Math.sin(snapped)];
+      }
+      if (state.lineAxis) {
+        const proj = dx0 * state.lineAxis[0] + dy0 * state.lineAxis[1];
+        tx = state.strokeStartWorld[0] + state.lineAxis[0] * proj;
+        ty = state.strokeStartWorld[1] + state.lineAxis[1] * proj;
+        [tx, ty] = clampToBed(tx, ty, 1.2);
+      }
+    } else if (guide === 'orbit' && state.orbitStoneIdx >= 0 && state.orbitStoneIdx < state.stones.length) {
+      const st = state.stones[state.orbitStoneIdx];
+      const ang = Math.atan2(ty - st.y, tx - st.x);
+      // Subdivide large angular jumps cleanly along the circle
+      let dAng = ang - state.orbitAngle;
+      while (dAng > Math.PI) dAng -= Math.PI * 2;
+      while (dAng < -Math.PI) dAng += Math.PI * 2;
+      const arcLen = Math.abs(dAng) * state.orbitRadius;
+      state.strokeSpeed = arcLen / dt;
+      if (arcLen > 0.35) {
+        const arcSegs = Math.max(1, Math.min(18, Math.ceil(arcLen / 1.5)));
+        const signDir = dAng >= 0 ? 1 : -1;
+        for (let s = 0; s < arcSegs; s++) {
+          const a0 = state.orbitAngle + (dAng * s) / arcSegs;
+          const a1 = state.orbitAngle + (dAng * (s + 1)) / arcSegs;
+          const p0 = [st.x + Math.cos(a0) * state.orbitRadius, st.y + Math.sin(a0) * state.orbitRadius];
+          const p1 = [st.x + Math.cos(a1) * state.orbitRadius, st.y + Math.sin(a1) * state.orbitRadius];
+          // Radial normal keeps tines concentric around stone!
+          const n0 = [Math.cos(a0), Math.sin(a0)];
+          const n1 = [Math.cos(a1), Math.sin(a1)];
+          applyRakeSegment(p0, p1, n0, n1, state.strokeSpeed);
+          state.rakePos = p1;
+          state.rakeDir = [-Math.sin(a1) * signDir, Math.cos(a1) * signDir];
+        }
+        state.orbitAngle = ang;
+      }
+      return;
+    }
+
+    // Freehand / Line physical wooden-rake trailing inertia
+    const p0 = [state.rakePos[0], state.rakePos[1]];
+    const dx = tx - p0[0];
+    const dy = ty - p0[1];
+    const dist = Math.hypot(dx, dy);
+    state.strokeSpeed = dist / dt;
+
+    if (!state.rakeHeadingReady) {
+      if (dist < 1.1) return; // Wait for clean initial heading before biting into sand
+      state.rakeDir = [dx / dist, dy / dist];
+      state.rakeHeadingReady = true;
+    }
+
+    if (dist < 0.25) return;
+
+    const n0 = [-state.rakeDir[1], state.rakeDir[0]];
+
+    // Smooth physical heading damping (like real wooden rake pulled by handle)
+    const targetDir = [dx / dist, dy / dist];
+    const turnAlpha = guide === 'line' ? 1.0 : Math.min(0.85, 1.0 - Math.exp(-dist * 0.24));
+    let newDx = state.rakeDir[0] + (targetDir[0] - state.rakeDir[0]) * turnAlpha;
+    let newDy = state.rakeDir[1] + (targetDir[1] - state.rakeDir[1]) * turnAlpha;
+    const nl = Math.hypot(newDx, newDy) || 1;
+    const newDir = [newDx / nl, newDy / nl];
+    const n1 = [-newDir[1], newDir[0]];
+
+    applyRakeSegment(p0, [tx, ty], n0, n1, state.strokeSpeed);
+    state.rakePos = [tx, ty];
+    state.rakeDir = newDir;
+    state.strokePrevWorld = [tx, ty];
+  });
+
+  function endPointer(e) {
+    if (!state.pointerDown) return;
+    if (state.tool === 'stone' && state.grabbedStone >= 0) {
+      triggerStoneThud(0.75);
+      state.grabbedStone = -1;
+      updateCursorClass();
+    } else if (state.strokeStarted && !state.rakeHeadingReady && state.tool === 'stylus') {
+      // Single tap with bamboo stylus makes a crisp meditative dot/dimple
+      runRakeStep({
+        p0: state.rakePos,
+        p1: [state.rakePos[0] + 0.05, state.rakePos[1]],
+        n0: [0, 1], n1: [0, 1],
+        mode: 1, tines: 1, spacing: 0, halfW: 1.4, depth: 1.5, strength: 0.9
+      });
+      runRelaxPasses(3, 0.16);
+      state.settleFrames = 24;
+    }
+
+    state.pointerDown = false;
+    state.strokeStarted = false;
+    state.strokeSpeed = 0;
+    document.body.classList.remove('is-raking');
+    if (e && e.pointerId !== undefined && glCanvas.hasPointerCapture(e.pointerId)) {
+      try { glCanvas.releasePointerCapture(e.pointerId); } catch (_) {}
+    }
+  }
+
+  glCanvas.addEventListener('pointerup', endPointer);
+  glCanvas.addEventListener('pointercancel', endPointer);
+  glCanvas.addEventListener('pointerleave', () => {
+    if (!state.pointerDown) state.pointerInside = false;
+  });
+
+  // Scroll wheel rotates stone in Stones mode (or gently scrubs sun angle if Shift held!)
+  glCanvas.addEventListener('wheel', (e) => {
+    if (state.tool === 'stone') {
+      const idx = state.grabbedStone >= 0 ? state.grabbedStone : state.hoveredStone;
+      if (idx >= 0) {
+        e.preventDefault();
+        const st = state.stones[idx];
+        st.rot += e.deltaY * 0.004;
+        runRakeStep({
+          p0: [st.x, st.y], p1: [st.x, st.y], n0: [0, 1], n1: [0, 1],
+          mode: 4, activeStone: idx, strength: 0.5
+        });
+        state.settleFrames = 16;
+      }
+    }
+  }, { passive: false });
+
+  glCanvas.addEventListener('contextmenu', (e) => {
+    if (state.tool === 'stone') {
+      e.preventDefault();
+      const w = screenToWorld(e.clientX, e.clientY, 0);
+      const hitIdx = hitTestStone(w[0], w[1]);
+      if (hitIdx >= 0) removeStoneAt(hitIdx);
+    }
+  });
+
+  /* ==========================================================================
+   * 11. UI CONTROLS, KEYBOARD SHORTCUTS & ANIMATED SWEEPER
+   * ========================================================================== */
+  function selectTool(toolName) {
+    if (!TOOLS[toolName]) return;
+    state.tool = toolName;
+    state.grabbedStone = -1;
+    state.hoveredStone = -1;
+    document.querySelectorAll('#toolGroup .tool-btn').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.tool === toolName);
+    });
+    updateCursorClass();
+    if (toolName === 'stone') {
+      showBanner('Drag stones · Scroll to rotate · Click sand to add · Double-click to lift', 3400);
+    } else {
+      showBanner(TOOLS[toolName].label, 1400);
+    }
+  }
+
+  function cycleGuide() {
+    const order = ['free', 'line', 'orbit'];
+    const labels = { free: 'Free', line: 'Line', orbit: 'Orbit' };
+    const next = order[(order.indexOf(state.guide) + 1) % order.length];
+    state.guide = next;
+    document.getElementById('guideLabel').textContent = labels[next];
+    document.getElementById('guideBtn').classList.toggle('is-active', next !== 'free');
+    const desc = next === 'free' ? 'Freehand raking' : (next === 'line' ? 'Straight temple rows (Line lock)' : 'Concentric ripples around nearest stone');
+    showBanner(desc, 2000);
+  }
+
+  function selectLight(name) {
+    const p = LIGHT_PRESETS[name];
+    if (!p) return;
+    state.lightName = name;
+    state.targetAzimuth = p.azimuth;
+    state.targetElevation = p.elevation;
+    document.getElementById('sunAzimuth').value = p.azimuth;
+    document.getElementById('sunAzimuthVal').textContent = `${p.azimuth}°`;
+    document.getElementById('sunElevation').value = p.elevation;
+    document.getElementById('sunElevationVal').textContent = `${p.elevation}°`;
+    document.querySelectorAll('#lightChoices .pop-choice').forEach(btn => {
+      btn.classList.toggle('is-active', btn.dataset.light === name);
+    });
+  }
+
+  function startSweepSmooth() {
+    if (state.sweepActive) return;
+    initAudio();
+    pushUndoSnapshot();
+    state.sweepActive = true;
+    state.sweepX = -world.bedW * 0.5 - 6.0;
+    state.sweepPrevX = state.sweepX;
+    showBanner('Smoothing sand bed…', 1600);
+  }
+
+  function toggleView() {
+    state.verandaView = !state.verandaView;
+    cam.targetPitchDeg = state.verandaView ? 61.5 : 78.5;
+    document.getElementById('viewLabel').textContent = state.verandaView ? 'Veranda' : 'Plan';
+    document.getElementById('viewBtn').classList.toggle('is-active', state.verandaView);
+  }
+
+  function toggleAudio() {
+    initAudio();
+    state.audioEnabled = !state.audioEnabled;
+    document.getElementById('audioBtn').classList.toggle('is-active', state.audioEnabled);
+    document.getElementById('audioIconOn').style.display = state.audioEnabled ? 'block' : 'none';
+    document.getElementById('audioIconOff').style.display = state.audioEnabled ? 'none' : 'block';
+  }
+
+  function toggleZenMode() {
+    state.zenMode = !state.zenMode;
+    closePopovers();
+    document.body.classList.toggle('zen-mode', state.zenMode);
+    document.getElementById('zenBtn').classList.toggle('is-active', state.zenMode);
+  }
+
+  // Bind UI buttons
+  document.querySelectorAll('#toolGroup .tool-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      initAudio();
+      closePopovers();
+      selectTool(btn.dataset.tool);
+    });
+  });
+
+  document.getElementById('guideBtn').addEventListener('click', () => {
+    initAudio();
+    closePopovers();
+    cycleGuide();
+  });
+
+  document.getElementById('lightBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    initAudio();
+    dismissHint();
+    const pop = document.getElementById('lightPopover');
+    const wasOpen = pop.classList.contains('is-open');
+    closePopovers();
+    if (!wasOpen) {
+      pop.classList.add('is-open');
+      document.getElementById('lightBtn').classList.add('is-active');
+    }
+  });
+
+  document.getElementById('gardenBtn').addEventListener('click', (e) => {
+    e.stopPropagation();
+    initAudio();
+    dismissHint();
+    const pop = document.getElementById('gardenPopover');
+    const wasOpen = pop.classList.contains('is-open');
+    closePopovers();
+    if (!wasOpen) {
+      pop.classList.add('is-open');
+      document.getElementById('gardenBtn').classList.add('is-active');
+    }
+  });
+
+  document.querySelectorAll('#lightChoices .pop-choice').forEach(btn => {
+    btn.addEventListener('click', () => selectLight(btn.dataset.light));
+  });
+
+  document.querySelectorAll('#gardenChoices .pop-choice').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const preset = btn.dataset.preset;
+      document.querySelectorAll('#gardenChoices .pop-choice').forEach(b => {
+        b.classList.toggle('is-active', b === btn);
+      });
+      applyPreset(preset, true);
+      closePopovers();
+      triggerStoneThud(0.4);
+      showBanner(`Garden: ${btn.querySelector('.name').textContent}`, 1800);
+    });
+  });
+
+  document.getElementById('sunAzimuth').addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    state.targetAzimuth = v;
+    state.sunAzimuth = v;
+    document.getElementById('sunAzimuthVal').textContent = `${Math.round(v)}°`;
+  });
+
+  document.getElementById('sunElevation').addEventListener('input', (e) => {
+    const v = parseFloat(e.target.value);
+    state.targetElevation = v;
+    state.sunElevation = v;
+    document.getElementById('sunElevationVal').textContent = `${Math.round(v)}°`;
+  });
+
+  document.getElementById('komorebiToggle').addEventListener('click', (e) => {
+    state.komorebiOn = !state.komorebiOn;
+    e.currentTarget.classList.toggle('is-active', state.komorebiOn);
+  });
+
+  document.getElementById('leavesToggle').addEventListener('click', (e) => {
+    state.leavesOn = !state.leavesOn;
+    e.currentTarget.classList.toggle('is-active', state.leavesOn);
+    if (state.leavesOn && mapleLeaves.length === 0) initMapleLeaves();
+  });
+
+  document.getElementById('undoBtn').addEventListener('click', () => {
+    initAudio();
+    performUndo();
+  });
+
+  document.getElementById('sweepBtn').addEventListener('click', () => {
+    closePopovers();
+    startSweepSmooth();
+  });
+
+  document.getElementById('viewBtn').addEventListener('click', toggleView);
+  document.getElementById('audioBtn').addEventListener('click', toggleAudio);
+  document.getElementById('zenBtn').addEventListener('click', toggleZenMode);
+
+  // Keyboard shortcuts
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Shift') state.shiftHeld = true;
+    if (e.key === 'Alt') state.altHeld = true;
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'z') {
+      e.preventDefault();
+      performUndo();
+      return;
+    }
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+
+    const k = e.key.toLowerCase();
+    if (k === '1') selectTool('rake');
+    else if (k === '2') selectTool('fine');
+    else if (k === '3') selectTool('wave');
+    else if (k === '4') selectTool('stylus');
+    else if (k === '5') selectTool('smooth');
+    else if (k === '6') selectTool('stone');
+    else if (k === 'g') cycleGuide();
+    else if (k === 'v') toggleView();
+    else if (k === 'm') toggleAudio();
+    else if (k === 'h' || k === 'escape') {
+      if (k === 'escape') {
+        closePopovers();
+        if (state.zenMode) toggleZenMode();
+      } else {
+        toggleZenMode();
+      }
+    }
+    else if (k === 'r') startSweepSmooth();
+    else if (k === 'q' || k === 'e') {
+      const delta = k === 'q' ? -8 : 8;
+      state.targetAzimuth = (state.targetAzimuth + delta + 360) % 360;
+      document.getElementById('sunAzimuth').value = Math.round(state.targetAzimuth);
+      document.getElementById('sunAzimuthVal').textContent = `${Math.round(state.targetAzimuth)}°`;
+    }
+    else if ((k === '[' || k === ']') && state.tool === 'stone') {
+      const idx = state.grabbedStone >= 0 ? state.grabbedStone : state.hoveredStone;
+      if (idx >= 0) {
+        state.stones[idx].rot += (k === '[' ? -0.18 : 0.18);
+        state.settleFrames = 10;
+      }
+    }
+  });
+
+  window.addEventListener('keyup', (e) => {
+    if (e.key === 'Shift') state.shiftHeld = false;
+    if (e.key === 'Alt') state.altHeld = false;
+  });
+
+  /* ==========================================================================
+   * 12. RESIZE & ASPECT-MATCHED SIMULATION BUFFER MANAGEMENT
+   * ========================================================================== */
+  function resizeViewport(initial = false) {
+    const w = Math.max(1, window.innerWidth);
+    const h = Math.max(1, window.innerHeight);
+    const dpr = Math.min(window.devicePixelRatio || 1, w > 1400 ? 1.75 : 2.0);
+
+    world.viewW = w;
+    world.viewH = h;
+    world.dpr = dpr;
+    cam.aspect = w / h;
+
+    glCanvas.width = Math.round(w * dpr);
+    glCanvas.height = Math.round(h * dpr);
+    fxCanvas.width = Math.round(w * dpr);
+    fxCanvas.height = Math.round(h * dpr);
+
+    // Compute physical gravel bed dimensions (cm) matched cleanly to viewport aspect
+    if (initial || !sandA) {
+      const asp = Math.max(0.62, Math.min(2.05, w / h));
+      if (asp >= 1.0) {
+        world.bedH = 168.0;
+        world.bedW = Math.round(168.0 * asp);
+      } else {
+        world.bedW = 148.0;
+        world.bedH = Math.round(148.0 / asp);
+      }
+
+      // Square-texel simulation FBO (~1152 on long axis, ~2.2mm per cell!)
+      const longAxis = Math.min(w, h) < 600 ? 896 : 1152;
+      if (world.bedW >= world.bedH) {
+        world.simW = longAxis;
+        world.simH = Math.max(512, Math.round(longAxis * (world.bedH / world.bedW)));
+      } else {
+        world.simH = longAxis;
+        world.simW = Math.max(512, Math.round(longAxis * (world.bedW / world.bedH)));
+      }
+
+      destroySimTarget(sandA);
+      destroySimTarget(sandB);
+      clearUndoStack();
+      sandA = createSimTarget(world.simW, world.simH);
+      sandB = createSimTarget(world.simW, world.simH);
+      applyPreset(state.preset, false);
+    }
+
+    updateCamera();
+  }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    resizeViewport(false);
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(() => {
+      // Only rebuild FBO if aspect ratio changed substantially (e.g. phone orientation flip)
+      const oldAsp = world.bedW / world.bedH;
+      const newAsp = Math.max(0.62, Math.min(2.05, window.innerWidth / Math.max(1, window.innerHeight)));
+      if (Math.abs(oldAsp - newAsp) > 0.35) {
+        resizeViewport(true);
+      }
+    }, 280);
+  });
+
+  resizeViewport(true);
+
+  /* ==========================================================================
+   * 13. MAIN RENDER & PHYSICS LOOP
+   * ========================================================================== */
+  let lastFrameMs = performance.now();
+  let rainAccum = 0;
+
+  function lerp(a, b, t) {
+    return a + (b - a) * t;
+  }
+
+  function lerpAngleDeg(a, b, t) {
+    let diff = ((b - a + 540) % 360) - 180;
+    return (a + diff * t + 360) % 360;
+  }
+
+  function frame(nowMs) {
+    const dt = Math.min(0.05, Math.max(0.001, (nowMs - lastFrameMs) * 0.001));
+    lastFrameMs = nowMs;
+
+    // 1) Smooth camera pitch & atmospheric lighting transitions
+    const lp = LIGHT_PRESETS[state.lightName];
+    const smoothT = Math.min(1, dt * 4.5);
+
+    if (Math.abs(cam.pitchDeg - cam.targetPitchDeg) > 0.01) {
+      cam.pitchDeg = lerp(cam.pitchDeg, cam.targetPitchDeg, Math.min(1, dt * 6.5));
+      updateCamera();
+    }
+
+    state.sunAzimuth   = lerpAngleDeg(state.sunAzimuth, state.targetAzimuth, smoothT);
+    state.sunElevation = lerp(state.sunElevation, state.targetElevation, smoothT);
+    for (let c = 0; c < 3; c++) {
+      state.curSunCol[c]    = lerp(state.curSunCol[c], lp.sunColor[c], smoothT);
+      state.curSkyCol[c]    = lerp(state.curSkyCol[c], lp.skyColor[c], smoothT);
+      state.curBounceCol[c] = lerp(state.curBounceCol[c], lp.bounceCol[c], smoothT);
+    }
+    state.curWetness  = lerp(state.curWetness, lp.wetness, smoothT * 0.6);
+    state.curExposure = lerp(state.curExposure, lp.exposure, smoothT);
+    const targetKomo = state.komorebiOn ? lp.komorebiStr : 0.0;
+    state.curKomorebiStr = lerp(state.curKomorebiStr, targetKomo, smoothT);
+
+    // 2) Animated full-garden wooden Narashi sweeper bar
+    if (state.sweepActive) {
+      state.sweepPrevX = state.sweepX;
+      const sweepSpeed = world.bedW / 1.35; // glides cleanly across in ~1.35s
+      state.sweepX += sweepSpeed * dt;
+      runRakeStep({
+        p0: [state.sweepPrevX, 0],
+        p1: [state.sweepX, 0],
+        n0: [0, 1],
+        n1: [0, 1],
+        mode: 3,
+        strength: 0.9
+      });
+      // Kick tiny dust grains ahead of sweeping cedar bar & push maple leaves gracefully
+      if (Math.random() < 0.75) {
+        const ry = (Math.random() - 0.5) * world.bedH * 0.9;
+        spawnKickedGrains(state.sweepX + 2.0, ry, 1, 0, 55, 2);
+      }
+      for (const lf of mapleLeaves) {
+        if (Math.abs(lf.x - state.sweepX) < 6.0 && lf.z < 2.0) {
+          lf.vx += 42 * dt * 10;
+          lf.vz = Math.max(lf.vz, 7.5);
+          lf.vrot += (Math.random() - 0.5) * 6;
+        }
+      }
+      runRelaxPasses(1, 0.16);
+      state.settleFrames = 26;
+
+      if (state.sweepX > world.bedW * 0.5 + 8.0) {
+        state.sweepActive = false;
+      }
+    }
+
+    // 3) Gentle Kyoto raindrops dimpling the gravel when in Mist weather mode
+    if (lp.rainRate > 0.01) {
+      rainAccum += lp.rainRate * dt;
+      while (rainAccum >= 1.0) {
+        rainAccum -= 1.0;
+        const rx = (Math.random() - 0.5) * (world.bedW - 6);
+        const ry = (Math.random() - 0.5) * (world.bedH - 6);
+        runRakeStep({
+          p0: [rx, ry], p1: [rx, ry],
+          n0: [0, 1], n1: [0, 1],
+          mode: 5,
+          halfW: 0.75 + Math.random() * 0.55,
+          depth: 0.20 + Math.random() * 0.16,
+          strength: 1.0
+        });
+        state.settleFrames = Math.max(state.settleFrames, 2);
+        if (Math.random() < 0.35) {
+          triggerGrainTick(0.010, 1600 + Math.random() * 1400);
+        }
+      }
+    }
+
+    // 4) Angle-of-repose granular relaxation passes (only while sand is actively settling)
+    if (state.settleFrames > 0) {
+      runRelaxPasses(state.pointerDown ? 1 : 2, 0.155);
+      state.settleFrames--;
+    }
+
+    // Decay pointer stroke speed cleanly when mouse stops moving while held down
+    if (state.pointerDown && (nowMs - state.lastMoveTime) > 55) {
+      state.strokeSpeed *= Math.pow(0.004, dt);
+    }
+
+    // 5) Render Photorealistic Karesansui Frame (WebGL2)
+    packStoneUniforms();
+    const sunDir = getSunDir();
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+    gl.useProgram(progRender);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, sandA.tex);
+    gl.uniform1i(uRender.uSandTex, 0);
+
+    gl.uniform2f(uRender.uBedSize, world.bedW, world.bedH);
+    gl.uniform2f(uRender.uTexel, 1 / world.simW, 1 / world.simH);
+    gl.uniform2f(uRender.uFrameDim, world.frameW, world.frameH);
+    gl.uniform2f(uRender.uResolution, glCanvas.width, glCanvas.height);
+    gl.uniform1f(uRender.uTime, nowMs * 0.001);
+
+    gl.uniform3fv(uRender.uCamPos, cam.pos);
+    gl.uniform3fv(uRender.uCamForward, cam.forward);
+    gl.uniform3fv(uRender.uCamRight, cam.right);
+    gl.uniform3fv(uRender.uCamUp, cam.up);
+    gl.uniform1f(uRender.uTanHalfFov, cam.tanHalfFov);
+    gl.uniform1f(uRender.uAspect, cam.aspect);
+
+    gl.uniform3fv(uRender.uSunDir, sunDir);
+    gl.uniform3fv(uRender.uSunColor, state.curSunCol);
+    gl.uniform3fv(uRender.uSkyColor, state.curSkyCol);
+    gl.uniform3fv(uRender.uBounceColor, state.curBounceCol);
+    gl.uniform1f(uRender.uWetness, state.curWetness);
+    gl.uniform1f(uRender.uExposure, state.curExposure);
+    gl.uniform1f(uRender.uKomorebi, state.curKomorebiStr);
+
+    gl.uniform1i(uRender.uStoneCount, state.stones.length);
+    gl.uniform4fv(uRender.uStoneA, stoneBufA);
+    gl.uniform4fv(uRender.uStoneB, stoneBufB);
+    gl.uniform4fv(uRender.uStoneC, stoneBufC);
+
+    gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+    // 6) Render 2D Overlay FX (Kicked Grains, Drifting Maple Leaves, Sweeper Beam, Rake Ghost)
+    stepAndRenderFX(dt, nowMs);
+
+    // 7) Update Procedural Granular Soundscape
+    updateAudio(nowMs, dt);
+
+    requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

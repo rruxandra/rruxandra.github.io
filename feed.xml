@@ -6,7 +6,15 @@
     <description>A running transmission of half-formed thoughts, sketched before they cool into language. Pages that perform their ideas instead of explaining them.</description>
     <language>en</language>
     <atom:link href="https://rruxandra.github.io/feed.xml" rel="self" type="application/rss+xml" />
-    <lastBuildDate>Thu, 19 Nov 2026 20:38:00 +01:00</lastBuildDate>
+    <lastBuildDate>Sun, 22 Nov 2026 08:55:00 +01:00</lastBuildDate>
+
+    <item>
+      <title>Karesansui: dry landscape</title>
+      <link>https://rruxandra.github.io/karesansui.html</link>
+      <description>A physically simulated Japanese zen sand garden — mass-conserving Shirakawa granite gravel settling at its angle of repose, raymarched mossy boulders, raking sunlight through swaying maple shadows, and procedural gravel acoustics.</description>
+      <pubDate>Sun, 22 Nov 2026 08:55:00 +01:00</pubDate>
+      <guid isPermaLink="true">https://rruxandra.github.io/karesansui.html</guid>
+    </item>
 
     <item>
       <title>Possible Futures: the collapse of many into one</title>
