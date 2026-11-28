@@ -207,6 +207,10 @@
     font-variation-settings: 'opsz' 30, 'SOFT' 70, 'WONK' 1;
   }
 
+  .scrap .note p + p {
+    margin-top: 0.75rem;
+  }
+
   .scrap .src {
     display: inline-flex; align-items: baseline; gap: 0.45rem;
     margin-top: 1.5rem;
@@ -219,9 +223,10 @@
     padding-bottom: 2px;
     transition: color .3s ease, border-color .3s ease;
   }
-  .scrap .src:hover { color: var(--paper-link); border-color: var(--paper-link); }
+  .scrap span.src { border-bottom: none; }
+  .scrap a.src:hover { color: var(--paper-link); border-color: var(--paper-link); }
   .scrap .src .arrow { display: inline-block; transition: transform .4s cubic-bezier(.2,.8,.2,1); }
-  .scrap .src:hover .arrow { transform: translate(2px, -2px); }
+  .scrap a.src:hover .arrow { transform: translate(2px, -2px); }
 
   /* before JS lays the desk out, the scraps simply sit in a column */
   html:not(.js) .scrap { position: static; margin: 0 0 2.5rem; }
@@ -232,9 +237,6 @@
   .scrap.long-form .note {
     font-size: 0.98rem;
     line-height: 1.44;
-  }
-  .scrap.long-form .note p + p {
-    margin-top: 0.75rem;
   }
   .scrap.long-form .note strong {
     font-weight: 500;
@@ -333,6 +335,19 @@
              <div class="body"><p class="note">…</p></div>
            </article>
     ────────────────────────────────────────────────────────────── -->
+
+    <article class="scrap">
+      <div class="paper" aria-hidden="true"></div>
+      <div class="tape" aria-hidden="true"></div>
+      <div class="body">
+        <div class="note">
+          <p>This is the first time in history nobody has any idea what the world will look like in 10 years what the job market will look like, what social relations will look like, et cetera.</p>
+          <p>So hedge your bets. Don&#8217;t focus on a narrow subject like coding. Give equal importance to your head (intellectual skills), your heart (social skills) and your hands (motor skills).</p>
+          <p>It is in the combination of these three that humans still have a large advantage over A.I.</p>
+        </div>
+        <span class="src">Yuval Noah Harari</span>
+      </div>
+    </article>
 
     <article class="scrap">
       <div class="paper" aria-hidden="true"></div>
@@ -495,7 +510,7 @@
   <footer class="mono">
     <span class="end">End of transmission</span>
     <a href="index.html"><span>return to </span>log<span class="arrow">↗</span></a>
-    <span id="tally">17 scraps</span>
+    <span id="tally">18 scraps</span>
   </footer>
 
 </div>
